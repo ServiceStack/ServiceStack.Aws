@@ -26,11 +26,6 @@ namespace ServiceStack.Aws
         private const string ExpiresAtName = "expiresAt";
 
         /// <summary>
-        /// AWS Access Key ID
-        /// </summary>
-        public string AwsAccessKey { get; set; }
-
-        /// <summary>
         /// The name of the DynamoDB Table - either make sure it is already created with HashKey string named "urn" or pass true into constructor createTableIfMissing argument
         /// </summary>
         public string CacheTableName
@@ -38,16 +33,6 @@ namespace ServiceStack.Aws
             get { return cacheTableName; }
             set { cacheTableName = value; }
         }
-
-        /// <summary>
-        /// AWS Secret Key ID
-        /// </summary>
-        public string AwsSecretKey { get; set; }
-
-        /// <summary>
-        /// AWS Region where the DynamoDB Table is stored
-        /// </summary>
-        public RegionEndpoint AwsRegion { get; set; }
 
         /// <summary>
         /// If the client needs to delete/re-create the DynamoDB table, this is the Read Capacity to use
@@ -67,6 +52,22 @@ namespace ServiceStack.Aws
             set { cacheWriteCapacity = value; }
         }
 
+        public DynamoDbCacheClient(AmazonDynamoDBClient client, string cacheTableName = "ICacheClientDynamo",
+            int readCapacity = 10, int writeCapacity = 5, bool createTableIfMissing = false)
+        {
+            this.client = client;
+            CacheTableName = cacheTableName;
+            CacheReadCapacity = readCapacity;
+            CacheWriteCapacity = writeCapacity;
+            scacheTableCreate = createTableIfMissing;
+
+            if (string.IsNullOrEmpty(CacheTableName))
+                throw new MissingFieldException("DynamoCacheClient", "CacheTableName");
+
+            if (scacheTableCreate)
+                CreateDynamoCacheTable();
+        }
+
         /// <summary>
         /// DynamoDbCacheClient constructor
         /// </summary>
@@ -80,37 +81,12 @@ namespace ServiceStack.Aws
         public DynamoDbCacheClient(string awsAccessKey, string awsSecretKey, RegionEndpoint region,
                                    string cacheTableName = "ICacheClientDynamo", int readCapacity = 10,
                                    int writeCapacity = 5, bool createTableIfMissing = false)
+            : this(new AmazonDynamoDBClient(awsAccessKey, awsSecretKey, region), cacheTableName, readCapacity, writeCapacity, createTableIfMissing)
         {
-            CacheTableName = cacheTableName;
-            AwsAccessKey = awsAccessKey;
-            AwsSecretKey = awsSecretKey;
-            AwsRegion = region;
-            CacheReadCapacity = readCapacity;
-            CacheWriteCapacity = writeCapacity;
-            scacheTableCreate = createTableIfMissing;
-
-            Init();
-        }
-
-        private void Init()
-        {
-            if (string.IsNullOrEmpty(CacheTableName))
-                throw new MissingFieldException("DynamoCacheClient", "CacheTableName");
-
-            if (string.IsNullOrEmpty(AwsAccessKey))
-                throw new MissingFieldException("DynamoCacheClient", "AwsAccessKey");
-
-            client = new AmazonDynamoDBClient(AwsAccessKey, AwsSecretKey, AwsRegion);
-            Log.Info("Successfully created AmazonDynamoDBClient");
-            if (scacheTableCreate) 
-                CreateDynamoCacheTable();
         }
 
         private void CreateDynamoCacheTable()
         {
-            if (string.IsNullOrEmpty(AwsSecretKey))
-                throw new MissingFieldException("DynamoCacheClient", "AwsSecretKey");
-
             Log.InfoFormat("Attempting to load DynamoDB table {0}", cacheTableName);
             if (!Table.TryLoadTable(client, CacheTableName, out awsCacheTableObj))
             {
@@ -120,18 +96,25 @@ namespace ServiceStack.Aws
                     client.CreateTable(new CreateTableRequest
                     {
                         TableName = CacheTableName,
-                        KeySchema = new List<KeySchemaElement> {
-                                new KeySchemaElement { 
-                                    AttributeName = KeyName, 
-                                    KeyType = KeyType.HASH, 
-                                }
-                            },
+                        KeySchema = new List<KeySchemaElement>
+                        {
+                            new KeySchemaElement
+                            {
+                                AttributeName = KeyName, KeyType = KeyType.HASH,
+                            }
+                        },
+                        AttributeDefinitions = new List<AttributeDefinition>()
+                        {
+                            new AttributeDefinition
+                            {
+                                AttributeName = KeyName, AttributeType = "S"
+                            }
+                        },
                         ProvisionedThroughput = new ProvisionedThroughput
                         {
                             ReadCapacityUnits = CacheReadCapacity,
                             WriteCapacityUnits = CacheWriteCapacity,
                         }
-
                     });
                     Log.InfoFormat("Successfully created DynamoDB table {0}", cacheTableName);
                     WaitUntilTableReady(cacheTableName);

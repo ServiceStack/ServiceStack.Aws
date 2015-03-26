@@ -60,6 +60,12 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ServiceStack.Aws\ServiceStack.Aws.csproj">
+      <Project>{ec090b85-e208-4b4e-ae19-bbfef51e4560}</Project>
+      <Name>ServiceStack.Aws</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
