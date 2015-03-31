@@ -195,10 +195,10 @@ namespace ServiceStack.Aws
             var itemKey = new Dictionary<string, AttributeValue> { { KeyName, new AttributeValue() { S = key } } };
             var response = client.GetItem(CacheTableName, itemKey);
 
-            var item = response.Item;
-            if (item != null)
+            if (response.IsItemSet)
             {
-                DateTime expiresAt = Convert.ToDateTime(item[ExpiresAtName].S);
+                var item = response.Item;
+                DateTime expiresAt = DateTime.ParseExact(item[ExpiresAtName].S, "s", CultureInfo.InvariantCulture);
                 if (DateTime.UtcNow > expiresAt)
                 {
                     Log.InfoFormat("Cache key: {0} has expired, removing from cache!", key);
@@ -236,7 +236,7 @@ namespace ServiceStack.Aws
                             { ValueName, new AttributeValue {S = value.ToJson()} },
                             {
                                 ExpiresAtName,
-                                new AttributeValue {S = expiresAt.ToUniversalTime().ToString(CultureInfo.InvariantCulture)}
+                                new AttributeValue {S = expiresAt.ToUniversalTime().ToString("s", CultureInfo.InvariantCulture)}
                             }
                         }
                     }
@@ -405,9 +405,7 @@ namespace ServiceStack.Aws
         public void Dispose()
         {
             if (client != null)
-            {
                 client.Dispose();
-            }
         }
     }
 }
