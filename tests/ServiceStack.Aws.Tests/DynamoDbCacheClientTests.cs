@@ -181,6 +181,8 @@ namespace ServiceStack.Aws.Tests
 
             Assert.IsFalse(this.cacheClient.Add("Car", "Ford"));
             Assert.That(this.cacheClient.Get<string>("Car"), Is.EqualTo("Audi"));
+
+            this.cacheClient.Remove("Car");
         }
 
         [Test]
@@ -193,6 +195,8 @@ namespace ServiceStack.Aws.Tests
 
             Assert.IsTrue(this.cacheClient.Replace("Car", "Audi"));
             Assert.That(this.cacheClient.Get<string>("Car"), Is.EqualTo("Audi"));
+
+            this.cacheClient.Remove("Car");
         }
     }
 }

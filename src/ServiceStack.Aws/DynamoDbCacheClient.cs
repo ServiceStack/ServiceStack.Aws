@@ -14,7 +14,7 @@ namespace ServiceStack.Aws
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DynamoDbCacheClient));
 
-        private AmazonDynamoDBClient client;
+        private IAmazonDynamoDB client;
         private Table awsCacheTableObj;
 
         private string cacheTableName;
@@ -52,7 +52,7 @@ namespace ServiceStack.Aws
             set { cacheWriteCapacity = value; }
         }
 
-        public DynamoDbCacheClient(AmazonDynamoDBClient client, string cacheTableName = "ICacheClientDynamo",
+        public DynamoDbCacheClient(IAmazonDynamoDB client, string cacheTableName = "ICacheClientDynamo",
             int readCapacity = 10, int writeCapacity = 5, bool createTableIfMissing = false)
         {
             this.client = client;
@@ -222,6 +222,15 @@ namespace ServiceStack.Aws
             return true;
         }
 
+        private bool CacheReplace<T>(string key, T value, DateTime expiresAt)
+        {
+            T entry;
+            if (!TryGetValue(key, out entry)) return false;
+
+            CacheSet(key, value, expiresAt);
+            return true;
+        }
+
         private bool CacheSet<T>(string key, T value, DateTime expiresAt)
         {
             try
@@ -366,17 +375,17 @@ namespace ServiceStack.Aws
 
         public bool Replace<T>(string key, T value, TimeSpan expiresIn)
         {
-            return Set(key, value, DateTime.UtcNow.Add(expiresIn));
+            return CacheReplace(key, value, DateTime.UtcNow.Add(expiresIn));
         }
 
         public bool Replace<T>(string key, T value, DateTime expiresAt)
         {
-            return Set(key, value, expiresAt.ToUniversalTime());
+            return CacheReplace(key, value, expiresAt.ToUniversalTime());
         }
 
         public bool Replace<T>(string key, T value)
         {
-            return Set(key, value, DateTime.MaxValue.ToUniversalTime());
+            return CacheReplace(key, value, DateTime.MaxValue.ToUniversalTime());
         }
 
         public bool Set<T>(string key, T value, TimeSpan expiresIn)
