@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using NUnit.Framework;
 using ServiceStack.Aws.SQS;
+using ServiceStack.Aws.SQS.Fake;
 
 namespace ServiceStack.Aws.Tests.SQS
 {
@@ -19,54 +20,70 @@ namespace ServiceStack.Aws.Tests.SQS
         [TestFixtureSetUp]
         public void FixtureSetup()
         {
-            _client = SqsTestClientFactory.GetClient();
+            //_client = SqsTestClientFactory.GetClient();
+            // NOTE: This purposely gets an instance of the Fake client directly vs. using the factory, as these
+            // tests create a lot of queues that are never really used, so we don't want to actually run it against
+            // a "real" SQS instance typically. If we want to, just use the line above instead of the line below.
+            _client = FakeAmazonSqs.Instance;
             _helper = new FakeSqsClientHelper(_client);
         }
-
+        
         [Test]
         public void Create_fails_with_non_alphanumeric_chars()
         {
-            Assert.Throws<AmazonSQSException>(() => _client.CreateQueue("testing123:testing456"));
-            Assert.Throws<AmazonSQSException>(() => _client.CreateQueue("testing123.testing456"));
-            Assert.Throws<AmazonSQSException>(() => _client.CreateQueue("testing123=testing456"));
-            Assert.Throws<AmazonSQSException>(() => _client.CreateQueue("testing123+testing456"));
+            var invalidNames = new List<string>
+                               {
+                                   "testing123:testing456",
+                                   "testing123.testing456",
+                                   "testing123=testing456",
+                                   "testing123+testing456"
+                               };
+
+            foreach (var invalidName in invalidNames)
+            {
+                Assert.Throws<AmazonSQSException>(() => _client.CreateQueue(invalidName), invalidName);
+            }
         }
 
         [Test]
         public void Create_succeeds_with_valid_non_alphanumeric_chars()
         {
-            var createResponse = _client.CreateQueue("testing123-testing456");
-            Assert.IsNotNullOrEmpty(createResponse.QueueUrl);
+            var validNames = new List<string>
+                               {
+                                   "testing123-testing456",
+                                   "testing123_testing456",
+                                   "-_",
+                               };
 
-            createResponse = _client.CreateQueue("testing123_testing456");
-            Assert.IsNotNullOrEmpty(createResponse.QueueUrl);
-            
-            createResponse = _client.CreateQueue("-_");
-            Assert.IsNotNullOrEmpty(createResponse.QueueUrl);
+            foreach (var validName in validNames)
+            {
+                var createResponse = _client.CreateQueue(validName);
+                Assert.IsNotNullOrEmpty(createResponse.QueueUrl);
+            }
         }
 
         [Test]
         public void Can_create_and_get_attributes_and_url_correctly()
         {
             var createRequest = new CreateQueueRequest
-                          {
-                              QueueName = Guid.NewGuid().ToString("N"),
-                              Attributes = new Dictionary<string, string>
-                                           {
-                                               { QueueAttributeName.VisibilityTimeout, "23" },
-                                               { QueueAttributeName.ReceiveMessageWaitTimeSeconds, "13" },
-                                           }
-                          };
-
+                                {
+                                    QueueName = Guid.NewGuid().ToString("N"),
+                                    Attributes = new Dictionary<string, string>
+                                                 {
+                                                     { QueueAttributeName.VisibilityTimeout, "23" },
+                                                     { QueueAttributeName.ReceiveMessageWaitTimeSeconds, "13" },
+                                                 }
+                                };
+            
             var createResponse = _client.CreateQueue(createRequest);
 
             Assert.IsNotNullOrEmpty(createResponse.QueueUrl);
 
             var attrResponse = _client.GetQueueAttributes(createResponse.QueueUrl, new List<string>
-                                                                                   {
-                                                                                       "All"
-                                                                                   });
-
+                                                                                    {
+                                                                                        "All"
+                                                                                    });
+                
             Assert.AreEqual(attrResponse.Attributes[QueueAttributeName.VisibilityTimeout],
                             createRequest.Attributes[QueueAttributeName.VisibilityTimeout]);
             Assert.AreEqual(attrResponse.Attributes[QueueAttributeName.ReceiveMessageWaitTimeSeconds],
@@ -75,16 +92,41 @@ namespace ServiceStack.Aws.Tests.SQS
             var qUrlResponse = _client.GetQueueUrl(createRequest.QueueName);
 
             Assert.AreEqual(qUrlResponse.QueueUrl, createResponse.QueueUrl);
+            
         }
 
         [Test]
-        public void Creating_duplicate_queue_names_throws_exception()
+        public void Creating_duplicate_queue_names_with_same_attribute_definition_does_not_throw_exception()
         {
             var name = Guid.NewGuid().ToString("N");
 
-            _helper.CreateQueue(name);
+            var firstUrl = _helper.CreateQueue(name);
 
-            Assert.Throws<QueueNameExistsException>(() => _helper.CreateQueue(name));
+            var secondUrl = _helper.CreateQueue(name);
+
+            Assert.AreEqual(firstUrl, secondUrl);
+            
+        }
+
+        [Test]
+        public void Creating_duplicate_queue_names_with_different_vis_timeout_throws_exception()
+        {
+            var name = Guid.NewGuid().ToString("N");
+
+            var url = _helper.CreateQueue(name);
+            
+            Assert.Throws<QueueNameExistsException>(() => _helper.CreateQueue(name, visTimeout: 23));
+            
+        }
+
+        [Test]
+        public void Creating_duplicate_queue_names_with_different_waittime_throws_exception()
+        {
+            var name = Guid.NewGuid().ToString("N");
+
+            var url = _helper.CreateQueue(name);
+
+            Assert.Throws<QueueNameExistsException>(() => _helper.CreateQueue(name, waitTime: 13));
         }
 
         [Test]
@@ -108,8 +150,11 @@ namespace ServiceStack.Aws.Tests.SQS
         [Test]
         public void Sending_no_entries_throws_exception()
         {
+            var newQueueUrl = _helper.CreateQueue();
+
             Assert.Throws<EmptyBatchRequestException>(() => _client.SendMessageBatch(new SendMessageBatchRequest
                                                                                      {
+                                                                                         QueueUrl = newQueueUrl,
                                                                                          Entries = new List<SendMessageBatchRequestEntry>()
                                                                                      }));
         }
@@ -117,7 +162,8 @@ namespace ServiceStack.Aws.Tests.SQS
         [Test]
         public void Sending_to_non_existent_q_throws_exception()
         {
-            Assert.Throws<QueueDoesNotExistException>(() => _helper.SendMessages(queueUrl: Guid.NewGuid().ToString("N")));
+            var queueUrl = "http://{0}.com".Fmt(Guid.NewGuid().ToString("N"));
+            SqsTestAssert.Throws<QueueDoesNotExistException>(() => _helper.SendMessages(queueUrl), "specified queue does not exist");
         }
 
         [Test]
@@ -167,7 +213,11 @@ namespace ServiceStack.Aws.Tests.SQS
             var newQueueUrl = _helper.CreateQueue();
 
             // New q should be empty
-            var response = _client.ReceiveMessage(newQueueUrl);
+            var response = _client.ReceiveMessage(new ReceiveMessageRequest
+                                                  {
+                                                      QueueUrl = newQueueUrl,
+                                                      WaitTimeSeconds = 0
+                                                  });
             Assert.AreEqual(0, response.Messages.Count);
 
             // Send 1, pull it off (should only get 1)
@@ -202,15 +252,23 @@ namespace ServiceStack.Aws.Tests.SQS
             var newQueueUrl = _helper.CreateQueue();
 
             // New q should be empty
-            var response = _client.ReceiveMessage(newQueueUrl);
+            var response = _client.ReceiveMessage(new ReceiveMessageRequest
+                                                  {
+                                                      QueueUrl = newQueueUrl,
+                                                      WaitTimeSeconds = 0
+                                                  });
             Assert.AreEqual(0, response.Messages.Count);
 
             // Send 1, pull it off (should only get 1)
             _helper.SendMessages(newQueueUrl);
             var message = _helper.ReceiveSingle(newQueueUrl, visTimeout: 1);
-            
+
             // Q should be empty again
-            response = _client.ReceiveMessage(newQueueUrl);
+            response = _client.ReceiveMessage(new ReceiveMessageRequest
+                                              {
+                                                  QueueUrl = newQueueUrl,
+                                                  WaitTimeSeconds = 0
+                                              });
             Assert.AreEqual(0, response.Messages.Count);
 
             Thread.Sleep(1000);
@@ -253,7 +311,7 @@ namespace ServiceStack.Aws.Tests.SQS
                                                       WaitTimeSeconds = 0
                                                   });
 
-            Assert.AreEqual(5, received.Messages.Count);
+            SqsTestAssert.FakeEqualRealGreater(5, 1, received.Messages.Count);
 
             var response = _client.DeleteMessageBatch(newQueueUrl,
                                                       received.Messages
@@ -264,7 +322,7 @@ namespace ServiceStack.Aws.Tests.SQS
                                                                            })
                                                               .ToList());
 
-            Assert.AreEqual(5, response.Successful.Count);
+            Assert.AreEqual(received.Messages.Count, response.Successful.Count);
 
             received = _client.ReceiveMessage(new ReceiveMessageRequest
                                               {
@@ -274,13 +332,17 @@ namespace ServiceStack.Aws.Tests.SQS
                                                   WaitTimeSeconds = 0
                                               });
 
-            Assert.AreEqual(1, received.Messages.Count);
+            SqsTestAssert.FakeEqualRealGreater(1, 0, received.Messages.Count);
         }
 
         [Test]
         public void Deleting_too_many_messages_throws_exception()
         {
-            var entries = (SqsQueueDefinition.MaxBatchDeleteItems + 1).Times(() => new DeleteMessageBatchRequestEntry());
+            var entries = (SqsQueueDefinition.MaxBatchDeleteItems + 1).Times(() => new DeleteMessageBatchRequestEntry
+                                                                                   {
+                                                                                       Id = Guid.NewGuid().ToString("N"),
+                                                                                       ReceiptHandle = Guid.NewGuid().ToString("N")
+                                                                                   });
 
             Assert.Throws<TooManyEntriesInBatchRequestException>(() => _client.DeleteMessageBatch(new DeleteMessageBatchRequest
                                                                                                   {
@@ -292,8 +354,10 @@ namespace ServiceStack.Aws.Tests.SQS
         [Test]
         public void Deleting_no_entries_throws_exception()
         {
+            var qUrl = _helper.CreateQueue();
             Assert.Throws<EmptyBatchRequestException>(() => _client.DeleteMessageBatch(new DeleteMessageBatchRequest
                                                                                        {
+                                                                                           QueueUrl = qUrl,
                                                                                            Entries = new List<DeleteMessageBatchRequestEntry>()
                                                                                        }));
         }
@@ -302,7 +366,9 @@ namespace ServiceStack.Aws.Tests.SQS
         public void Deleting_from_non_existent_q_throws_exception()
         {
             var entries = 1.Times(() => new DeleteMessageBatchRequestEntry());
-            Assert.Throws<QueueDoesNotExistException>(() => _client.DeleteMessageBatch(Guid.NewGuid().ToString("N"), entries));
+            var queueUrl = "http://{0}.com".Fmt(Guid.NewGuid().ToString("N"));
+            
+            SqsTestAssert.Throws<QueueDoesNotExistException>(() => _client.DeleteMessageBatch(queueUrl, entries), "specified queue does not exist");
         }
 
         [Test]
@@ -314,14 +380,7 @@ namespace ServiceStack.Aws.Tests.SQS
 
             Assert.IsNotNull(response);
         }
-
-        [Test]
-        public void Deleting_non_existent_queue_ignores_quietly()
-        {
-            var response = _client.DeleteQueue(Guid.NewGuid().ToString("N"));
-            Assert.IsNotNull(response);
-        }
-
+        
         [Test]
         public void Can_get_url_for_existing_q()
         {
@@ -381,8 +440,12 @@ namespace ServiceStack.Aws.Tests.SQS
 
             sw.Stop();
 
-            Assert.AreEqual(3, response.Messages.Count);
-            Assert.GreaterOrEqual(sw.ElapsedMilliseconds, 2000);
+            SqsTestAssert.FakeEqualRealGreater(3, 1, response.Messages.Count);
+
+            if (SqsTestAssert.IsFakeClient)
+            {   // SQS support for long polling doesn't guarantee a specific wait time oddly
+                Assert.GreaterOrEqual(sw.ElapsedMilliseconds, 2000);
+            }
         }
         
     }

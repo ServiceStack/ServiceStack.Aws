@@ -120,12 +120,36 @@ namespace ServiceStack.Aws.SQS.Fake
 
                 entryIds.Add(entry.Id);
 
-                var success = q.ChangeVisibility(new ChangeMessageVisibilityRequest
+                var success = false;
+                BatchResultErrorEntry batchError = null;
+
+                try
+                {
+                    success = q.ChangeVisibility(new ChangeMessageVisibilityRequest
                                                  {
                                                      QueueUrl = request.QueueUrl,
                                                      ReceiptHandle = entry.ReceiptHandle,
                                                      VisibilityTimeout = entry.VisibilityTimeout
                                                  });
+                }
+                catch(ReceiptHandleIsInvalidException rhex)
+                {
+                    batchError = new BatchResultErrorEntry
+                                 {
+                                     Id = entry.Id,
+                                     Message = rhex.Message,
+                                     Code = rhex.ErrorCode
+                                 };
+                }
+                catch(MessageNotInflightException mfex)
+                {
+                    batchError = new BatchResultErrorEntry
+                                 {
+                                     Id = entry.Id,
+                                     Message = mfex.Message,
+                                     Code = mfex.ErrorCode
+                                 };
+                }
 
                 if (success)
                 {
@@ -136,12 +160,14 @@ namespace ServiceStack.Aws.SQS.Fake
                 }
                 else
                 {
-                    response.Failed.Add(new BatchResultErrorEntry
-                                        {
-                                            Id = entry.Id,
-                                            Message = "FakeCvError",
-                                            Code = "123"
-                                        });
+                    var entryToQueue = batchError ?? new BatchResultErrorEntry
+                                                     {
+                                                         Id = entry.Id,
+                                                         Message = "FakeCvError",
+                                                         Code = "123"
+                                                     };
+
+                    response.Failed.Add(entryToQueue);
                 }
             }
 
@@ -173,17 +199,28 @@ namespace ServiceStack.Aws.SQS.Fake
 
             var qd = request.Attributes.ToQueueDefinition(SqsQueueNames.GetSqsQueueName(request.QueueName), qUrl, disableBuffering: true);
 
+            var existingQueue = _queues.SingleOrDefault(kvp => kvp.Value.QueueDefinition.QueueName.Equals(qd.QueueName, StringComparison.InvariantCultureIgnoreCase)).Value;
+
+            if (existingQueue != null)
+            {   // If an existing q with same name, attributes must match, which we only check 2 of currently in Fake
+                if (existingQueue.QueueDefinition.VisibilityTimeout == qd.VisibilityTimeout &&
+                    existingQueue.QueueDefinition.ReceiveWaitTime == qd.ReceiveWaitTime)
+                {   // Same, so return the existing q
+                    return new CreateQueueResponse
+                           {
+                               QueueUrl = existingQueue.QueueDefinition.QueueUrl
+                           };
+                }
+
+                throw new QueueNameExistsException("Queue with name [{0}] already exists".Fmt(qd.QueueName));
+            }
+
             qd.QueueArn = Guid.NewGuid().ToString("N");
             
             var q = new FakeSqsQueue
                     {
                         QueueDefinition = qd
                     };
-
-            if (_queues.Any(kvp => kvp.Value.QueueDefinition.QueueName.Equals(qd.QueueName, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                throw new QueueNameExistsException("Queue with name [{0}] already exists".Fmt(qd.QueueName));
-            }
 
             if (!_queues.TryAdd(qUrl, q))
             {
@@ -257,18 +294,42 @@ namespace ServiceStack.Aws.SQS.Fake
 
             foreach (var entry in request.Entries)
             {
-                if (entryIds.Contains(entry.Id))
+                var success = false;
+                BatchResultErrorEntry batchError = null;
+
+                try
                 {
-                    throw new BatchEntryIdsNotDistinctException("Duplicate Id of [{0}]".Fmt(entry.Id));
-                }
+                    if (entryIds.Contains(entry.Id))
+                    {
+                        throw new BatchEntryIdsNotDistinctException("Duplicate Id of [{0}]".Fmt(entry.Id));
+                    }
 
-                entryIds.Add(entry.Id);
+                    entryIds.Add(entry.Id);
 
-                var success = q.DeleteMessage(new DeleteMessageRequest
+                    success = q.DeleteMessage(new DeleteMessageRequest
                                               {
                                                   QueueUrl = request.QueueUrl,
                                                   ReceiptHandle = entry.ReceiptHandle
                                               });
+                }
+                catch(ReceiptHandleIsInvalidException rhex)
+                {
+                    batchError = new BatchResultErrorEntry
+                                 {
+                                     Id = entry.Id,
+                                     Message = rhex.Message,
+                                     Code = rhex.ErrorCode
+                                 };
+                }
+                catch(MessageNotInflightException mfex)
+                {
+                    batchError = new BatchResultErrorEntry
+                                 {
+                                     Id = entry.Id,
+                                     Message = mfex.Message,
+                                     Code = mfex.ErrorCode
+                                 };
+                }
 
                 if (success)
                 {
@@ -279,12 +340,14 @@ namespace ServiceStack.Aws.SQS.Fake
                 }
                 else
                 {
-                    response.Failed.Add(new BatchResultErrorEntry
-                                        {
-                                            Id = entry.Id,
-                                            Message = "FakeDeleteError",
-                                            Code = "456"
-                                        });
+                    var entryToQueue = batchError ?? new BatchResultErrorEntry
+                                                     {
+                                                         Id = entry.Id,
+                                                         Message = "FakeDeleteError",
+                                                         Code = "456"
+                                                     };
+
+                    response.Failed.Add(entryToQueue);
                 }
             }
 
@@ -559,27 +622,44 @@ namespace ServiceStack.Aws.SQS.Fake
 
             foreach (var entry in request.Entries)
             {
-                if (entryIds.Contains(entry.Id))
+                string id = null;
+                BatchResultErrorEntry batchError = null;
+
+                try
                 {
-                    throw new BatchEntryIdsNotDistinctException("Duplicate Id of [{0}]".Fmt(entry.Id));
-                }
+                    if (entryIds.Contains(entry.Id))
+                    {
+                        throw new BatchEntryIdsNotDistinctException("Duplicate Id of [{0}]".Fmt(entry.Id));
+                    }
 
-                entryIds.Add(entry.Id);
+                    entryIds.Add(entry.Id);
 
-                var id = q.Send(new SendMessageRequest
+                    id = q.Send(new SendMessageRequest
                                 {
                                     MessageBody = entry.MessageBody,
                                     QueueUrl = q.QueueDefinition.QueueUrl
                                 });
+                }
+                catch(ReceiptHandleIsInvalidException rhex)
+                {
+                    batchError = new BatchResultErrorEntry
+                                 {
+                                     Id = entry.Id,
+                                     Message = rhex.Message,
+                                     Code = rhex.ErrorCode
+                                 };
+                }
 
                 if (id == null)
                 {
-                    response.Failed.Add(new BatchResultErrorEntry
-                                        {
-                                            Id = entry.Id,
-                                            Message = "FakeSendError",
-                                            Code = "789"
-                                        });
+                    var entryToQueue = batchError ?? new BatchResultErrorEntry
+                                                     {
+                                                         Id = entry.Id,
+                                                         Message = "FakeSendError",
+                                                         Code = "789"
+                                                     };
+
+                    response.Failed.Add(entryToQueue);
                 }
                 else
                 {

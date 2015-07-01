@@ -5,6 +5,7 @@ using System.Linq;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using NUnit.Framework;
+using ServiceStack.Aws.SQS;
 using ServiceStack.Aws.SQS.Fake;
 
 namespace ServiceStack.Aws.Tests.SQS
@@ -98,14 +99,36 @@ namespace ServiceStack.Aws.Tests.SQS
                 queueUrl = _defaultQueueUrl;
             }
 
-            var received = _client.ReceiveMessage(new ReceiveMessageRequest
+            var maxAttempts = SqsTestAssert.IsFakeClient
+                                  ? 1
+                                  : 5;
+
+            var receiveAttempts = 0;
+
+            ReceiveMessageResponse received = null;
+
+            while (receiveAttempts < maxAttempts)
+            {
+                received = _client.ReceiveMessage(new ReceiveMessageRequest
                                                   {
                                                       QueueUrl = queueUrl,
                                                       MaxNumberOfMessages = 1,
-                                                      VisibilityTimeout = visTimeout,
-                                                      WaitTimeSeconds = 0
+                                                      VisibilityTimeout = visTimeout > 0
+                                                                              ? visTimeout
+                                                                              : SqsQueueDefinition.MaxVisibilityTimeoutSeconds,
+                                                      WaitTimeSeconds = SqsTestAssert.IsFakeClient
+                                                                            ? 0
+                                                                            : 3
                                                   });
 
+                if (received != null)
+                {
+                    break;
+                }
+
+                receiveAttempts++;
+            }
+            
             Assert.IsNotNull(received);
             Assert.IsNotNull(received.Messages);
             Assert.AreEqual(1, received.Messages.Count);

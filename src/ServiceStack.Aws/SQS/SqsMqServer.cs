@@ -33,6 +33,11 @@ namespace ServiceStack.Aws.SQS
             get { return _sqsMqMessageFactory; }
         }
 
+        public SqsConnectionFactory ConnectionFactory
+        {
+            get { return _sqsMqMessageFactory.ConnectionFactory; }
+        }
+        
         /// <summary>
         /// How many times a message should be retried before sending to the DLQ (Max of 1000).
         /// </summary>

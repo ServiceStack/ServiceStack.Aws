@@ -61,8 +61,10 @@
     <Compile Include="SQS\FakeAmazonSqsTests.cs" />
     <Compile Include="SQS\FakeSqsClientHelper.cs" />
     <Compile Include="SQS\SqsMqBufferTests.cs" />
+    <Compile Include="SQS\SqsMqServerTests.cs" />
     <Compile Include="SQS\SqsQueueDefinitionTests.cs" />
     <Compile Include="SQS\SqsQueueManagerTests.cs" />
+    <Compile Include="SQS\SqsTestAssert.cs" />
     <Compile Include="SQS\SqsTestClientFactory.cs" />
   </ItemGroup>
   <ItemGroup>

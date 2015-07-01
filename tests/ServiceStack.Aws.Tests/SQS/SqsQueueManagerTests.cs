@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using Amazon.SQS.Model;
 using NUnit.Framework;
 using ServiceStack.Aws.SQS;
@@ -16,6 +18,27 @@ namespace ServiceStack.Aws.Tests.SQS
         public void FixtureSetup()
         {
             _sqsQueueManager = new SqsQueueManager(SqsTestClientFactory.GetConnectionFactory());
+        }
+
+        [TestFixtureTearDown]
+        public void FixtureTeardown()
+        {
+            if (SqsTestAssert.IsFakeClient)
+            {
+                return;
+            }
+            
+            // Cleanup anything left cached that we tested with
+            var queueNamesToDelete = new List<string>(_sqsQueueManager.QueueNameMap.Keys);
+
+            foreach (var queueName in queueNamesToDelete)
+            {
+                try
+                {
+                    _sqsQueueManager.DeleteQueue(queueName);
+                }
+                catch { }
+            }
         }
 
         private string GetNewId()
@@ -177,7 +200,8 @@ namespace ServiceStack.Aws.Tests.SQS
 
             // should still return true when not forced, false when forced
             Assert.IsNotNull(_sqsQueueManager.GetQueueDefinition(qd.QueueName));
-            Assert.Throws<QueueDoesNotExistException>(() => _sqsQueueManager.GetQueueDefinition(qd.QueueName, forceRecheck: true));
+
+            SqsTestAssert.Throws<QueueDoesNotExistException>(() => _sqsQueueManager.GetQueueDefinition(qd.QueueName, forceRecheck: true), "specified queue does not exist");
         }
         
         [Test]
@@ -236,17 +260,18 @@ namespace ServiceStack.Aws.Tests.SQS
                            RetryCount = 6
                        };
 
-            var rdarn = GetNewId();
+            var redriveQd = _sqsQueueManager.CreateQueue(GetNewId(), info);
 
-            var qd = _sqsQueueManager.CreateQueue(GetNewId(), info, redriveArn: rdarn);
+            var qd = _sqsQueueManager.CreateQueue(GetNewId(), info, redriveArn: redriveQd.QueueArn);
 
             Assert.IsNotNull(qd, "Queue Definition");
             Assert.AreEqual(qd.VisibilityTimeout, info.VisibilityTimeout, "VisibilityTimeout");
             Assert.AreEqual(qd.ReceiveWaitTime, info.ReceiveWaitTime, "ReceiveWaitTime");
             Assert.AreEqual(qd.DisableBuffering, info.DisableBuffering, "DisableBuffering");
+
             Assert.IsNotNull(qd.RedrivePolicy, "RedrivePolicy");
             Assert.AreEqual(qd.RedrivePolicy.maxReceiveCount, info.RetryCount, "RetryCount");
-            Assert.AreEqual(qd.RedrivePolicy.deadLetterTargetArn, rdarn, "Redrive TargetArn");
+            Assert.AreEqual(qd.RedrivePolicy.deadLetterTargetArn, redriveQd.QueueArn, "Redrive TargetArn");
 
         }
 
@@ -261,20 +286,20 @@ namespace ServiceStack.Aws.Tests.SQS
                            RetryCount = 6
                        };
 
-            var rdarn = GetNewId();
+            var redriveQd = _sqsQueueManager.CreateQueue(GetNewId(), info);
 
-            var qd = _sqsQueueManager.CreateQueue(GetNewId(), info, redriveArn: rdarn);
+            var qd = _sqsQueueManager.CreateQueue(GetNewId(), info, redriveArn: redriveQd.QueueArn);
 
             Assert.IsNotNull(qd, "First Queue Definition");
             Assert.IsTrue(_sqsQueueManager.QueueExists(qd.QueueName), "First Queue");
 
-            var newarn = GetNewId();
-
+            var newRedriveQd = _sqsQueueManager.CreateQueue(GetNewId(), info);
+            
             var newQd = _sqsQueueManager.CreateQueue(qd.QueueName, visibilityTimeoutSeconds: 12,
                                                      receiveWaitTimeSeconds: 10, disasbleBuffering: false,
                                                      redrivePolicy: new SqsRedrivePolicy
                                                                     {
-                                                                        deadLetterTargetArn = newarn,
+                                                                        deadLetterTargetArn = newRedriveQd.QueueArn,
                                                                         maxReceiveCount = 7
                                                                     });
 
@@ -284,7 +309,7 @@ namespace ServiceStack.Aws.Tests.SQS
             Assert.AreEqual(newQd.DisableBuffering, false, "DisableBuffering");
             Assert.IsNotNull(newQd.RedrivePolicy, "RedrivePolicy");
             Assert.AreEqual(newQd.RedrivePolicy.maxReceiveCount, 7, "RetryCount");
-            Assert.AreEqual(newQd.RedrivePolicy.deadLetterTargetArn, newarn, "Redrive TargetArn");
+            Assert.AreEqual(newQd.RedrivePolicy.deadLetterTargetArn, newRedriveQd.QueueArn, "Redrive TargetArn");
 
         }
 
@@ -306,14 +331,17 @@ namespace ServiceStack.Aws.Tests.SQS
             var emptyTempQueue2 = _sqsQueueManager.CreateQueue(QueueNames.GetTempQueueName());
             var emptyTempQueueNotCached = _sqsQueueManager.CreateQueue(QueueNames.GetTempQueueName());
 
-            SqsQueueDefinition qd;
-            _sqsQueueManager.QueueNameMap.TryRemove(emptyTempQueueNotCached.QueueName, out qd);
+            if (!SqsTestAssert.IsFakeClient)
+            {   // List queue doesn't return newly created queues for a bit, so if this a "real", we skip this part
+                SqsQueueDefinition qd;
+                _sqsQueueManager.QueueNameMap.TryRemove(emptyTempQueueNotCached.QueueName, out qd);
+            }
 
-            var countOfQueuesRemoved = _sqsQueueManager.RemoveEmptyTemporaryQueues(DateTime.UtcNow.ToUnixTime());
+            var countOfQueuesRemoved = _sqsQueueManager.RemoveEmptyTemporaryQueues(DateTime.UtcNow.AddDays(5).ToUnixTime());
 
             try
             {
-                Assert.AreEqual(3, countOfQueuesRemoved, "Count Removed");
+                SqsTestAssert.FakeEqualRealGreater(3, 2, countOfQueuesRemoved);
             }
             finally
             {

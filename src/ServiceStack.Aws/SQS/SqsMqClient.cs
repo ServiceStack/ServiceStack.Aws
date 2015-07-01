@@ -115,8 +115,12 @@ namespace ServiceStack.Aws.SQS
         public void Nak(IMessage message, bool requeue, Exception exception = null)
         {
             if (requeue)
-            {
-                ChangeVisibility(message, 0);
+            {   // NOTE: Cannot simply cv at SQS, as that simply puts the same message with the same state back on the q at
+                // SQS, and we need the state on the message object coming in to this Nak to remain with it (i.e. retryCount, etc.)
+                //ChangeVisibility(message, 0);
+
+                DeleteMessage(message);
+                Publish(message);
             }
             else
             {

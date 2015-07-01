@@ -114,15 +114,16 @@ namespace ServiceStack.Aws.SQS
                     return result.Values;
                 }
 
-                var id = request.ReceiptHandle.ToSha256HashString64();
+                var hashId = request.ReceiptHandle.ToSha256HashString64();
 
-                if (!result.ContainsKey(id))
+                if (!result.ContainsKey(hashId))
                 {
-                    result.Add(id, new ChangeMessageVisibilityBatchRequestEntry
-                                   {
-                                       Id = id,
-                                       ReceiptHandle = request.ReceiptHandle
-                                   });
+                    result.Add(hashId, new ChangeMessageVisibilityBatchRequestEntry
+                                       {
+                                           Id = Guid.NewGuid().ToString("N"),
+                                           ReceiptHandle = request.ReceiptHandle,
+                                           VisibilityTimeout = request.VisibilityTimeout
+                                       });
                 }
             }
 
@@ -269,15 +270,15 @@ namespace ServiceStack.Aws.SQS
                     return result.Values;
                 }
 
-                var id = request.ReceiptHandle.ToSha256HashString64();
+                var hashId = request.ReceiptHandle.ToSha256HashString64();
 
-                if (!result.ContainsKey(id))
+                if (!result.ContainsKey(hashId))
                 {
-                    result.Add(id, new DeleteMessageBatchRequestEntry
-                                   {
-                                       Id = id,
-                                       ReceiptHandle = request.ReceiptHandle
-                                   });
+                    result.Add(hashId, new DeleteMessageBatchRequestEntry
+                                       {
+                                           Id = Guid.NewGuid().ToString("N"),
+                                           ReceiptHandle = request.ReceiptHandle
+                                       });
                 }
             }
 

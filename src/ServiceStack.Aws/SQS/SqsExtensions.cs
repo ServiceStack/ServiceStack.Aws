@@ -20,10 +20,13 @@ namespace ServiceStack.Aws.SQS
         {
             return entry == null
                        ? null
-                       : new Exception("Batch Entry exception for operation [{0}]. Id [{1}], Code [{2}], Is Sender Fault [{3}].".Fmt(methodOperation,
-                                                                                                                                     entry.Id,
-                                                                                                                                     entry.Code,
-                                                                                                                                     entry.SenderFault));
+                       : new Exception(
+                             "Batch Entry exception for operation [{0}]. Id [{1}], Code [{2}], Is Sender Fault [{3}]. Message [{4}].".Fmt(
+                                 methodOperation,
+                                 entry.Id,
+                                 entry.Code,
+                                 entry.SenderFault,
+                                 entry.Message));
         }
 
         public static string ToValidQueueName(this string queueName)

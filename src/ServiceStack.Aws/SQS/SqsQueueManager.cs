@@ -75,8 +75,18 @@ namespace ServiceStack.Aws.SQS
                 var definition = GetQueueDefinition(queueName, forceRecheck);
                 return definition != null;
             }
-            catch (QueueDoesNotExistException)
+            catch(QueueDoesNotExistException)
             {
+                _log.DebugFormat("SQS Queue named [{0}] does not exist", queueName);
+                return false;
+            }
+            catch(AmazonSQSException sqsex)
+            {
+                if (!sqsex.Message.Contains("specified queue does not exist"))
+                {
+                    throw;
+                }
+
                 _log.DebugFormat("SQS Queue named [{0}] does not exist", queueName);
                 return false;
             }
@@ -168,6 +178,13 @@ namespace ServiceStack.Aws.SQS
                 DeleteQueue(queueName, queueUrl);
             }
             catch(QueueDoesNotExistException) { }
+            catch(AmazonSQSException sqsex)
+            {
+                if (!sqsex.Message.Contains("specified queue does not exist"))
+                {
+                    throw;
+                }
+            }
         }
 
         private void DeleteQueue(string queueName, string queueUrl)
@@ -303,6 +320,14 @@ namespace ServiceStack.Aws.SQS
                 PurgeQueueUrl(GetQueueUrl(queueName));
             }
             catch(QueueDoesNotExistException) { }
+            catch(AmazonSQSException sqsex)
+            {
+                if (!sqsex.Message.Contains("specified queue does not exist"))
+                {
+                    throw;
+                }
+            }
+
         }
 
         public void PurgeQueues(IEnumerable<string> queueNames)
@@ -315,6 +340,13 @@ namespace ServiceStack.Aws.SQS
                     PurgeQueueUrl(url);
                 }
                 catch(QueueDoesNotExistException) { }
+                catch(AmazonSQSException sqsex)
+                {
+                    if (!sqsex.Message.Contains("specified queue does not exist"))
+                    {
+                        throw;
+                    }
+                }
             }
         }
 
@@ -326,6 +358,13 @@ namespace ServiceStack.Aws.SQS
             }
             catch(QueueDoesNotExistException) { }
             catch(PurgeQueueInProgressException) { }
+            catch(AmazonSQSException sqsex)
+            {
+                if (!sqsex.Message.Contains("specified queue does not exist"))
+                {
+                    throw;
+                }
+            }
         }
         
         public int RemoveEmptyTemporaryQueues(long createdBefore)
