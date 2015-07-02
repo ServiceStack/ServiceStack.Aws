@@ -15,10 +15,11 @@ namespace ServiceStack.Aws.Tests
 
         [TestFixtureSetUp]
         public void OnTestFixtureSetup()
-        {
+        {   // Create a hosts entry pointing the alias "localdynamo" to whatever IP you happen to be running
+            // a local dynamo instance on (see https://aws.amazon.com/blogs/aws/dynamodb-local-for-desktop-development)
             var config = new AmazonDynamoDBConfig()
             {
-                ServiceURL = "http://192.168.137.217:8000"
+                ServiceURL = "http://localdynamo:8000"
             };
 
             var dynamoDbClient = new AmazonDynamoDBClient("keyId", "key", config);
