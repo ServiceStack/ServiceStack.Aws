@@ -63,7 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DynamoDbCacheClient.cs" />
+    <Compile Include="Dynamo\DynamoDbCacheClient.cs" />
     <Compile Include="Interfaces\IMqWorker.cs" />
     <Compile Include="Interfaces\ISqsMqBufferFactory.cs" />
     <Compile Include="Interfaces\ISqsMqBuffer.cs" />
@@ -94,6 +94,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="S3\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

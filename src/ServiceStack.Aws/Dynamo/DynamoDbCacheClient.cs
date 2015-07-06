@@ -8,7 +8,7 @@ using Amazon.DynamoDBv2.Model;
 using ServiceStack.Caching;
 using ServiceStack.Logging;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.Dynamo
 {
     public class DynamoDbCacheClient : ICacheClient
     {

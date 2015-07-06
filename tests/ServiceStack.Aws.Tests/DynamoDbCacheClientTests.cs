@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using NUnit.Framework;
+using ServiceStack.Aws.Dynamo;
 using ServiceStack.Caching;
 
 namespace ServiceStack.Aws.Tests
