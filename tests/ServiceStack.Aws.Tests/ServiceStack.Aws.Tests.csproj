@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="DynamoDbCacheClientTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="S3\FileSystemObjectTests.cs" />
     <Compile Include="SQS\FakeAmazonSqsTests.cs" />
     <Compile Include="SQS\FakeSqsClientHelper.cs" />
     <Compile Include="SQS\SqsMqBufferTests.cs" />
