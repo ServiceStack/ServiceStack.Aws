@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ServiceStack.Aws.SQS
+﻿namespace ServiceStack.Aws.Sqs
 {
     public class SqsQueueDefinition
     {

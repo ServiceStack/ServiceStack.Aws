@@ -1,6 +1,6 @@
 ﻿using System;
 using Amazon.SQS.Model;
-using ServiceStack.Aws.SQS;
+using ServiceStack.Aws.Sqs;
 
 namespace ServiceStack.Aws.Interfaces
 {

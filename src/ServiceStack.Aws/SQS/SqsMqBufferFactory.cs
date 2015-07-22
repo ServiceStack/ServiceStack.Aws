@@ -6,7 +6,7 @@ using ServiceStack.Aws.Interfaces;
 using ServiceStack.Aws.Support;
 using Timer = System.Timers.Timer;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqBufferFactory : ISqsMqBufferFactory
     {

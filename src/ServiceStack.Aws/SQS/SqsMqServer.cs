@@ -6,7 +6,7 @@ using ServiceStack.Aws.Interfaces;
 using ServiceStack.Aws.Support;
 using ServiceStack.Messaging;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqServer : BaseMqServer<SqsMqWorker>
     {

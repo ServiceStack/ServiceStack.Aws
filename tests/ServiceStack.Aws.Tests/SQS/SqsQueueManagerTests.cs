@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using Amazon.SQS.Model;
 using NUnit.Framework;
-using ServiceStack.Aws.SQS;
+using ServiceStack.Aws.Sqs;
 using ServiceStack.Messaging;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws.Tests.SQS
+namespace ServiceStack.Aws.Tests.Sqs
 {
     [TestFixture]
     public class SqsQueueManagerTests

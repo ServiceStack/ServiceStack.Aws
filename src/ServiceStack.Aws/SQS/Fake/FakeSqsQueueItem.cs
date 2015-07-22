@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws.SQS.Fake
+namespace ServiceStack.Aws.Sqs.Fake
 {
     public class FakeSqsQueueItem
     {

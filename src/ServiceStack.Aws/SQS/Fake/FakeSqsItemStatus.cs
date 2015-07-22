@@ -1,4 +1,4 @@
-﻿namespace ServiceStack.Aws.SQS.Fake
+﻿namespace ServiceStack.Aws.Sqs.Fake
 {
     public enum FakeSqsItemStatus
     {

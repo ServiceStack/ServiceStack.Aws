@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public static class SqsQueueNames
     {

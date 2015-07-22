@@ -10,7 +10,7 @@ using ServiceStack.Logging;
 using ServiceStack.Messaging;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public class SqsQueueManager
     {

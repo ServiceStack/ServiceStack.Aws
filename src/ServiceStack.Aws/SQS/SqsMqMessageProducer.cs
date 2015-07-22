@@ -5,7 +5,7 @@ using ServiceStack.Aws.Interfaces;
 using ServiceStack.Logging;
 using ServiceStack.Messaging;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqMessageProducer : IMessageProducer, IOneWayClient
     {

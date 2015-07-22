@@ -6,7 +6,7 @@ using ServiceStack.Aws.Support;
 using ServiceStack.Logging;
 using ServiceStack.Messaging;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqWorker : IMqWorker<SqsMqWorker>
     {

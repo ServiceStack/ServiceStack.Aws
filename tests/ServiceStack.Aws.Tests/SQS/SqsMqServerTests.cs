@@ -4,12 +4,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
-using ServiceStack.Aws.SQS;
+using ServiceStack.Aws.Sqs;
 using ServiceStack.Logging;
 using ServiceStack.Messaging;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws.Tests.SQS
+namespace ServiceStack.Aws.Tests.Sqs
 {
     [TestFixture, Category("Integration")]
     public class SqsMqServerTests

@@ -5,10 +5,10 @@ using System.Linq;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using NUnit.Framework;
-using ServiceStack.Aws.SQS;
-using ServiceStack.Aws.SQS.Fake;
+using ServiceStack.Aws.Sqs;
+using ServiceStack.Aws.Sqs.Fake;
 
-namespace ServiceStack.Aws.Tests.SQS
+namespace ServiceStack.Aws.Tests.Sqs
 {
     public class FakeSqsClientHelper
     {

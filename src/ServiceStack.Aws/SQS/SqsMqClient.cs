@@ -3,7 +3,7 @@ using Amazon.SQS.Model;
 using ServiceStack.Aws.Interfaces;
 using ServiceStack.Messaging;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqClient : SqsMqMessageProducer, IMessageQueueClient
     {

@@ -1,5 +1,5 @@
 ﻿using System;
-using ServiceStack.Aws.SQS;
+using ServiceStack.Aws.Sqs;
 using ServiceStack.Messaging;
 
 namespace ServiceStack.Aws.Interfaces

@@ -12,7 +12,7 @@ using ServiceStack.Messaging;
 using ServiceStack.Text;
 using Message = Amazon.SQS.Model.Message;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public static class SqsExtensions
     {

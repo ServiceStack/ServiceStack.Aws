@@ -7,7 +7,7 @@ using ServiceStack.Aws.Interfaces;
 using ServiceStack.Logging;
 using ServiceStack.Messaging;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     // The majority of the code here was lifted/massaged from the existing MQ Server implmentations
     public abstract class BaseMqServer<TWorker> : IMessageService

@@ -3,7 +3,7 @@ using Amazon;
 using Amazon.SQS;
 using ServiceStack.Aws.Support;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public class SqsConnectionFactory
     {

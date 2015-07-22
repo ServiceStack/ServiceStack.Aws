@@ -1,9 +1,9 @@
 ﻿using System;
 using Amazon.SQS;
 using NUnit.Framework;
-using ServiceStack.Aws.SQS.Fake;
+using ServiceStack.Aws.Sqs.Fake;
 
-namespace ServiceStack.Aws.Tests.SQS
+namespace ServiceStack.Aws.Tests.Sqs
 {
     public static class SqsTestAssert
     {

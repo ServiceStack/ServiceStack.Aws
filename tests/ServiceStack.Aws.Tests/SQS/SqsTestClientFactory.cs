@@ -1,9 +1,8 @@
-﻿using Amazon;
-using Amazon.SQS;
-using ServiceStack.Aws.SQS;
-using ServiceStack.Aws.SQS.Fake;
+﻿using Amazon.SQS;
+using ServiceStack.Aws.Sqs;
+using ServiceStack.Aws.Sqs.Fake;
 
-namespace ServiceStack.Aws.Tests.SQS
+namespace ServiceStack.Aws.Tests.Sqs
 {
     public static class SqsTestClientFactory
     {

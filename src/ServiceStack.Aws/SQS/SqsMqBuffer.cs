@@ -7,7 +7,7 @@ using Amazon.SQS.Model;
 using ServiceStack.Aws.Interfaces;
 using ServiceStack.Aws.Support;
 
-namespace ServiceStack.Aws.SQS
+namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqBuffer : ISqsMqBuffer
     {

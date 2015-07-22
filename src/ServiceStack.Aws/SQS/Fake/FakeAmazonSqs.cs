@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
-namespace ServiceStack.Aws.SQS.Fake
+namespace ServiceStack.Aws.Sqs.Fake
 {
     public class FakeAmazonSqs : IAmazonSQS
     {

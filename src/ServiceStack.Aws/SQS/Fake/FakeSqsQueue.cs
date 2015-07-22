@@ -6,7 +6,7 @@ using System.Threading;
 using Amazon.SQS.Model;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws.SQS.Fake
+namespace ServiceStack.Aws.Sqs.Fake
 {
     public class FakeSqsQueue
     {
