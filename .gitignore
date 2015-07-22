@@ -190,3 +190,5 @@ App_Data/
 src/TechStacks/TechStacks/webdeploy.zip
 .idea/
 *.txt
+src/ServiceStack.Aws.v2.ncrunchproject
+*.ncrunchsolution

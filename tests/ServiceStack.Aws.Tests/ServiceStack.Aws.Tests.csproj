@@ -32,9 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AWSSDK, Version=2.3.44.0, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
-      <HintPath>..\..\src\ServiceStack.Aws\packages\AWSSDK.2.3.44.0\lib\net45\AWSSDK.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="AWSSDK">
+      <HintPath>..\..\src\packages\AWSSDK.2.3.44.0\lib\net45\AWSSDK.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\..\src\ServiceStack.Aws\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
@@ -77,7 +76,6 @@
       <Name>ServiceStack.Aws</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
