@@ -12,22 +12,22 @@ using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Sqs
 {
-    public class SqsQueueManager
+    public class SqsQueueManager : IDisposable
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(SqsQueueManager));
-        private readonly ConcurrentDictionary<string, SqsQueueDefinition> _queueNameMap = new ConcurrentDictionary<string, SqsQueueDefinition>();
+        private static readonly ILog log = LogManager.GetLogger(typeof(SqsQueueManager));
+        private readonly ConcurrentDictionary<string, SqsQueueDefinition> queueNameMap = new ConcurrentDictionary<string, SqsQueueDefinition>();
 
-        private readonly SqsConnectionFactory _sqsConnectionFactory;
-        private IAmazonSQS _sqsClient;
-        
+        private readonly SqsConnectionFactory sqsConnectionFactory;
+        private IAmazonSQS sqsClient;
+
         public SqsQueueManager(SqsConnectionFactory sqsConnectionFactory)
         {
             Guard.AgainstNullArgument(sqsConnectionFactory, "sqsConnectionFactory");
 
             DefaultVisibilityTimeout = SqsQueueDefinition.DefaultVisibilityTimeoutSeconds;
             DefaultReceiveWaitTime = SqsQueueDefinition.DefaultWaitTimeSeconds;
-            
-            _sqsConnectionFactory = sqsConnectionFactory;
+
+            this.sqsConnectionFactory = sqsConnectionFactory;
         }
 
         public int DefaultVisibilityTimeout { get; set; }
@@ -36,101 +36,93 @@ namespace ServiceStack.Aws.Sqs
 
         public SqsConnectionFactory ConnectionFactory
         {
-            get { return _sqsConnectionFactory; }
+            get { return sqsConnectionFactory; }
         }
 
         public ConcurrentDictionary<string, SqsQueueDefinition> QueueNameMap
         {
-            get { return _queueNameMap; }
+            get { return queueNameMap; }
         }
 
         private SqsQueueName GetSqsQueueName(string queueName)
         {
             SqsQueueDefinition qd;
 
-            return _queueNameMap.TryGetValue(queueName, out qd)
-                       ? qd.SqsQueueName
-                       : SqsQueueNames.GetSqsQueueName(queueName);
+            return queueNameMap.TryGetValue(queueName, out qd)
+                ? qd.SqsQueueName
+                : SqsQueueNames.GetSqsQueueName(queueName);
         }
 
         public IAmazonSQS SqsClient
         {
-            get { return _sqsClient ?? (_sqsClient = _sqsConnectionFactory.GetClient()); }
+            get { return sqsClient ?? (sqsClient = sqsConnectionFactory.GetClient()); }
         }
 
-        public Boolean QueueExists(string queueName, Boolean forceRecheck = false)
+        public bool QueueExists(string queueName, bool forceRecheck = false)
         {
             return QueueExists(GetSqsQueueName(queueName), forceRecheck);
         }
 
-        private Boolean QueueExists(SqsQueueName queueName, Boolean forceRecheck = false)
+        private bool QueueExists(SqsQueueName queueName, bool forceRecheck = false)
         {
-            if (!forceRecheck && _queueNameMap.ContainsKey(queueName.QueueName))
-            {
+            if (!forceRecheck && queueNameMap.ContainsKey(queueName.QueueName))
                 return true;
-            }
 
             try
             {
                 var definition = GetQueueDefinition(queueName, forceRecheck);
                 return definition != null;
             }
-            catch(QueueDoesNotExistException)
+            catch (QueueDoesNotExistException)
             {
-                _log.DebugFormat("SQS Queue named [{0}] does not exist", queueName);
+                log.DebugFormat("SQS Queue named [{0}] does not exist", queueName);
                 return false;
             }
-            catch(AmazonSQSException sqsex)
+            catch (AmazonSQSException sqsex)
             {
                 if (!sqsex.Message.Contains("specified queue does not exist"))
-                {
                     throw;
-                }
 
-                _log.DebugFormat("SQS Queue named [{0}] does not exist", queueName);
+                log.DebugFormat("SQS Queue named [{0}] does not exist", queueName);
                 return false;
             }
         }
 
-        public String GetQueueUrl(string queueName, Boolean forceRecheck = false)
+        public string GetQueueUrl(string queueName, bool forceRecheck = false)
         {
             return GetQueueUrl(GetSqsQueueName(queueName), forceRecheck);
         }
 
-        private String GetQueueUrl(SqsQueueName queueName, Boolean forceRecheck = false)
+        private string GetQueueUrl(SqsQueueName queueName, bool forceRecheck = false)
         {
             SqsQueueDefinition qd = null;
 
-            if (!forceRecheck && _queueNameMap.TryGetValue(queueName.QueueName, out qd))
+            if (!forceRecheck && queueNameMap.TryGetValue(queueName.QueueName, out qd))
             {
-                if (!String.IsNullOrEmpty(qd.QueueUrl))
-                {
+                if (!string.IsNullOrEmpty(qd.QueueUrl))
                     return qd.QueueUrl;
-                }
             }
 
             var response = SqsClient.GetQueueUrl(queueName.AwsQueueName);
             return response.QueueUrl;
         }
 
-        public SqsQueueDefinition GetQueueDefinition(string queueName, Boolean forceRecheck = false)
+        public SqsQueueDefinition GetQueueDefinition(string queueName, bool forceRecheck = false)
         {
             return GetQueueDefinition(GetSqsQueueName(queueName), forceRecheck);
         }
 
-        private SqsQueueDefinition GetQueueDefinition(SqsQueueName queueName, Boolean forceRecheck = false)
+        private SqsQueueDefinition GetQueueDefinition(SqsQueueName queueName, bool forceRecheck = false)
         {
-            SqsQueueDefinition qd = null;
+            SqsQueueDefinition qd;
 
-            if (!forceRecheck && _queueNameMap.TryGetValue(queueName.QueueName, out qd))
-            {
+            if (!forceRecheck && queueNameMap.TryGetValue(queueName.QueueName, out qd))
                 return qd;
-            }
-            
+
             var queueUrl = GetQueueUrl(queueName);
             return GetQueueDefinition(queueName, queueUrl);
         }
-        
+
         private SqsQueueDefinition GetQueueDefinition(string queueName, string queueUrl)
         {
             return GetQueueDefinition(GetSqsQueueName(queueName), queueUrl);
@@ -139,30 +131,27 @@ namespace ServiceStack.Aws.Sqs
         private SqsQueueDefinition GetQueueDefinition(SqsQueueName queueName, string queueUrl)
         {
             var response = SqsClient.GetQueueAttributes(new GetQueueAttributesRequest
-                                                        {
-                                                            QueueUrl = queueUrl,
-                                                            AttributeNames = new List<string>
-                                                                             {
-                                                                                 "All"
-                                                                             }
-                                                        });
+            {
+                QueueUrl = queueUrl,
+                AttributeNames = new List<string> {
+                    "All"
+                }
+            });
 
             var qd = response.Attributes.ToQueueDefinition(queueName, queueUrl, DisableBuffering);
 
-            _queueNameMap[queueName.QueueName] = qd;
+            queueNameMap[queueName.QueueName] = qd;
 
             return qd;
         }
-        
+
         public SqsQueueDefinition GetOrCreate(string queueName, int? visibilityTimeoutSeconds = null,
                                               int? receiveWaitTimeSeconds = null, bool? disasbleBuffering = null)
         {
-            SqsQueueDefinition qd = null;
+            SqsQueueDefinition qd;
 
-            if (QueueExists(queueName) && _queueNameMap.TryGetValue(queueName, out qd))
-            {
+            if (QueueExists(queueName) && queueNameMap.TryGetValue(queueName, out qd))
                 return qd;
-            }
 
             qd = CreateQueue(GetSqsQueueName(queueName), visibilityTimeoutSeconds,
                              receiveWaitTimeSeconds, disasbleBuffering);
@@ -177,8 +166,8 @@ namespace ServiceStack.Aws.Sqs
                 var queueUrl = GetQueueUrl(queueName);
                 DeleteQueue(queueName, queueUrl);
             }
-            catch(QueueDoesNotExistException) { }
-            catch(AmazonSQSException sqsex)
+            catch (QueueDoesNotExistException) { }
+            catch (AmazonSQSException sqsex)
             {
                 if (!sqsex.Message.Contains("specified queue does not exist"))
                 {
@@ -195,25 +184,25 @@ namespace ServiceStack.Aws.Sqs
         private void DeleteQueue(SqsQueueName queueName, string queueUrl)
         {
             var request = new DeleteQueueRequest
-                          {
-                              QueueUrl = queueUrl
-                          };
+            {
+                QueueUrl = queueUrl
+            };
 
             var response = SqsClient.DeleteQueue(request);
 
             SqsQueueDefinition qd;
-            _queueNameMap.TryRemove(queueName.QueueName, out qd);
+            queueNameMap.TryRemove(queueName.QueueName, out qd);
         }
 
         public SqsQueueDefinition CreateQueue(string queueName, SqsMqWorkerInfo info, string redriveArn = null)
         {
-            var redrivePolicy = String.IsNullOrEmpty(redriveArn)
-                                    ? null
-                                    : new SqsRedrivePolicy
-                                      {
-                                          maxReceiveCount = info.RetryCount,
-                                          deadLetterTargetArn = redriveArn
-                                      };
+            var redrivePolicy = string.IsNullOrEmpty(redriveArn)
+                ? null
+                : new SqsRedrivePolicy
+                {
+                    MaxReceiveCount = info.RetryCount,
+                    DeadLetterTargetArn = redriveArn
+                };
 
             return CreateQueue(GetSqsQueueName(queueName), info.VisibilityTimeout, info.ReceiveWaitTime,
                                info.DisableBuffering, redrivePolicy);
@@ -234,34 +223,30 @@ namespace ServiceStack.Aws.Sqs
             SqsQueueDefinition queueDefinition = null;
 
             var request = new CreateQueueRequest
-                          {
-                              QueueName = queueName.AwsQueueName,
-                              Attributes = new Dictionary<string, string>
-                                           {
-                                               {
-                                                   QueueAttributeName.ReceiveMessageWaitTimeSeconds,
-                                                   TimeSpan.FromSeconds(receiveWaitTimeSeconds.HasValue
-                                                                            ? receiveWaitTimeSeconds.Value
-                                                                            : DefaultReceiveWaitTime)
-                                                           .TotalSeconds
-                                                           .ToString(CultureInfo.InvariantCulture)
-                                               },
-                                               {
-                                                   QueueAttributeName.VisibilityTimeout,
-                                                   TimeSpan.FromSeconds(visibilityTimeoutSeconds.HasValue
-                                                                            ? visibilityTimeoutSeconds.Value
-                                                                            : DefaultVisibilityTimeout)
-                                                           .TotalSeconds
-                                                           .ToString(CultureInfo.InvariantCulture)
-                                               },
-                                               {
-                                                   QueueAttributeName.MessageRetentionPeriod,
-                                                   (QueueNames.IsTempQueue(queueName.QueueName)
-                                                        ? SqsQueueDefinition.DefaultTempQueueRetentionSeconds
-                                                        : SqsQueueDefinition.DefaultPermanentQueueRetentionSeconds).ToString(CultureInfo.InvariantCulture)
-                                               }
-                                           }
-                          };
+            {
+                QueueName = queueName.AwsQueueName,
+                Attributes = new Dictionary<string, string>
+                {
+                    {
+                        QueueAttributeName.ReceiveMessageWaitTimeSeconds,
+                        TimeSpan.FromSeconds(receiveWaitTimeSeconds ?? DefaultReceiveWaitTime)
+                            .TotalSeconds
+                            .ToString(CultureInfo.InvariantCulture)
+                    },
+                    {
+                        QueueAttributeName.VisibilityTimeout,
+                        TimeSpan.FromSeconds(visibilityTimeoutSeconds ?? DefaultVisibilityTimeout)
+                            .TotalSeconds
+                            .ToString(CultureInfo.InvariantCulture)
+                    },
+                    {
+                        QueueAttributeName.MessageRetentionPeriod,
+                        (QueueNames.IsTempQueue(queueName.QueueName)
+                            ? SqsQueueDefinition.DefaultTempQueueRetentionSeconds
+                            : SqsQueueDefinition.DefaultPermanentQueueRetentionSeconds).ToString(CultureInfo.InvariantCulture)
+                    }
+                }
+            };
 
             if (redrivePolicy != null)
             {
@@ -271,18 +256,16 @@ namespace ServiceStack.Aws.Sqs
             try
             {
                 var createResponse = SqsClient.CreateQueue(request);
-                
+
                 // Note - must go fetch the attributes from the server after creation, as the request attributes do not include
                 // anything assigned by the server (i.e. the ARN, etc.).
                 queueDefinition = GetQueueDefinition(queueName, createResponse.QueueUrl);
-                
-                queueDefinition.DisableBuffering = disasbleBuffering.HasValue
-                                                       ? disasbleBuffering.Value
-                                                       : DisableBuffering;
 
-                _queueNameMap[queueDefinition.QueueName] = queueDefinition;
+                queueDefinition.DisableBuffering = disasbleBuffering ?? DisableBuffering;
+
+                queueNameMap[queueDefinition.QueueName] = queueDefinition;
             }
-            catch(QueueNameExistsException)
+            catch (QueueNameExistsException)
             {   // Queue exists with different attributes, instead of creating, alter those attributes to match what was requested
                 queueDefinition = UpdateQueue(queueName, request.ToSetAttributesRequest(null), disasbleBuffering);
             }
@@ -293,7 +276,7 @@ namespace ServiceStack.Aws.Sqs
         private SqsQueueDefinition UpdateQueue(SqsQueueName sqsQueueName, SetQueueAttributesRequest request,
                                                bool? disasbleBuffering = null)
         {
-            if (String.IsNullOrEmpty(request.QueueUrl))
+            if (string.IsNullOrEmpty(request.QueueUrl))
             {
                 request.QueueUrl = GetQueueUrl(sqsQueueName);
             }
@@ -304,11 +287,9 @@ namespace ServiceStack.Aws.Sqs
             // anything assigned by the server (i.e. the ARN, etc.).
             var queueDefinition = GetQueueDefinition(sqsQueueName, request.QueueUrl);
 
-            queueDefinition.DisableBuffering = disasbleBuffering.HasValue
-                                                   ? disasbleBuffering.Value
-                                                   : DisableBuffering;
-            
-            _queueNameMap[queueDefinition.QueueName] = queueDefinition;
+            queueDefinition.DisableBuffering = disasbleBuffering ?? DisableBuffering;
+
+            queueNameMap[queueDefinition.QueueName] = queueDefinition;
 
             return queueDefinition;
         }
@@ -319,13 +300,11 @@ namespace ServiceStack.Aws.Sqs
             {
                 PurgeQueueUrl(GetQueueUrl(queueName));
             }
-            catch(QueueDoesNotExistException) { }
-            catch(AmazonSQSException sqsex)
+            catch (QueueDoesNotExistException) { }
+            catch (AmazonSQSException sqsex)
             {
                 if (!sqsex.Message.Contains("specified queue does not exist"))
-                {
                     throw;
-                }
             }
 
         }
@@ -339,13 +318,11 @@ namespace ServiceStack.Aws.Sqs
                     var url = GetQueueUrl(queueName);
                     PurgeQueueUrl(url);
                 }
-                catch(QueueDoesNotExistException) { }
-                catch(AmazonSQSException sqsex)
+                catch (QueueDoesNotExistException) { }
+                catch (AmazonSQSException sqsex)
                 {
                     if (!sqsex.Message.Contains("specified queue does not exist"))
-                    {
                         throw;
-                    }
                 }
             }
         }
@@ -356,17 +333,15 @@ namespace ServiceStack.Aws.Sqs
             {
                 SqsClient.PurgeQueue(queueUrl);
             }
-            catch(QueueDoesNotExistException) { }
-            catch(PurgeQueueInProgressException) { }
-            catch(AmazonSQSException sqsex)
+            catch (QueueDoesNotExistException) { }
+            catch (PurgeQueueInProgressException) { }
+            catch (AmazonSQSException sqsex)
             {
                 if (!sqsex.Message.Contains("specified queue does not exist"))
-                {
                     throw;
-                }
             }
         }
-        
+
         public int RemoveEmptyTemporaryQueues(long createdBefore)
         {
             var queuesRemoved = 0;
@@ -374,14 +349,13 @@ namespace ServiceStack.Aws.Sqs
             var localTempQueueUrlMap = new Dictionary<string, QueueNameUrlMap>();
 
             // First, check any locally available
-            _queueNameMap.Where(kvp => QueueNames.IsTempQueue(kvp.Key))
-                         .Where(kvp => kvp.Value.CreatedTimestamp <= createdBefore)
-                         .Each(kvp => localTempQueueUrlMap.Add(kvp.Value.QueueUrl,
-                                                               new QueueNameUrlMap
-                                                               {
-                                                                   QueueUrl = kvp.Value.QueueUrl,
-                                                                   QueueName = kvp.Value.QueueName
-                                                               }));
+            queueNameMap.Where(kvp => QueueNames.IsTempQueue(kvp.Key))
+                .Where(kvp => kvp.Value.CreatedTimestamp <= createdBefore)
+                .Each(kvp => localTempQueueUrlMap.Add(kvp.Value.QueueUrl,
+                    new QueueNameUrlMap {
+                        QueueUrl = kvp.Value.QueueUrl,
+                        QueueName = kvp.Value.QueueName
+                    }));
 
             // Refresh the local info for each of the potentials, then if they are empty and expired, remove
             foreach (var qNameUrl in localTempQueueUrlMap.Values)
@@ -389,41 +363,35 @@ namespace ServiceStack.Aws.Sqs
                 var qd = GetQueueDefinition(qNameUrl.QueueName, qNameUrl.QueueUrl);
 
                 if (qd.CreatedTimestamp > createdBefore || qd.ApproximateNumberOfMessages > 0)
-                {
                     continue;
-                }
 
                 DeleteQueue(qd.SqsQueueName, qd.QueueUrl);
                 queuesRemoved++;
             }
 
             var queues = SqsClient.ListQueues(new ListQueuesRequest
-                                              {
-                                                  QueueNamePrefix = QueueNames.TempMqPrefix.ToValidQueueName()
-                                              });
+            {
+                QueueNamePrefix = QueueNames.TempMqPrefix.ToValidQueueName()
+            });
 
             if (queues == null || queues.QueueUrls == null || queues.QueueUrls.Count <= 0)
-            {
                 return queuesRemoved;
-            }
 
             foreach (var queueUrl in queues.QueueUrls)
             {
+                // Already deleted above, or left purposely
                 if (localTempQueueUrlMap.ContainsKey(queueUrl))
-                {
-                    // Already deleted above, or left purposely
                     continue;
-                }
 
                 var response = SqsClient.GetQueueAttributes(new GetQueueAttributesRequest
-                                                            {
-                                                                QueueUrl = queueUrl,
-                                                                AttributeNames = new List<string>
-                                                                                 {
-                                                                                     QueueAttributeName.CreatedTimestamp,
-                                                                                     QueueAttributeName.ApproximateNumberOfMessages
-                                                                                 }
-                                                            });
+                {
+                    QueueUrl = queueUrl,
+                    AttributeNames = new List<string>
+                    {
+                        QueueAttributeName.CreatedTimestamp,
+                        QueueAttributeName.ApproximateNumberOfMessages
+                    }
+                });
 
                 if (response == null || response.CreatedTimestamp.ToUnixTime() > createdBefore ||
                     response.ApproximateNumberOfMessages > 0)
@@ -440,24 +408,21 @@ namespace ServiceStack.Aws.Sqs
 
         private class QueueNameUrlMap
         {
-            public String QueueName { get; set; }
-            public String QueueUrl { get; set; }
+            public string QueueName { get; set; }
+            public string QueueUrl { get; set; }
         }
 
         public void Dispose()
         {
-            if (_sqsClient == null)
-            {
+            if (sqsClient == null)
                 return;
-            }
 
             try
             {
-                _sqsClient.Dispose();
-                _sqsClient = null;
+                sqsClient.Dispose();
+                sqsClient = null;
             }
             catch { }
         }
-
     }
 }

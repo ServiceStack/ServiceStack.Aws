@@ -7,13 +7,13 @@ namespace ServiceStack.Aws.Sqs
         public string QName { get; set; }
         public string RHandle { get; set; }
 
-        public static String CreateTag(string queueName, string receiptHandle)
+        public static string CreateTag(string queueName, string receiptHandle)
         {
             return new SqsMessageTag
-                   {
-                       QName = queueName,
-                       RHandle = receiptHandle
-                   }.ToJsv();
+            {
+                QName = queueName,
+                RHandle = receiptHandle
+            }.ToJsv();
         }
     }
 }

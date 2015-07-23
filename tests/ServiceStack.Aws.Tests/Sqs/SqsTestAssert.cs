@@ -16,19 +16,18 @@ namespace ServiceStack.Aws.Tests.Sqs
         //  http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-batch-api.html
         //  http://docs.aws.amazon.com/sdkfornet/latest/apidocs/items/MSQS_SQSReceiveMessage_ReceiveMessageRequestNET4_5.html
 
-        private static bool? _isFakeClient;
-        public static Boolean IsFakeClient
+        private static bool? isFakeClient;
+        public static bool IsFakeClient
         {
-            get {
-                if (_isFakeClient.HasValue)
-                {
-                    return _isFakeClient.Value;
-                }
+            get
+            {
+                if (isFakeClient.HasValue)
+                    return isFakeClient.Value;
 
                 var fakeClient = SqsTestClientFactory.GetClient() as FakeAmazonSqs;
 
-                _isFakeClient = fakeClient != null;
-                return _isFakeClient.Value;
+                isFakeClient = fakeClient != null;
+                return isFakeClient.Value;
             }
         }
 
@@ -58,28 +57,28 @@ namespace ServiceStack.Aws.Tests.Sqs
                 {
                     code();
                 }
-                catch(T typedEx)
+                catch (T typedEx)
                 {
                     return;
                 }
-                catch(AmazonSQSException sqsex)
+                catch (AmazonSQSException sqsex)
                 {
-                    if (!String.IsNullOrEmpty(realMsgContains))
+                    if (!string.IsNullOrEmpty(realMsgContains))
                     {
                         Assert.IsTrue(sqsex.Message.ToLowerInvariant().Contains(realMsgContains.ToLowerInvariant()));
                     }
 
                     return;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Assert.Fail("Real SQS client - expected to throw typed or SQS exception, but it threw a different one. Exception type: [{0}], message [{1}]".Fmt(ex.GetType(), ex.Message));
                 }
-                
+
                 Assert.Fail("Real SQS client - expected to throw exception, but it did not throw one.");
             }
 
         }
-         
+
     }
 }

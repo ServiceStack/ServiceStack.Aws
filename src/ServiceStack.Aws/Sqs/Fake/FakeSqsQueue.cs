@@ -12,9 +12,8 @@ namespace ServiceStack.Aws.Sqs.Fake
     {
         public const string FakeBatchItemFailString = "ReturnFailureForThisBatchItem";
 
-        private readonly ConcurrentDictionary<string, FakeSqsQueueItem> _inFlighItems = new ConcurrentDictionary<string, FakeSqsQueueItem>();
-        private readonly ConcurrentQueue<FakeSqsQueueItem> _qItems = new ConcurrentQueue<FakeSqsQueueItem>();
-        private long _lastInFlightRequeue = DateTime.UtcNow.ToUnixTime();
+        private readonly ConcurrentDictionary<string, FakeSqsQueueItem> inFlighItems = new ConcurrentDictionary<string, FakeSqsQueueItem>();
+        private readonly ConcurrentQueue<FakeSqsQueueItem> qItems = new ConcurrentQueue<FakeSqsQueueItem>();
 
         public SqsQueueDefinition QueueDefinition { get; set; }
 
@@ -26,7 +25,7 @@ namespace ServiceStack.Aws.Sqs.Fake
             // item and dealing with it, but since this is a fake service for testing, I'm not handling those
             // kinds of things at the moment...
 
-            if (!_inFlighItems.TryGetValue(receiptHandle, out item))
+            if (!inFlighItems.TryGetValue(receiptHandle, out item))
             {
                 throw new ReceiptHandleIsInvalidException("Handle [{0}] does not exist".Fmt(receiptHandle));
             }
@@ -75,14 +74,14 @@ namespace ServiceStack.Aws.Sqs.Fake
             }
 
             var item = GetInFlightItem(request.ReceiptHandle);
-            return _inFlighItems.TryRemove(request.ReceiptHandle, out item);
+            return inFlighItems.TryRemove(request.ReceiptHandle, out item);
         }
 
         private void RequeueInFlightMessage(string receiptHandle, bool force = false)
         {
             FakeSqsQueueItem item;
 
-            if (!_inFlighItems.TryRemove(receiptHandle, out item))
+            if (!inFlighItems.TryRemove(receiptHandle, out item))
             {
                 return;
             }
@@ -94,11 +93,11 @@ namespace ServiceStack.Aws.Sqs.Fake
                 item.InFlightUntil = 0;
                 item.Status = FakeSqsItemStatus.Queued;
 
-                _qItems.Enqueue(item);
+                qItems.Enqueue(item);
             }
             else if (status == FakeSqsItemStatus.InFlight)
             {
-                _inFlighItems.TryAdd(receiptHandle, item);
+                inFlighItems.TryAdd(receiptHandle, item);
             }
         }
 
@@ -115,8 +114,8 @@ namespace ServiceStack.Aws.Sqs.Fake
 
             //_lastInFlightRequeue = now;
 
-            var requeueItems = _inFlighItems.Where(inf => inf.Value.GetStatus() == FakeSqsItemStatus.Queued)
-                                            .Select(inf => inf.Key);
+            var requeueItems = inFlighItems.Where(inf => inf.Value.GetStatus() == FakeSqsItemStatus.Queued)
+                .Select(inf => inf.Key);
 
             foreach (var fKey in requeueItems)
             {
@@ -129,20 +128,18 @@ namespace ServiceStack.Aws.Sqs.Fake
             RequeueExpiredInFlightMessages();
 
             var count = 0;
-            
+
             var visibilityTimeout = request.VisibilityTimeout <= 0
-                                        ? this.QueueDefinition.VisibilityTimeout
-                                        : SqsQueueDefinition.GetValidVisibilityTimeout(request.VisibilityTimeout);
+                ? this.QueueDefinition.VisibilityTimeout
+                : SqsQueueDefinition.GetValidVisibilityTimeout(request.VisibilityTimeout);
 
             var foundItem = false;
-
             var timeoutAt = DateTime.UtcNow.AddSeconds(request.WaitTimeSeconds).ToUnixTime();
-            
             do
             {
                 FakeSqsQueueItem qi;
 
-                foundItem = _qItems.TryDequeue(out qi);
+                foundItem = qItems.TryDequeue(out qi);
 
                 if (!foundItem)
                 {
@@ -153,7 +150,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                 qi.InFlightUntil = DateTime.UtcNow.AddSeconds(visibilityTimeout).ToUnixTime();
                 qi.Status = FakeSqsItemStatus.InFlight;
 
-                if (!_inFlighItems.TryAdd(qi.ReceiptHandle, qi))
+                if (!inFlighItems.TryAdd(qi.ReceiptHandle, qi))
                 {
                     throw new ReceiptHandleIsInvalidException("Could not flight queued item with handle [{0}]".Fmt(qi.ReceiptHandle));
                 }
@@ -163,7 +160,6 @@ namespace ServiceStack.Aws.Sqs.Fake
 
             } while (count < request.MaxNumberOfMessages &&
                      (foundItem || timeoutAt >= DateTime.UtcNow.ToUnixTime()));
-
         }
 
         public string Send(SendMessageRequest request)
@@ -174,28 +170,28 @@ namespace ServiceStack.Aws.Sqs.Fake
             }
 
             var newItem = new FakeSqsQueueItem
-                          {
-                              Body = request.MessageBody,
-                              Status = FakeSqsItemStatus.Queued
-                          };
+            {
+                Body = request.MessageBody,
+                Status = FakeSqsItemStatus.Queued
+            };
 
-            _qItems.Enqueue(newItem);
+            qItems.Enqueue(newItem);
 
             return newItem.MessageId;
         }
 
-        public Int32 Count
+        public int Count
         {
-            get { return _qItems.Count + _inFlighItems.Count; }
+            get { return qItems.Count + inFlighItems.Count; }
         }
 
         public void Clear()
         {
-            while (_qItems.Count > 0)
+            while (qItems.Count > 0)
             {
                 FakeSqsQueueItem qi;
 
-                while (_qItems.TryDequeue(out qi))
+                while (qItems.TryDequeue(out qi))
                 {
                     continue;
                 }

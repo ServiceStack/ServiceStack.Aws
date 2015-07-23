@@ -11,33 +11,33 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqBuffer : ISqsMqBuffer
     {
-        private readonly SqsQueueDefinition _queueDefinition;
-        private readonly SqsConnectionFactory _sqsConnectionFactory;
-        private IAmazonSQS _sqsClient;
+        private readonly SqsQueueDefinition queueDefinition;
+        private readonly SqsConnectionFactory sqsConnectionFactory;
+        private IAmazonSQS sqsClient;
 
-        private readonly ConcurrentQueue<Message> _receiveBuffer = new ConcurrentQueue<Message>();
-        private readonly ConcurrentQueue<DeleteMessageRequest> _deleteBuffer = new ConcurrentQueue<DeleteMessageRequest>();
-        private readonly ConcurrentQueue<SendMessageRequest> _sendBuffer = new ConcurrentQueue<SendMessageRequest>();
-        private readonly ConcurrentQueue<ChangeMessageVisibilityRequest> _cvBuffer = new ConcurrentQueue<ChangeMessageVisibilityRequest>();
-        
+        private readonly ConcurrentQueue<Message> receiveBuffer = new ConcurrentQueue<Message>();
+        private readonly ConcurrentQueue<DeleteMessageRequest> deleteBuffer = new ConcurrentQueue<DeleteMessageRequest>();
+        private readonly ConcurrentQueue<SendMessageRequest> sendBuffer = new ConcurrentQueue<SendMessageRequest>();
+        private readonly ConcurrentQueue<ChangeMessageVisibilityRequest> cvBuffer = new ConcurrentQueue<ChangeMessageVisibilityRequest>();
+
         public SqsMqBuffer(SqsQueueDefinition queueDefinition,
                            SqsConnectionFactory sqsConnectionFactory)
         {
             Guard.AgainstNullArgument(queueDefinition, "queueDefinition");
             Guard.AgainstNullArgument(sqsConnectionFactory, "sqsConnectionFactory");
 
-            _queueDefinition = queueDefinition;
-            _sqsConnectionFactory = sqsConnectionFactory;
+            this.queueDefinition = queueDefinition;
+            this.sqsConnectionFactory = sqsConnectionFactory;
         }
 
         private IAmazonSQS SqsClient
         {
-            get { return _sqsClient ?? (_sqsClient = _sqsConnectionFactory.GetClient()); }
+            get { return sqsClient ?? (sqsClient = sqsConnectionFactory.GetClient()); }
         }
 
         public SqsQueueDefinition QueueDefinition
         {
-            get { return _queueDefinition; }
+            get { return queueDefinition; }
         }
 
         public Action<Exception> ErrorHandler { get; set; }
@@ -57,8 +57,8 @@ namespace ServiceStack.Aws.Sqs
                 return false;
             }
 
-            _cvBuffer.Enqueue(request);
-            return CvEnqueued(_queueDefinition.ChangeVisibilityBufferSize);
+            cvBuffer.Enqueue(request);
+            return CvEnqueued(queueDefinition.ChangeVisibilityBufferSize);
         }
 
         private bool CvEnqueued(int minBufferCount, bool forceOne = false)
@@ -68,24 +68,22 @@ namespace ServiceStack.Aws.Sqs
 
             try
             {
-                while (forceOne || _cvBuffer.Count >= minBufferCount)
+                while (forceOne || cvBuffer.Count >= minBufferCount)
                 {
                     forceOne = false;
 
                     var entries = EntriesToCv(SqsQueueDefinition.MaxBatchCvItems).ToList();
 
                     if (entries.Count <= 0)
-                    {
                         break;
-                    }
 
                     cvAtAws = true;
 
                     var response = SqsClient.ChangeMessageVisibilityBatch(new ChangeMessageVisibilityBatchRequest
-                                                                          {
-                                                                              QueueUrl = _queueDefinition.QueueUrl,
-                                                                              Entries = entries
-                                                                          });
+                    {
+                        QueueUrl = queueDefinition.QueueUrl,
+                        Entries = entries
+                    });
 
                     if (response.Failed != null && response.Failed.Count > 0)
                     {
@@ -93,14 +91,14 @@ namespace ServiceStack.Aws.Sqs
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 HandleError(ex);
             }
 
             return cvAtAws;
         }
-        
+
         private IEnumerable<ChangeMessageVisibilityBatchRequestEntry> EntriesToCv(int count)
         {
             var result = new Dictionary<String, ChangeMessageVisibilityBatchRequestEntry>(count);
@@ -109,21 +107,19 @@ namespace ServiceStack.Aws.Sqs
             {
                 ChangeMessageVisibilityRequest request;
 
-                if (!_cvBuffer.TryDequeue(out request))
-                {
+                if (!cvBuffer.TryDequeue(out request))
                     return result.Values;
-                }
 
                 var hashId = request.ReceiptHandle.ToSha256HashString64();
 
                 if (!result.ContainsKey(hashId))
                 {
                     result.Add(hashId, new ChangeMessageVisibilityBatchRequestEntry
-                                       {
-                                           Id = Guid.NewGuid().ToString("N"),
-                                           ReceiptHandle = request.ReceiptHandle,
-                                           VisibilityTimeout = request.VisibilityTimeout
-                                       });
+                    {
+                        Id = Guid.NewGuid().ToString("N"),
+                        ReceiptHandle = request.ReceiptHandle,
+                        VisibilityTimeout = request.VisibilityTimeout
+                    });
                 }
             }
 
@@ -133,12 +129,10 @@ namespace ServiceStack.Aws.Sqs
         public bool Send(SendMessageRequest request)
         {
             if (request == null)
-            {
                 return false;
-            }
 
-            _sendBuffer.Enqueue(request);
-            return SendEnqueued(_queueDefinition.SendBufferSize);
+            sendBuffer.Enqueue(request);
+            return SendEnqueued(queueDefinition.SendBufferSize);
         }
 
         private bool SendEnqueued(int minBufferCount, bool forceOne = false)
@@ -148,24 +142,22 @@ namespace ServiceStack.Aws.Sqs
 
             try
             {
-                while (forceOne || _sendBuffer.Count >= minBufferCount)
+                while (forceOne || sendBuffer.Count >= minBufferCount)
                 {
                     forceOne = false;
 
                     var entries = EntriesToSend(SqsQueueDefinition.MaxBatchSendItems).ToList();
 
                     if (entries.Count <= 0)
-                    {
                         break;
-                    }
 
                     sentToSqs = true;
 
                     var response = SqsClient.SendMessageBatch(new SendMessageBatchRequest
-                                                              {
-                                                                  QueueUrl = _queueDefinition.QueueUrl,
-                                                                  Entries = entries
-                                                              });
+                    {
+                        QueueUrl = queueDefinition.QueueUrl,
+                        Entries = entries
+                    });
 
                     if (response.Failed != null && response.Failed.Count > 0)
                     {
@@ -189,18 +181,16 @@ namespace ServiceStack.Aws.Sqs
             {
                 SendMessageRequest request;
 
-                if (!_sendBuffer.TryDequeue(out request))
-                {
+                if (!sendBuffer.TryDequeue(out request))
                     yield break;
-                }
 
                 yield return new SendMessageBatchRequestEntry
-                             {
-                                 Id = Guid.NewGuid().ToString("N"),
-                                 MessageBody = request.MessageBody,
-                                 DelaySeconds = request.DelaySeconds,
-                                 MessageAttributes = request.MessageAttributes
-                             };
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    MessageBody = request.MessageBody,
+                    DelaySeconds = request.DelaySeconds,
+                    MessageAttributes = request.MessageAttributes
+                };
 
                 results++;
             }
@@ -209,12 +199,10 @@ namespace ServiceStack.Aws.Sqs
         public bool Delete(DeleteMessageRequest request)
         {
             if (request == null)
-            {
                 return false;
-            }
 
-            _deleteBuffer.Enqueue(request);
-            return DeleteEnqueued(_queueDefinition.DeleteBufferSize);
+            deleteBuffer.Enqueue(request);
+            return DeleteEnqueued(queueDefinition.DeleteBufferSize);
         }
 
         private bool DeleteEnqueued(int minBufferCount, bool forceOne = false)
@@ -224,24 +212,22 @@ namespace ServiceStack.Aws.Sqs
 
             try
             {
-                while (forceOne || _deleteBuffer.Count >= minBufferCount)
+                while (forceOne || deleteBuffer.Count >= minBufferCount)
                 {
                     forceOne = false;
 
                     var entries = EntriesToDelete(SqsQueueDefinition.MaxBatchDeleteItems).ToList();
 
                     if (entries.Count <= 0)
-                    {
                         break;
-                    }
 
                     deletedAtSqs = true;
 
                     var response = SqsClient.DeleteMessageBatch(new DeleteMessageBatchRequest
-                                                                {
-                                                                    QueueUrl = _queueDefinition.QueueUrl,
-                                                                    Entries = entries
-                                                                });
+                    {
+                        QueueUrl = queueDefinition.QueueUrl,
+                        Entries = entries
+                    });
 
                     if (response.Failed != null && response.Failed.Count > 0)
                     {
@@ -265,20 +251,18 @@ namespace ServiceStack.Aws.Sqs
             {
                 DeleteMessageRequest request;
 
-                if (!_deleteBuffer.TryDequeue(out request))
-                {
+                if (!deleteBuffer.TryDequeue(out request))
                     return result.Values;
-                }
 
                 var hashId = request.ReceiptHandle.ToSha256HashString64();
 
                 if (!result.ContainsKey(hashId))
                 {
                     result.Add(hashId, new DeleteMessageBatchRequestEntry
-                                       {
-                                           Id = Guid.NewGuid().ToString("N"),
-                                           ReceiptHandle = request.ReceiptHandle
-                                       });
+                    {
+                        Id = Guid.NewGuid().ToString("N"),
+                        ReceiptHandle = request.ReceiptHandle
+                    });
                 }
             }
 
@@ -288,9 +272,7 @@ namespace ServiceStack.Aws.Sqs
         private Message BufferResponse(ReceiveMessageResponse response)
         {
             if (response == null || response.Messages == null)
-            {
                 return null;
-            }
 
             Message toReturn = null;
 
@@ -302,7 +284,7 @@ namespace ServiceStack.Aws.Sqs
                     continue;
                 }
 
-                _receiveBuffer.Enqueue(message);
+                receiveBuffer.Enqueue(message);
             }
 
             return toReturn;
@@ -311,16 +293,12 @@ namespace ServiceStack.Aws.Sqs
         public Message Receive(ReceiveMessageRequest request)
         {
             if (request == null)
-            {
                 return null;
-            }
 
             Message toReturn = null;
 
-            if (_receiveBuffer.Count > 0 && _receiveBuffer.TryDequeue(out toReturn))
-            {
+            if (receiveBuffer.Count > 0 && receiveBuffer.TryDequeue(out toReturn))
                 return toReturn;
-            }
 
             request.MaxNumberOfMessages = Math.Min(SqsQueueDefinition.MaxBatchReceiveItems, Math.Max(request.MaxNumberOfMessages, 1));
 
@@ -335,37 +313,37 @@ namespace ServiceStack.Aws.Sqs
 
             var stopAt = DateTime.UtcNow.AddSeconds(30);
 
-            while (_receiveBuffer.Count > 0 && DateTime.UtcNow <= stopAt && _receiveBuffer.TryDequeue(out toNak))
+            while (receiveBuffer.Count > 0 && DateTime.UtcNow <= stopAt && receiveBuffer.TryDequeue(out toNak))
             {
                 ChangeVisibility(new ChangeMessageVisibilityRequest
-                                 {
-                                     QueueUrl = _queueDefinition.QueueUrl,
-                                     ReceiptHandle = toNak.ReceiptHandle,
-                                     VisibilityTimeout = 0
-                                 });
+                {
+                    QueueUrl = queueDefinition.QueueUrl,
+                    ReceiptHandle = toNak.ReceiptHandle,
+                    VisibilityTimeout = 0
+                });
             }
         }
 
         public int DeleteBufferCount
         {
-            get { return _deleteBuffer.Count; }
+            get { return deleteBuffer.Count; }
         }
 
         public int SendBufferCount
         {
-            get { return _sendBuffer.Count; }
+            get { return sendBuffer.Count; }
         }
 
         public int ChangeVisibilityBufferCount
         {
-            get { return _cvBuffer.Count; }
+            get { return cvBuffer.Count; }
         }
 
         public int ReceiveBufferCount
         {
-            get { return _receiveBuffer.Count; }
+            get { return receiveBuffer.Count; }
         }
-        
+
         public void Drain(bool fullDrain, bool nakReceived = false)
         {
             SendEnqueued(fullDrain ? 1 : SqsQueueDefinition.MaxBatchSendItems, forceOne: true);
@@ -383,15 +361,15 @@ namespace ServiceStack.Aws.Sqs
         {   // Do our best to drain all the buffers
             Drain(fullDrain: true, nakReceived: true);
 
-            if (_sqsClient == null)
+            if (sqsClient == null)
             {
                 return;
             }
 
             try
             {
-                _sqsClient.Dispose();
-                _sqsClient = null;
+                sqsClient.Dispose();
+                sqsClient = null;
             }
             catch { }
         }

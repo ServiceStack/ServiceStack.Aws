@@ -7,7 +7,7 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsConnectionFactory
     {
-        private readonly Func<IAmazonSQS> _clientFactory;
+        private readonly Func<IAmazonSQS> clientFactory;
 
         public SqsConnectionFactory() : this(() => new AmazonSQSClient()) { }
 
@@ -18,12 +18,12 @@ namespace ServiceStack.Aws.Sqs
         {
             Guard.AgainstNullArgument(clientFactory, "clientFactory");
 
-            _clientFactory = clientFactory;
+            this.clientFactory = clientFactory;
         }
 
         public IAmazonSQS GetClient()
         {
-            return _clientFactory();
+            return clientFactory();
         }
 
     }

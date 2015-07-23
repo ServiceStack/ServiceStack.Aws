@@ -7,9 +7,9 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqMessageFactory : ISqsMqMessageFactory
     {
-        private readonly ISqsMqBufferFactory _sqsMqBufferFactory;
-        private readonly SqsQueueManager _sqsQueueManager;
-        private int _retryCount;
+        private readonly ISqsMqBufferFactory sqsMqBufferFactory;
+        private readonly SqsQueueManager sqsQueueManager;
+        private int retryCount;
 
         public SqsMqMessageFactory(SqsQueueManager sqsQueueManager) 
             : this(new SqsMqBufferFactory(sqsQueueManager.ConnectionFactory), sqsQueueManager) { }
@@ -20,67 +20,55 @@ namespace ServiceStack.Aws.Sqs
             Guard.AgainstNullArgument(sqsMqBufferFactory, "sqsMqBufferFactory");
             Guard.AgainstNullArgument(sqsQueueManager, "sqsQueueManager");
             
-            _sqsMqBufferFactory = sqsMqBufferFactory;
-            _sqsQueueManager = sqsQueueManager;
+            this.sqsMqBufferFactory = sqsMqBufferFactory;
+            this.sqsQueueManager = sqsQueueManager;
         }
 
         public SqsQueueManager QueueManager
         {
-            get { return _sqsQueueManager; }
+            get { return sqsQueueManager; }
         }
     
         public SqsConnectionFactory ConnectionFactory
         {
-            get { return _sqsQueueManager.ConnectionFactory; }
+            get { return sqsQueueManager.ConnectionFactory; }
         }
 
         public Action<Exception> ErrorHandler
         {
-            get { return _sqsMqBufferFactory.ErrorHandler; }
-            set { _sqsMqBufferFactory.ErrorHandler = value; }
+            get { return sqsMqBufferFactory.ErrorHandler; }
+            set { sqsMqBufferFactory.ErrorHandler = value; }
         }
 
         public int BufferFlushIntervalSeconds
         {
-            get { return _sqsMqBufferFactory.BufferFlushIntervalSeconds; }
-            set { _sqsMqBufferFactory.BufferFlushIntervalSeconds = value; }
+            get { return sqsMqBufferFactory.BufferFlushIntervalSeconds; }
+            set { sqsMqBufferFactory.BufferFlushIntervalSeconds = value; }
         }
 
         public int RetryCount
         {
-            get { return _retryCount; }
+            get { return retryCount; }
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > 1000, "SQS MQ RetryCount must be 0-1000");
-                _retryCount = value;
+                retryCount = value;
             }
         }
         
         public void Dispose()
         {
-            try
-            {
-                _sqsQueueManager.Dispose();
-            }
-            catch { }
-            
-            try
-            {
-                _sqsMqBufferFactory.Dispose();
-            }
-            catch { }
-
-            
+            new IDisposable[] { sqsQueueManager, sqsMqBufferFactory }.Dispose();
         }
 
         public IMessageQueueClient CreateMessageQueueClient()
         {
-            return new SqsMqClient(_sqsMqBufferFactory, _sqsQueueManager);
+            return new SqsMqClient(sqsMqBufferFactory, sqsQueueManager);
         }
 
         public IMessageProducer CreateMessageProducer()
         {
-            return new SqsMqMessageProducer(_sqsMqBufferFactory, _sqsQueueManager);
+            return new SqsMqMessageProducer(sqsMqBufferFactory, sqsQueueManager);
         }
     }
 }

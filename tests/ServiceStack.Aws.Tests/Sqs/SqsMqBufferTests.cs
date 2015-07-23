@@ -13,32 +13,30 @@ namespace ServiceStack.Aws.Tests.Sqs
     [TestFixture]
     public class SqsMqBufferTests
     {
-        private SqsQueueManager _sqsQueueManager;
-        private SqsMqBufferFactory _sqsMqBufferFactory;
+        private SqsQueueManager sqsQueueManager;
+        private SqsMqBufferFactory sqsMqBufferFactory;
 
         [TestFixtureSetUp]
         public void FixtureSetup()
         {
-            _sqsQueueManager = new SqsQueueManager(SqsTestClientFactory.GetConnectionFactory());
-            _sqsMqBufferFactory = new SqsMqBufferFactory(SqsTestClientFactory.GetConnectionFactory());
+            sqsQueueManager = new SqsQueueManager(SqsTestClientFactory.GetConnectionFactory());
+            sqsMqBufferFactory = new SqsMqBufferFactory(SqsTestClientFactory.GetConnectionFactory());
         }
 
         [TestFixtureTearDown]
         public void FixtureTeardown()
         {
             if (SqsTestAssert.IsFakeClient)
-            {
                 return;
-            }
 
             // Cleanup anything left cached that we tested with
-            var queueNamesToDelete = new List<string>(_sqsQueueManager.QueueNameMap.Keys);
+            var queueNamesToDelete = new List<string>(sqsQueueManager.QueueNameMap.Keys);
 
             foreach (var queueName in queueNamesToDelete)
             {
                 try
                 {
-                    _sqsQueueManager.DeleteQueue(queueName);
+                    sqsQueueManager.DeleteQueue(queueName);
                 }
                 catch { }
             }
@@ -48,11 +46,11 @@ namespace ServiceStack.Aws.Tests.Sqs
                                             int? receiveWaitTimeSeconds = null,
                                             bool? disasbleBuffering = null)
         {
-            var qd = _sqsQueueManager.CreateQueue(GetNewId(), visibilityTimeoutSeconds, receiveWaitTimeSeconds, disasbleBuffering);
-            var buffer = _sqsMqBufferFactory.GetOrCreate(qd);
+            var qd = sqsQueueManager.CreateQueue(GetNewId(), visibilityTimeoutSeconds, receiveWaitTimeSeconds, disasbleBuffering);
+            var buffer = sqsMqBufferFactory.GetOrCreate(qd);
             return buffer;
         }
-        
+
         private string GetNewId()
         {
             return Guid.NewGuid().ToString("N");
@@ -64,10 +62,10 @@ namespace ServiceStack.Aws.Tests.Sqs
             var buffer = GetNewMqBuffer(disasbleBuffering: true);
 
             var sent = buffer.Send(new SendMessageRequest
-                                   {
-                                       QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                       MessageBody = GetNewId()
-                                   });
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                MessageBody = GetNewId()
+            });
 
             Assert.IsTrue(sent);
             Assert.AreEqual(0, buffer.SendBufferCount);
@@ -79,10 +77,10 @@ namespace ServiceStack.Aws.Tests.Sqs
             var buffer = GetNewMqBuffer();
 
             var sent = buffer.Send(new SendMessageRequest
-                                   {
-                                       QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                       MessageBody = GetNewId()
-                                   });
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                MessageBody = GetNewId()
+            });
 
             Assert.IsFalse(sent);
             Assert.AreEqual(1, buffer.SendBufferCount, "Send did not buffer");
@@ -98,10 +96,10 @@ namespace ServiceStack.Aws.Tests.Sqs
             var buffer = GetNewMqBuffer(disasbleBuffering: true);
 
             Assert.Throws<ReceiptHandleIsInvalidException>(() => buffer.Delete(new DeleteMessageRequest
-                                                                               {
-                                                                                   QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                                                   ReceiptHandle = GetNewId()
-                                                                               }));
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId()
+            }));
         }
 
         [Test]
@@ -110,10 +108,10 @@ namespace ServiceStack.Aws.Tests.Sqs
             var buffer = GetNewMqBuffer();
 
             var deleted = buffer.Delete(new DeleteMessageRequest
-                                        {
-                                            QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                            ReceiptHandle = GetNewId()
-                                        });
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId()
+            });
 
             Assert.IsFalse(deleted);
             Assert.AreEqual(1, buffer.DeleteBufferCount, "Delete did not buffer");
@@ -129,11 +127,11 @@ namespace ServiceStack.Aws.Tests.Sqs
             var buffer = GetNewMqBuffer(disasbleBuffering: true);
 
             Assert.Throws<ReceiptHandleIsInvalidException>(() => buffer.ChangeVisibility(new ChangeMessageVisibilityRequest
-                                                                                         {
-                                                                                             QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                                                             ReceiptHandle = GetNewId(),
-                                                                                             VisibilityTimeout = 0
-                                                                                         }));
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId(),
+                VisibilityTimeout = 0
+            }));
         }
 
         [Test]
@@ -142,11 +140,11 @@ namespace ServiceStack.Aws.Tests.Sqs
             var buffer = GetNewMqBuffer();
 
             var visChanged = buffer.ChangeVisibility(new ChangeMessageVisibilityRequest
-                                                     {
-                                                         QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                         ReceiptHandle = GetNewId(),
-                                                         VisibilityTimeout = 0
-                                                     });
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId(),
+                VisibilityTimeout = 0
+            });
 
             Assert.IsFalse(visChanged);
             Assert.AreEqual(1, buffer.ChangeVisibilityBufferCount, "CV did not buffer");
@@ -164,19 +162,19 @@ namespace ServiceStack.Aws.Tests.Sqs
             var body = GetNewId();
 
             var sent = buffer.Send(new SendMessageRequest
-                                   {
-                                       QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                       MessageBody = body
-                                   });
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                MessageBody = body
+            });
 
             Assert.IsTrue(sent);
             Assert.AreEqual(0, buffer.SendBufferCount);
 
             var received = buffer.Receive(new ReceiveMessageRequest
-                                          {
-                                              QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                              MaxNumberOfMessages = 5
-                                          });
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                MaxNumberOfMessages = 5
+            });
 
             Assert.IsNotNull(received);
             Assert.AreEqual(body, received.Body);
@@ -191,16 +189,16 @@ namespace ServiceStack.Aws.Tests.Sqs
             buffer.QueueDefinition.SendBufferSize = 1;
 
             10.Times(i =>
-                     {
-                         var sent = buffer.Send(new SendMessageRequest
-                                                {
-                                                    QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                    MessageBody = GetNewId()
-                                                });
+            {
+                var sent = buffer.Send(new SendMessageRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    MessageBody = GetNewId()
+                });
 
-                         Assert.IsTrue(sent);
-                         Assert.AreEqual(0, buffer.SendBufferCount);
-                     });
+                Assert.IsTrue(sent);
+                Assert.AreEqual(0, buffer.SendBufferCount);
+            });
 
             // Using a real SQS queue results in the Receive being sporadic in terms of actually returning
             // a batch of stuff on a receive call, as it is dependent on the size of the queue, where you land,
@@ -208,8 +206,8 @@ namespace ServiceStack.Aws.Tests.Sqs
             // of data, which is the best we can do
 
             var timesToTry = SqsTestAssert.IsFakeClient
-                                 ? 1
-                                 : 10;
+                ? 1
+                : 10;
 
             var attempts = 0;
 
@@ -218,19 +216,17 @@ namespace ServiceStack.Aws.Tests.Sqs
             while (attempts < timesToTry)
             {
                 received = buffer.Receive(new ReceiveMessageRequest
-                                          {
-                                              QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                              MaxNumberOfMessages = 10,
-                                              WaitTimeSeconds = SqsTestAssert.IsFakeClient
-                                                                    ? 0
-                                                                    : SqsQueueDefinition.MaxWaitTimeSeconds,
-                                              VisibilityTimeout = SqsQueueDefinition.MaxVisibilityTimeoutSeconds
-                                          });
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    MaxNumberOfMessages = 10,
+                    WaitTimeSeconds = SqsTestAssert.IsFakeClient
+                        ? 0
+                        : SqsQueueDefinition.MaxWaitTimeSeconds,
+                    VisibilityTimeout = SqsQueueDefinition.MaxVisibilityTimeoutSeconds
+                });
 
                 if (received != null && buffer.ReceiveBufferCount > 0)
-                {
                     break;
-                }
 
                 attempts++;
             }
@@ -261,26 +257,26 @@ namespace ServiceStack.Aws.Tests.Sqs
             buffer.QueueDefinition.SendBufferSize = 5;
 
             3.Times(i => buffer.Send(new SendMessageRequest
-                                     {
-                                         QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                         MessageBody = GetNewId()
-                                     }));
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                MessageBody = GetNewId()
+            }));
 
             var sent = false;
 
             2.Times(i =>
-                    {
-                        sent = buffer.Send(new SendMessageRequest
-                                           {
-                                               QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                               MessageBody = FakeSqsQueue.FakeBatchItemFailString
-                                           });
-                    });
-            
+            {
+                sent = buffer.Send(new SendMessageRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    MessageBody = FakeSqsQueue.FakeBatchItemFailString
+                });
+            });
+
             Assert.IsTrue(sent);
             Assert.AreEqual(0, buffer.SendBufferCount);
 
-            var messages = String.Join("\n|\n", itemsErrorHandled.Select(e => String.Concat("Type: [", e.GetType(), "]. Message: [", e.Message, "]")));
+            var messages = String.Join("\n|\n", itemsErrorHandled.Select(e => string.Concat("Type: [", e.GetType(), "]. Message: [", e.Message, "]")));
             Assert.AreEqual(2, itemsErrorHandled.Count, messages);
         }
 
@@ -298,49 +294,49 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             // Buffer 3 that should be successful items
             3.Times(i =>
-                    {
-                        buffer.Send(new SendMessageRequest
-                                    {
-                                        QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                        MessageBody = GetNewId()
-                                    });
+            {
+                buffer.Send(new SendMessageRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    MessageBody = GetNewId()
+                });
 
-                        var message = buffer.Receive(new ReceiveMessageRequest
-                                                     {
-                                                         QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                         MaxNumberOfMessages = 1,
-                                                         WaitTimeSeconds = 0
-                                                     });
+                var message = buffer.Receive(new ReceiveMessageRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    MaxNumberOfMessages = 1,
+                    WaitTimeSeconds = 0
+                });
 
-                        Assert.IsNotNull(message, "Receive message is null");
-                        Assert.IsNotNullOrEmpty(message.ReceiptHandle, "ReceiptHandle is null or empty");
+                Assert.IsNotNull(message, "Receive message is null");
+                Assert.IsNotNullOrEmpty(message.ReceiptHandle, "ReceiptHandle is null or empty");
 
-                        buffer.ChangeVisibility(new ChangeMessageVisibilityRequest
-                                                {
-                                                    QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                    ReceiptHandle = message.ReceiptHandle,
-                                                    VisibilityTimeout = 10
-                                                });
-                    });
+                buffer.ChangeVisibility(new ChangeMessageVisibilityRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    ReceiptHandle = message.ReceiptHandle,
+                    VisibilityTimeout = 10
+                });
+            });
 
             var sent = false;
 
             // 2 that should not
             2.Times(i =>
-                    {
-                        sent = buffer.ChangeVisibility(new ChangeMessageVisibilityRequest
-                                                       {
-                                                           QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                           ReceiptHandle = GetNewId(),
-                                                           VisibilityTimeout = 10
-                                                       });
-                    });
-            
+            {
+                sent = buffer.ChangeVisibility(new ChangeMessageVisibilityRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    ReceiptHandle = GetNewId(),
+                    VisibilityTimeout = 10
+                });
+            });
+
             // Last send should have fired the buffers off for real
             Assert.IsTrue(sent);
             Assert.AreEqual(0, buffer.ChangeVisibilityBufferCount);
 
-            var messages = String.Join("\n|\n", itemsErrorHandled.Select(e => String.Concat("Type: [", e.GetType(), "]. Message: [", e.Message, "]")));
+            var messages = string.Join("\n|\n", itemsErrorHandled.Select(e => string.Concat("Type: [", e.GetType(), "]. Message: [", e.Message, "]")));
             Assert.AreEqual(2, itemsErrorHandled.Count, messages);
         }
 
@@ -358,47 +354,47 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             // Buffer 3 that should be successful items
             3.Times(i =>
-                    {
-                        buffer.Send(new SendMessageRequest
-                                    {
-                                        QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                        MessageBody = GetNewId()
-                                    });
+            {
+                buffer.Send(new SendMessageRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    MessageBody = GetNewId()
+                });
 
-                        var message = buffer.Receive(new ReceiveMessageRequest
-                                                     {
-                                                         QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                         MaxNumberOfMessages = 1,
-                                                         WaitTimeSeconds = 0
-                                                     });
+                var message = buffer.Receive(new ReceiveMessageRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    MaxNumberOfMessages = 1,
+                    WaitTimeSeconds = 0
+                });
 
-                        Assert.IsNotNull(message, "Receive message is null");
-                        Assert.IsNotNullOrEmpty(message.ReceiptHandle, "ReceiptHandle is null or empty");
+                Assert.IsNotNull(message, "Receive message is null");
+                Assert.IsNotNullOrEmpty(message.ReceiptHandle, "ReceiptHandle is null or empty");
 
-                        buffer.Delete(new DeleteMessageRequest
-                                      {
-                                          QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                          ReceiptHandle = message.ReceiptHandle
-                                      });
-                    });
-            
+                buffer.Delete(new DeleteMessageRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    ReceiptHandle = message.ReceiptHandle
+                });
+            });
+
             var sent = false;
 
             // 2 that should not
             2.Times(i =>
-                    {
-                        sent = buffer.Delete(new DeleteMessageRequest
-                                             {
-                                                 QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                 ReceiptHandle = GetNewId()
-                                             });
-                    });
+            {
+                sent = buffer.Delete(new DeleteMessageRequest
+                {
+                    QueueUrl = buffer.QueueDefinition.QueueUrl,
+                    ReceiptHandle = GetNewId()
+                });
+            });
 
             // Last send should have fired the buffers off for real
             Assert.IsTrue(sent);
             Assert.AreEqual(0, buffer.DeleteBufferCount);
-            
-            var messages = String.Join("\n|\n", itemsErrorHandled.Select(e => String.Concat("Type: [", e.GetType(), "]. Message: [", e.Message, "]")));
+
+            var messages = string.Join("\n|\n", itemsErrorHandled.Select(e => string.Concat("Type: [", e.GetType(), "]. Message: [", e.Message, "]")));
             Assert.AreEqual(2, itemsErrorHandled.Count, messages);
         }
 
@@ -408,56 +404,56 @@ namespace ServiceStack.Aws.Tests.Sqs
             var buffer = GetNewMqBuffer();
 
             2.Times(i => buffer.Send(new SendMessageRequest
-                                     {
-                                         QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                         MessageBody = GetNewId()
-                                     }));
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                MessageBody = GetNewId()
+            }));
             4.Times(i => buffer.Delete(new DeleteMessageRequest
-                                       {
-                                           QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                           ReceiptHandle = GetNewId()
-                                       }));
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId()
+            }));
             3.Times(i => buffer.ChangeVisibility(new ChangeMessageVisibilityRequest
-                                                 {
-                                                     QueueUrl = buffer.QueueDefinition.QueueUrl,
-                                                     ReceiptHandle = GetNewId()
-                                                 }));
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId()
+            }));
 
             var buffer2 = GetNewMqBuffer();
 
             3.Times(i => buffer2.Send(new SendMessageRequest
-                                      {
-                                          QueueUrl = buffer2.QueueDefinition.QueueUrl,
-                                          MessageBody = GetNewId()
-                                      }));
+            {
+                QueueUrl = buffer2.QueueDefinition.QueueUrl,
+                MessageBody = GetNewId()
+            }));
             2.Times(i => buffer2.Delete(new DeleteMessageRequest
-                                        {
-                                            QueueUrl = buffer2.QueueDefinition.QueueUrl,
-                                            ReceiptHandle = GetNewId()
-                                        }));
+            {
+                QueueUrl = buffer2.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId()
+            }));
             4.Times(i => buffer2.ChangeVisibility(new ChangeMessageVisibilityRequest
-                                                  {
-                                                      QueueUrl = buffer2.QueueDefinition.QueueUrl,
-                                                      ReceiptHandle = GetNewId()
-                                                  }));
+            {
+                QueueUrl = buffer2.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId()
+            }));
 
             var buffer3 = GetNewMqBuffer();
 
             4.Times(i => buffer3.Send(new SendMessageRequest
-                                      {
-                                          QueueUrl = buffer3.QueueDefinition.QueueUrl,
-                                          MessageBody = GetNewId()
-                                      }));
+            {
+                QueueUrl = buffer3.QueueDefinition.QueueUrl,
+                MessageBody = GetNewId()
+            }));
             3.Times(i => buffer3.Delete(new DeleteMessageRequest
-                                        {
-                                            QueueUrl = buffer3.QueueDefinition.QueueUrl,
-                                            ReceiptHandle = GetNewId()
-                                        }));
+            {
+                QueueUrl = buffer3.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId()
+            }));
             2.Times(i => buffer3.ChangeVisibility(new ChangeMessageVisibilityRequest
-                                                  {
-                                                      QueueUrl = buffer3.QueueDefinition.QueueUrl,
-                                                      ReceiptHandle = GetNewId()
-                                                  }));
+            {
+                QueueUrl = buffer3.QueueDefinition.QueueUrl,
+                ReceiptHandle = GetNewId()
+            }));
 
             // Should all have something buffered
             Assert.Greater(buffer.SendBufferCount, 0, "1 SendBufferCount");
@@ -471,13 +467,13 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.Greater(buffer3.SendBufferCount, 0, "3 SendBufferCount");
             Assert.Greater(buffer3.DeleteBufferCount, 0, "3 DeleteBufferCount");
             Assert.Greater(buffer3.ChangeVisibilityBufferCount, 0, "3 CvBufferCount");
-            
+
             // Set the buffer flush on the factory. Setting it back to zero will still have the timer fire
             // at least once, and then it will be cleared after the first fire.
-            _sqsMqBufferFactory.BufferFlushIntervalSeconds = 1;
-            _sqsMqBufferFactory.BufferFlushIntervalSeconds = 0;
+            sqsMqBufferFactory.BufferFlushIntervalSeconds = 1;
+            sqsMqBufferFactory.BufferFlushIntervalSeconds = 0;
             Thread.Sleep(2000);
-            
+
             // Should all be drained
             Assert.AreEqual(0, buffer.SendBufferCount, "1 SendBufferCount");
             Assert.AreEqual(0, buffer.DeleteBufferCount, "1 DeleteBufferCount");

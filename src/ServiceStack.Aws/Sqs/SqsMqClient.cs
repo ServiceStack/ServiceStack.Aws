@@ -8,7 +8,8 @@ namespace ServiceStack.Aws.Sqs
     public class SqsMqClient : SqsMqMessageProducer, IMessageQueueClient
     {
         public SqsMqClient(ISqsMqBufferFactory sqsMqBufferFactory, SqsQueueManager sqsQueueManager)
-            : base(sqsMqBufferFactory, sqsQueueManager) { }
+            : base(sqsMqBufferFactory, sqsQueueManager)
+        { }
 
         public void Notify(string queueName, IMessage message)
         {   // Just a publish
@@ -18,8 +19,8 @@ namespace ServiceStack.Aws.Sqs
         public IMessage<T> Get<T>(string queueName, TimeSpan? timeOut = null)
         {
             return GetMessage<T>(queueName, timeOut.HasValue
-                                                ? (Int32)Math.Round(timeOut.Value.TotalSeconds, MidpointRounding.AwayFromZero)
-                                                : -1);
+                ? (int)Math.Round(timeOut.Value.TotalSeconds, MidpointRounding.AwayFromZero)
+                : -1);
         }
 
         public IMessage<T> GetAsync<T>(string queueName)
@@ -27,31 +28,31 @@ namespace ServiceStack.Aws.Sqs
             return GetMessage<T>(queueName, waitSeconds: 0);
         }
 
-        private IMessage<T> GetMessage<T>(String queueName, Int32 waitSeconds)
+        private IMessage<T> GetMessage<T>(string queueName, int waitSeconds)
         {
             using (__requestAccess())
             {
                 var receiveWaitTime = waitSeconds < 0
-                                          ? SqsQueueDefinition.MaxWaitTimeSeconds
-                                          : SqsQueueDefinition.GetValidQueueWaitTime(waitSeconds);
+                    ? SqsQueueDefinition.MaxWaitTimeSeconds
+                    : SqsQueueDefinition.GetValidQueueWaitTime(waitSeconds);
 
-                var queueDefinition = _sqsQueueManager.GetOrCreate(queueName, receiveWaitTimeSeconds: receiveWaitTime);
-                
+                var queueDefinition = sqsQueueManager.GetOrCreate(queueName, receiveWaitTimeSeconds: receiveWaitTime);
+
                 var timeoutAt = waitSeconds >= 0
-                                    ? DateTime.UtcNow.AddSeconds(waitSeconds)
-                                    : DateTime.MaxValue;
+                    ? DateTime.UtcNow.AddSeconds(waitSeconds)
+                    : DateTime.MaxValue;
 
-                var sqsBuffer = _sqsMqBufferFactory.GetOrCreate(queueDefinition);
+                var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
                 do
                 {
                     var sqsMessage = sqsBuffer.Receive(new ReceiveMessageRequest
-                                                       {
-                                                           MaxNumberOfMessages = queueDefinition.ReceiveBufferSize,
-                                                           QueueUrl = queueDefinition.QueueUrl,
-                                                           VisibilityTimeout = queueDefinition.VisibilityTimeout,
-                                                           WaitTimeSeconds = receiveWaitTime
-                                                       });
+                    {
+                        MaxNumberOfMessages = queueDefinition.ReceiveBufferSize,
+                        QueueUrl = queueDefinition.QueueUrl,
+                        VisibilityTimeout = queueDefinition.VisibilityTimeout,
+                        WaitTimeSeconds = receiveWaitTime
+                    });
 
                     var message = sqsMessage.ToMessage<T>(queueDefinition.QueueName);
 
@@ -68,22 +69,22 @@ namespace ServiceStack.Aws.Sqs
 
         public void DeleteMessage(IMessage message)
         {
-            if (message == null || String.IsNullOrEmpty(message.Tag))
+            if (message == null || string.IsNullOrEmpty(message.Tag))
             {
                 return;
             }
 
             var sqsTag = message.Tag.FromJsv<SqsMessageTag>();
 
-            var queueDefinition = _sqsQueueManager.GetOrCreate(sqsTag.QName);
+            var queueDefinition = sqsQueueManager.GetOrCreate(sqsTag.QName);
 
-            var sqsBuffer = _sqsMqBufferFactory.GetOrCreate(queueDefinition);
+            var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
             sqsBuffer.Delete(new DeleteMessageRequest
-                             {
-                                 QueueUrl = queueDefinition.QueueUrl,
-                                 ReceiptHandle = sqsTag.RHandle
-                             });
+            {
+                QueueUrl = queueDefinition.QueueUrl,
+                ReceiptHandle = sqsTag.RHandle
+            });
         }
 
         public void Ack(IMessage message)
@@ -91,25 +92,23 @@ namespace ServiceStack.Aws.Sqs
             DeleteMessage(message);
         }
 
-        public void ChangeVisibility(IMessage message, Int32 visibilityTimeoutSeconds)
+        public void ChangeVisibility(IMessage message, int visibilityTimeoutSeconds)
         {
-            if (message == null || String.IsNullOrEmpty(message.Tag))
-            {
+            if (message == null || string.IsNullOrEmpty(message.Tag))
                 return;
-            }
 
             var sqsTag = message.Tag.FromJsv<SqsMessageTag>();
 
-            var queueDefinition = _sqsQueueManager.GetOrCreate(sqsTag.QName);
+            var queueDefinition = sqsQueueManager.GetOrCreate(sqsTag.QName);
 
-            var sqsBuffer = _sqsMqBufferFactory.GetOrCreate(queueDefinition);
+            var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
             sqsBuffer.ChangeVisibility(new ChangeMessageVisibilityRequest
-                                       {
-                                           QueueUrl = queueDefinition.QueueUrl,
-                                           ReceiptHandle = sqsTag.RHandle,
-                                           VisibilityTimeout = visibilityTimeoutSeconds
-                                       });
+            {
+                QueueUrl = queueDefinition.QueueUrl,
+                ReceiptHandle = sqsTag.RHandle,
+                VisibilityTimeout = visibilityTimeoutSeconds
+            });
         }
 
         public void Nak(IMessage message, bool requeue, Exception exception = null)
@@ -129,9 +128,9 @@ namespace ServiceStack.Aws.Sqs
                     Publish(message.ToDlqQueueName(), message);
                     DeleteMessage(message);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    _log.Debug("Error trying to Nak message to Dlq", ex);
+                    log.Debug("Error trying to Nak message to Dlq", ex);
                     ChangeVisibility(message, 0);
                 }
             }
@@ -139,7 +138,7 @@ namespace ServiceStack.Aws.Sqs
 
         public IMessage<T> CreateMessage<T>(object mqResponse)
         {
-            using(__requestAccess())
+            using (__requestAccess())
             {
                 return (IMessage<T>)mqResponse;
             }
@@ -148,7 +147,7 @@ namespace ServiceStack.Aws.Sqs
         public string GetTempQueueName()
         {   // NOTE: Purposely not creating DLQ queues for all these temps if they get used, they'll get
             // created on the fly as needed if messages actually fail
-            var queueDefinition = _sqsQueueManager.GetOrCreate(QueueNames.GetTempQueueName());
+            var queueDefinition = sqsQueueManager.GetOrCreate(QueueNames.GetTempQueueName());
             return queueDefinition.QueueName;
         }
 

@@ -14,12 +14,12 @@ namespace ServiceStack.Aws.Tests.Sqs
     [TestFixture, Category("Integration")]
     public class SqsMqServerTests
     {
-        private SqsQueueManager _sqsQueueManager;
+        private SqsQueueManager sqsQueueManager;
 
         [TestFixtureSetUp]
         public void FixtureSetUp()
         {
-            _sqsQueueManager = new SqsQueueManager(SqsTestClientFactory.GetConnectionFactory());
+            sqsQueueManager = new SqsQueueManager(SqsTestClientFactory.GetConnectionFactory());
             LogManager.LogFactory = new ConsoleLogFactory();
         }
 
@@ -31,13 +31,13 @@ namespace ServiceStack.Aws.Tests.Sqs
                 return;
             }
 
-            var queueNamesToDelete = new List<string>(_sqsQueueManager.QueueNameMap.Keys);
+            var queueNamesToDelete = new List<string>(sqsQueueManager.QueueNameMap.Keys);
 
             foreach (var queueName in queueNamesToDelete)
             {
                 try
                 {
-                    _sqsQueueManager.DeleteQueue(queueName);
+                    sqsQueueManager.DeleteQueue(queueName);
                 }
                 catch { }
             }
@@ -55,51 +55,51 @@ namespace ServiceStack.Aws.Tests.Sqs
 
         private SqsMqServer CreateMqServer(int noOfRetries = 2)
         {
-            return new SqsMqServer(new SqsMqMessageFactory(_sqsQueueManager))
-                   {
-                       DisableBuffering = true,
-                       RetryCount = noOfRetries
-                   };
+            return new SqsMqServer(new SqsMqMessageFactory(sqsQueueManager))
+            {
+                DisableBuffering = true,
+                RetryCount = noOfRetries
+            };
         }
 
         private void Publish_4_messages(IMessageQueueClient mqClient)
         {
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "Hello"
-                             });
+            {
+                Value = "Hello"
+            });
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "World"
-                             });
+            {
+                Value = "World"
+            });
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "ServiceStack"
-                             });
+            {
+                Value = "ServiceStack"
+            });
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "Redis"
-                             });
+            {
+                Value = "Redis"
+            });
         }
 
         private void Publish_4_Rot13_messages(IMessageQueueClient mqClient)
         {
             mqClient.Publish(new Rot13
-                             {
-                                 Value = "Hello"
-                             });
+            {
+                Value = "Hello"
+            });
             mqClient.Publish(new Rot13
-                             {
-                                 Value = "World"
-                             });
+            {
+                Value = "World"
+            });
             mqClient.Publish(new Rot13
-                             {
-                                 Value = "ServiceStack"
-                             });
+            {
+                Value = "ServiceStack"
+            });
             mqClient.Publish(new Rot13
-                             {
-                                 Value = "Redis"
-                             });
+            {
+                Value = "Redis"
+            });
         }
 
         [Test]
@@ -127,10 +127,10 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             var mqHost = CreateMqServer();
             mqHost.RegisterHandler<Reverse>(x =>
-                                            {
-                                                reverseCalled++;
-                                                return x.GetBody().Value.Reverse();
-                                            });
+            {
+                reverseCalled++;
+                return x.GetBody().Value.Reverse();
+            });
 
             var mqClient = mqHost.MessageFactory.CreateMessageQueueClient();
             Publish_4_messages(mqClient);
@@ -149,36 +149,36 @@ namespace ServiceStack.Aws.Tests.Sqs
         {
             var mqHost = CreateMqServer();
 
-            _sqsQueueManager.PurgeQueues(QueueNames<Reverse>.AllQueueNames);
-            _sqsQueueManager.PurgeQueues(QueueNames<Rot13>.AllQueueNames);
+            sqsQueueManager.PurgeQueues(QueueNames<Reverse>.AllQueueNames);
+            sqsQueueManager.PurgeQueues(QueueNames<Rot13>.AllQueueNames);
 
             var reverseCalled = 0;
             var rot13Called = 0;
 
             mqHost.RegisterHandler<Reverse>(x =>
-                                            {
-                                                "Processing Reverse {0}...".Print(++reverseCalled);
-                                                return x.GetBody().Value.Reverse();
-                                            });
+            {
+                "Processing Reverse {0}...".Print(++reverseCalled);
+                return x.GetBody().Value.Reverse();
+            });
             mqHost.RegisterHandler<Rot13>(x =>
-                                          {
-                                              "Processing Rot13 {0}...".Print(++rot13Called);
-                                              return x.GetBody().Value.ToRot13();
-                                          });
+            {
+                "Processing Rot13 {0}...".Print(++rot13Called);
+                return x.GetBody().Value.ToRot13();
+            });
 
             var mqClient = mqHost.MessageFactory.CreateMessageQueueClient();
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "Hello"
-                             });
+            {
+                Value = "Hello"
+            });
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "World"
-                             });
+            {
+                Value = "World"
+            });
             mqClient.Publish(new Rot13
-                             {
-                                 Value = "ServiceStack"
-                             });
+            {
+                Value = "ServiceStack"
+            });
 
             mqHost.Start();
             Thread.Sleep(4000);
@@ -186,13 +186,13 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.That(mqHost.GetStats().TotalMessagesProcessed, Is.EqualTo(3));
 
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "Foo"
-                             });
+            {
+                Value = "Foo"
+            });
             mqClient.Publish(new Rot13
-                             {
-                                 Value = "Bar"
-                             });
+            {
+                Value = "Bar"
+            });
 
             10.Times(x => ThreadPool.QueueUserWorkItem(y => mqHost.Start()));
             Assert.That(mqHost.GetStatus(), Is.EqualTo("Started"));
@@ -280,65 +280,65 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             var mqHost = CreateMqServer(retryCount);
 
-            _sqsQueueManager.PurgeQueues(QueueNames<Reverse>.AllQueueNames);
-            _sqsQueueManager.PurgeQueues(QueueNames<Rot13>.AllQueueNames);
-            _sqsQueueManager.PurgeQueues(QueueNames<AlwaysThrows>.AllQueueNames);
+            sqsQueueManager.PurgeQueues(QueueNames<Reverse>.AllQueueNames);
+            sqsQueueManager.PurgeQueues(QueueNames<Rot13>.AllQueueNames);
+            sqsQueueManager.PurgeQueues(QueueNames<AlwaysThrows>.AllQueueNames);
 
             var reverseCalled = 0;
             var rot13Called = 0;
 
             mqHost.RegisterHandler<Reverse>(x =>
-                                            {
-                                                reverseCalled++;
-                                                return x.GetBody().Value.Reverse();
-                                            });
+            {
+                reverseCalled++;
+                return x.GetBody().Value.Reverse();
+            });
             mqHost.RegisterHandler<Rot13>(x =>
-                                          {
-                                              rot13Called++;
-                                              return x.GetBody().Value.ToRot13();
-                                          });
+            {
+                rot13Called++;
+                return x.GetBody().Value.ToRot13();
+            });
             mqHost.RegisterHandler<AlwaysThrows>(x => { throw new Exception("Always Throwing! " + x.GetBody().Value); });
             mqHost.Start();
 
             var mqClient = mqHost.MessageFactory.CreateMessageQueueClient();
             mqClient.Publish(new AlwaysThrows
-                             {
-                                 Value = "1st"
-                             });
+            {
+                Value = "1st"
+            });
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "Hello"
-                             });
+            {
+                Value = "Hello"
+            });
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "World"
-                             });
+            {
+                Value = "World"
+            });
             mqClient.Publish(new Rot13
-                             {
-                                 Value = "ServiceStack"
-                             });
+            {
+                Value = "ServiceStack"
+            });
 
             Thread.Sleep(8000);
             Assert.That(mqHost.GetStats().TotalMessagesFailed, Is.EqualTo(1 * totalRetries));
             Assert.That(mqHost.GetStats().TotalMessagesProcessed, Is.EqualTo(2 + 1));
 
             5.Times(x => mqClient.Publish(new AlwaysThrows
-                                          {
-                                              Value = "#" + x
-                                          }));
+            {
+                Value = "#" + x
+            }));
 
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "Hello"
-                             });
+            {
+                Value = "Hello"
+            });
             mqClient.Publish(new Reverse
-                             {
-                                 Value = "World"
-                             });
+            {
+                Value = "World"
+            });
             mqClient.Publish(new Rot13
-                             {
-                                 Value = "ServiceStack"
-                             });
+            {
+                Value = "ServiceStack"
+            });
 
             Thread.Sleep(5000);
 
@@ -350,7 +350,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.That(reverseCalled, Is.EqualTo(2 + 2));
             Assert.That(rot13Called, Is.EqualTo(1 + 1));
         }
-        
+
         public class Incr
         {
             public int Value { get; set; }
@@ -362,28 +362,25 @@ namespace ServiceStack.Aws.Tests.Sqs
             var called = 0;
             var mqHost = CreateMqServer();
 
-            _sqsQueueManager.PurgeQueues(QueueNames<Incr>.AllQueueNames);
+            sqsQueueManager.PurgeQueues(QueueNames<Incr>.AllQueueNames);
 
             mqHost.RegisterHandler<Incr>(m =>
-                                         {
-                                             Debug.WriteLine("In Incr #" + m.GetBody().Value);
-                                             called++;
-                                             return m.GetBody().Value > 0
-                                                        ? new Incr
-                                                          {
-                                                              Value = m.GetBody().Value - 1
-                                                          }
-                                                        : null;
-                                         });
+            {
+                Debug.WriteLine("In Incr #" + m.GetBody().Value);
+                called++;
+                return m.GetBody().Value > 0
+                    ? new Incr { Value = m.GetBody().Value - 1 }
+                    : null;
+            });
 
             mqHost.Start();
-            
+
             var mqClient = mqHost.MessageFactory.CreateMessageQueueClient();
 
             var incr = new Incr
-                       {
-                           Value = 5
-                       };
+            {
+                Value = 5
+            };
             mqClient.Publish(incr);
 
             Thread.Sleep(10000);
@@ -406,30 +403,30 @@ namespace ServiceStack.Aws.Tests.Sqs
         {
             var mqHost = CreateMqServer();
 
-            _sqsQueueManager.PurgeQueues(QueueNames<Hello>.AllQueueNames);
-            _sqsQueueManager.PurgeQueues(QueueNames<HelloResponse>.AllQueueNames);
+            sqsQueueManager.PurgeQueues(QueueNames<Hello>.AllQueueNames);
+            sqsQueueManager.PurgeQueues(QueueNames<HelloResponse>.AllQueueNames);
 
             string messageReceived = null;
 
             mqHost.RegisterHandler<Hello>(m => new HelloResponse
-                                               {
-                                                   Result = "Hello, " + m.GetBody().Name
-                                               });
+            {
+                Result = "Hello, " + m.GetBody().Name
+            });
 
             mqHost.RegisterHandler<HelloResponse>(m =>
-                                                  {
-                                                      messageReceived = m.GetBody().Result;
-                                                      return null;
-                                                  });
+            {
+                messageReceived = m.GetBody().Result;
+                return null;
+            });
 
             mqHost.Start();
 
             var mqClient = mqHost.MessageFactory.CreateMessageQueueClient();
 
             var dto = new Hello
-                      {
-                          Name = "ServiceStack"
-                      };
+            {
+                Name = "ServiceStack"
+            };
             mqClient.Publish(dto);
 
             Thread.Sleep(12000);
@@ -465,25 +462,25 @@ namespace ServiceStack.Aws.Tests.Sqs
             var timesCalled = 0;
             var mqHost = CreateMqServer();
 
-            _sqsQueueManager.PurgeQueues(QueueNames<Wait>.AllQueueNames);
+            sqsQueueManager.PurgeQueues(QueueNames<Wait>.AllQueueNames);
 
             mqHost.RegisterHandler<Wait>(m =>
-                                         {
-                                             timesCalled++;
-                                             Thread.Sleep(m.GetBody().ForMs);
-                                             return null;
-                                         }, noOfThreads);
+            {
+                timesCalled++;
+                Thread.Sleep(m.GetBody().ForMs);
+                return null;
+            }, noOfThreads);
 
             mqHost.Start();
 
             var mqClient = mqHost.MessageFactory.CreateMessageQueueClient();
 
             var dto = new Wait
-                      {
-                          ForMs = 100
-                      };
+            {
+                ForMs = 100
+            };
             msgs.Times(i => mqClient.Publish(dto));
-            
+
             const double buffer = 2.2;
             var sleepForMs = (int)((msgs * 1000 / (double)noOfThreads) * buffer);
 
@@ -498,14 +495,14 @@ namespace ServiceStack.Aws.Tests.Sqs
         [Test]
         public void Can_publish_and_receive_messages_with_MessageFactory()
         {
-            using(var mqFactory = new SqsMqMessageFactory(_sqsQueueManager))
+            using (var mqFactory = new SqsMqMessageFactory(sqsQueueManager))
             {
-                using(var mqClient = mqFactory.CreateMessageQueueClient())
+                using (var mqClient = mqFactory.CreateMessageQueueClient())
                 {
                     mqClient.Publish(new Hello
-                                     {
-                                         Name = "Foo"
-                                     });
+                    {
+                        Name = "Foo"
+                    });
 
                     var msg = mqClient.Get<Hello>(QueueNames<Hello>.In, TimeSpan.FromSeconds(30));
 
@@ -521,21 +518,21 @@ namespace ServiceStack.Aws.Tests.Sqs
             var mqServer = CreateMqServer();
 
             mqServer.RegisterHandler<Hello>(m =>
-                                            {
-                                                msgsReceived++;
-                                                return null;
-                                            });
+            {
+                msgsReceived++;
+                return null;
+            });
 
             mqServer.Start();
 
-            using(mqServer)
+            using (mqServer)
             {
-                using(var mqClient = mqServer.MessageFactory.CreateMessageQueueClient())
+                using (var mqClient = mqServer.MessageFactory.CreateMessageQueueClient())
                 {
                     mqClient.Publish(new Hello
-                                     {
-                                         Name = "Into the Void"
-                                     });
+                    {
+                        Name = "Into the Void"
+                    });
 
                     var msg = mqClient.Get<Hello>(QueueNames<Hello>.Out, TimeSpan.FromSeconds(30));
 
@@ -545,8 +542,9 @@ namespace ServiceStack.Aws.Tests.Sqs
 
                     Assert.That(response.Name, Is.EqualTo("Into the Void"));
                     Assert.That(msgsReceived, Is.EqualTo(1));
-                }}
-            
+                }
+            }
+
         }
 
         [Test]
@@ -556,25 +554,25 @@ namespace ServiceStack.Aws.Tests.Sqs
             var mqServer = CreateMqServer();
 
             mqServer.RegisterHandler<Hello>(m =>
-                                            {
-                                                msgsReceived++;
-                                                return null;
-                                            });
+            {
+                msgsReceived++;
+                return null;
+            });
 
             mqServer.Start();
 
-            using(mqServer)
+            using (mqServer)
             {
-                using(var mqClient = mqServer.MessageFactory.CreateMessageQueueClient())
+                using (var mqClient = mqServer.MessageFactory.CreateMessageQueueClient())
                 {
                     var replyMq = mqClient.GetTempQueueName();
                     mqClient.Publish(new Message<Hello>(new Hello
-                                                        {
-                                                            Name = "Into the Void"
-                                                        })
-                                     {
-                                         ReplyTo = replyMq
-                                     });
+                    {
+                        Name = "Into the Void"
+                    })
+                    {
+                        ReplyTo = replyMq
+                    });
 
                     var msg = mqClient.Get<Hello>(replyMq, TimeSpan.FromSeconds(30));
 

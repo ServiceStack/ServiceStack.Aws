@@ -10,22 +10,22 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqWorker : IMqWorker<SqsMqWorker>
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(SqsMqWorker));
+        private static readonly ILog log = LogManager.GetLogger(typeof(SqsMqWorker));
 
-        private readonly Object _msgLock = new Object();
-        private readonly ISqsMqMessageFactory _mqFactory;
-        private readonly SqsMqWorkerInfo _queueWorkerInfo;
-        private readonly IMessageHandler _messageHandler;
-        private readonly Action<SqsMqWorker, Exception> _errorHandler;
+        private readonly object _msgLock = new object();
+        private readonly ISqsMqMessageFactory mqFactory;
+        private readonly SqsMqWorkerInfo queueWorkerInfo;
+        private readonly IMessageHandler messageHandler;
+        private readonly Action<SqsMqWorker, Exception> errorHandler;
 
-        private IMessageQueueClient _mqClient;
-        private Thread _bgThread;
-        private int _status;
-        private int _totalMessagesProcessed;
+        private IMessageQueueClient mqClient;
+        private Thread bgThread;
+        private int status;
+        private int totalMessagesProcessed;
         
         public SqsMqWorker(ISqsMqMessageFactory mqFactory,
                            SqsMqWorkerInfo queueWorkerInfo,
-                           String queueName,
+                           string queueName,
                            Action<SqsMqWorker, Exception> errorHandler)
         {
             Guard.AgainstNullArgument(mqFactory, "mqFactory");
@@ -33,10 +33,10 @@ namespace ServiceStack.Aws.Sqs
             Guard.AgainstNullArgument(queueName, "queueName");
             Guard.AgainstNullArgument(queueWorkerInfo.MessageHandlerFactory, "queueWorkerInfo.MessageHandlerFactory");
 
-            _mqFactory = mqFactory;
-            _queueWorkerInfo = queueWorkerInfo;
-            _errorHandler = errorHandler;
-            _messageHandler = _queueWorkerInfo.MessageHandlerFactory.CreateMessageHandler();
+            this.mqFactory = mqFactory;
+            this.queueWorkerInfo = queueWorkerInfo;
+            this.errorHandler = errorHandler;
+            messageHandler = this.queueWorkerInfo.MessageHandlerFactory.CreateMessageHandler();
             QueueName = queueName;
         }
         
@@ -44,66 +44,60 @@ namespace ServiceStack.Aws.Sqs
 
         public int TotalMessagesProcessed
         {
-            get { return _totalMessagesProcessed; }
+            get { return totalMessagesProcessed; }
         }
 
         public IMessageQueueClient MqClient
         {
-            get { return _mqClient ?? (_mqClient = _mqFactory.CreateMessageQueueClient()); }
+            get { return mqClient ?? (mqClient = mqFactory.CreateMessageQueueClient()); }
         }
 
         public SqsMqWorker Clone()
         {
-            return new SqsMqWorker(_mqFactory, _queueWorkerInfo, QueueName, _errorHandler);
+            return new SqsMqWorker(mqFactory, queueWorkerInfo, QueueName, errorHandler);
         }
 
         public IMessageHandlerStats GetStats()
         {
-            return _messageHandler.GetStats();
+            return messageHandler.GetStats();
         }
 
         public void Start()
         {
-            if (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Started)
-            {
+            if (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Started)
                 return;
-            }
-            
-            if (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Disposed)
-            {
-                throw new ObjectDisposedException("MQ Host has been disposed");
-            }
 
-            if (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Stopping)
+            if (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Disposed)
+                throw new ObjectDisposedException("MQ Host has been disposed");
+
+            if (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Stopping)
             {
                 KillBgThreadIfExists();
             }
 
-            if (Interlocked.CompareExchange(ref _status, WorkerStatus.Starting, WorkerStatus.Stopped) == WorkerStatus.Stopped)
+            if (Interlocked.CompareExchange(ref status, WorkerStatus.Starting, WorkerStatus.Stopped) == WorkerStatus.Stopped)
             {
-                _log.Debug("Starting MQ Handler Worker: {0}...".Fmt(QueueName));
+                log.Debug("Starting MQ Handler Worker: {0}...".Fmt(QueueName));
 
                 //Should only be 1 thread past this point
-                _bgThread = new Thread(Run)
-                            {
-                                Name = "{0}: {1}".Fmt(GetType().Name, QueueName),
-                                IsBackground = true,
-                            };
+                bgThread = new Thread(Run)
+                {
+                    Name = "{0}: {1}".Fmt(GetType().Name, QueueName),
+                    IsBackground = true,
+                };
 
-                _bgThread.Start();
+                bgThread.Start();
             }
         }
 
         public void Stop()
         {
-            if (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Disposed)
-            {
+            if (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Disposed)
                 return;
-            }
 
-            if (Interlocked.CompareExchange(ref _status, WorkerStatus.Stopping, WorkerStatus.Started) == WorkerStatus.Started)
+            if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopping, WorkerStatus.Started) == WorkerStatus.Started)
             {
-                _log.Debug("Stopping SQS MQ Handler Worker: {0}...".Fmt(QueueName));
+                log.Debug("Stopping SQS MQ Handler Worker: {0}...".Fmt(QueueName));
                 
                 Thread.Sleep(100);
                 
@@ -118,10 +112,8 @@ namespace ServiceStack.Aws.Sqs
 
         private void Run()
         {
-            if (Interlocked.CompareExchange(ref _status, WorkerStatus.Started, WorkerStatus.Starting) != WorkerStatus.Starting)
-            {
+            if (Interlocked.CompareExchange(ref status, WorkerStatus.Started, WorkerStatus.Starting) != WorkerStatus.Starting)
                 return;
-            }
 
             try
             {
@@ -132,19 +124,19 @@ namespace ServiceStack.Aws.Sqs
             }
             catch(ThreadInterruptedException)
             {   // Expected exceptions from Kill()
-                _log.Warn("Received ThreadInterruptedException in Worker: {0}".Fmt(QueueName));
+                log.Warn("Received ThreadInterruptedException in Worker: {0}".Fmt(QueueName));
             }
             catch(ThreadAbortException)
             {   // Expected exceptions from Kill()
-                _log.Warn("Received ThreadAbortException in Worker: {0}".Fmt(QueueName));
+                log.Warn("Received ThreadAbortException in Worker: {0}".Fmt(QueueName));
             }
             catch (Exception ex)
             {   
                 Stop();
 
-                if (_errorHandler != null)
+                if (errorHandler != null)
                 {
-                    _errorHandler(this, ex);
+                    errorHandler(this, ex);
                 }
             }
             finally
@@ -156,12 +148,12 @@ namespace ServiceStack.Aws.Sqs
                 catch { }
 
                 // If in an invalid state, Dispose() this worker.
-                if (Interlocked.CompareExchange(ref _status, WorkerStatus.Stopped, WorkerStatus.Stopping) != WorkerStatus.Stopping)
+                if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping) != WorkerStatus.Stopping)
                 {
                     Dispose();
                 }
 
-                _bgThread = null;
+                bgThread = null;
             }
         }
 
@@ -169,16 +161,15 @@ namespace ServiceStack.Aws.Sqs
         {
             var retryCount = 0;
 
-            while (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Started)
+            while (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Started)
             {
                 try
                 {
-                    var msgsProcessedThisTime =
-                        _messageHandler.ProcessQueue(MqClient,
-                                                     QueueName,
-                                                     () => Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Started);
+                    var msgsProcessedThisTime = messageHandler.ProcessQueue(MqClient,
+                        QueueName,
+                        () => Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Started);
 
-                    _totalMessagesProcessed += msgsProcessedThisTime;
+                    totalMessagesProcessed += msgsProcessedThisTime;
                     
                     Monitor.Wait(_msgLock, millisecondsTimeout: 1000);
 
@@ -190,16 +181,16 @@ namespace ServiceStack.Aws.Sqs
                 }
                 catch (Exception ex)
                 {   
-                    if (Interlocked.CompareExchange(ref _status, 0, 0) != WorkerStatus.Started)
+                    if (Interlocked.CompareExchange(ref status, 0, 0) != WorkerStatus.Started)
                     {   // No longer suppossed to be running...
                         return;
                     }
 
-                    _log.Debug("Received exception polling in MqWorker {0}".Fmt(QueueName), ex);
+                    log.Debug("Received exception polling in MqWorker {0}".Fmt(QueueName), ex);
 
                     // If it was an unexpected exception, pause for a bit before retrying
                     var waitMs = Math.Min(retryCount++ * 2000, 60000);
-                    _log.Debug("Retrying poll after {0}ms...".Fmt(waitMs), ex);
+                    log.Debug("Retrying poll after {0}ms...".Fmt(waitMs), ex);
                     Thread.Sleep(waitMs);
                 }
             }
@@ -209,56 +200,50 @@ namespace ServiceStack.Aws.Sqs
         {
             try
             {
-                if (_bgThread == null || !_bgThread.IsAlive)
-                {
+                if (bgThread == null || !bgThread.IsAlive)
                     return;
-                }
 
-                if (!_bgThread.Join(10000))
+                if (!bgThread.Join(10000))
                 {
-                    _log.Warn(String.Concat("Interrupting previous Background Worker: ", _bgThread.Name));
+                    log.Warn(string.Concat("Interrupting previous Background Worker: ", bgThread.Name));
 
-                    _bgThread.Interrupt();
+                    bgThread.Interrupt();
 
-                    if (!_bgThread.Join(TimeSpan.FromSeconds(10)))
+                    if (!bgThread.Join(TimeSpan.FromSeconds(10)))
                     {
-                        _log.Warn(String.Concat(_bgThread.Name, " just wont die, so we're now aborting it..."));
-                        _bgThread.Abort();
+                        log.Warn(string.Concat(bgThread.Name, " just wont die, so we're now aborting it..."));
+                        bgThread.Abort();
                     }
                 }
 
             }
             finally
             {
-                _bgThread = null;
-                Interlocked.CompareExchange(ref _status, WorkerStatus.Stopped, _status);
+                bgThread = null;
+                Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, status);
             }
         }
 
         private void DisposeMqClient()
         {
             // Disposing mqClient causes an EndOfStreamException to be thrown in StartSubscription
-            if (_mqClient == null)
-            {
+            if (mqClient == null)
                 return;
-            }
 
-            _mqClient.Dispose();
-            _mqClient = null;
+            mqClient.Dispose();
+            mqClient = null;
         }
 
         public virtual void Dispose()
         {
-            if (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Disposed)
-            {
+            if (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Disposed)
                 return;
-            }
 
             Stop();
 
-            if (Interlocked.CompareExchange(ref _status, WorkerStatus.Disposed, WorkerStatus.Stopped) != WorkerStatus.Stopped)
+            if (Interlocked.CompareExchange(ref status, WorkerStatus.Disposed, WorkerStatus.Stopped) != WorkerStatus.Stopped)
             {
-                Interlocked.CompareExchange(ref _status, WorkerStatus.Disposed, WorkerStatus.Stopping);
+                Interlocked.CompareExchange(ref status, WorkerStatus.Disposed, WorkerStatus.Stopping);
             }
 
             try
@@ -267,9 +252,9 @@ namespace ServiceStack.Aws.Sqs
             }
             catch (Exception ex)
             {
-                _log.Error(String.Concat("Error Disposing MessageHandlerWorker for: ", QueueName), ex);
+                log.Error(string.Concat("Error Disposing MessageHandlerWorker for: ", QueueName), ex);
             }
         }
-
     }
+
 }

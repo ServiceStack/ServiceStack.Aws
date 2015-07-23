@@ -38,56 +38,56 @@ namespace ServiceStack.Aws.Tests.Sqs
 
         }
 
-        private readonly IAmazonSQS _client;
-        private readonly string _defaultQueueUrl;
+        private readonly IAmazonSQS client;
+        private readonly string defaultQueueUrl;
 
         public FakeSqsClientHelper() : this(FakeAmazonSqs.Instance) { }
 
         public FakeSqsClientHelper(IAmazonSQS client)
         {
-            _client = client;
-            _defaultQueueUrl = CreateQueue();
+            this.client = client;
+            defaultQueueUrl = CreateQueue();
         }
 
         public string DefaultQueueUrl
         {
-            get { return _defaultQueueUrl; }
+            get { return defaultQueueUrl; }
         }
-        
+
         public int SendMessages(string queueUrl = null, int count = 1)
         {
             if (queueUrl == null)
             {
-                queueUrl = _defaultQueueUrl;
+                queueUrl = defaultQueueUrl;
             }
 
             if (count <= 1)
             {
-                var scalarResponse = _client.SendMessage(queueUrl, FakeSqsModel.CreateJsv());
-                
-                return String.IsNullOrEmpty(scalarResponse.MessageId)
-                           ? 0
-                           : 1;
+                var scalarResponse = client.SendMessage(queueUrl, FakeSqsModel.CreateJsv());
+
+                return string.IsNullOrEmpty(scalarResponse.MessageId)
+                    ? 0
+                    : 1;
             }
 
             var request = new SendMessageBatchRequest
-                          {
-                              QueueUrl = queueUrl,
-                              Entries = new List<SendMessageBatchRequestEntry>(count)
-                          };
+            {
+                QueueUrl = queueUrl,
+                Entries = new List<SendMessageBatchRequestEntry>(count)
+            };
 
             for (var x = 0; x < count; x++)
             {
                 var model = new FakeSqsModel();
 
                 request.Entries.Add(new SendMessageBatchRequestEntry
-                                    {
-                                        Id = model.Id,
-                                        MessageBody = model.ToJsv()
-                                    });
+                {
+                    Id = model.Id,
+                    MessageBody = model.ToJsv()
+                });
             }
 
-            var response = _client.SendMessageBatch(request);
+            var response = client.SendMessageBatch(request);
 
             return response.Successful.Count;
         }
@@ -96,12 +96,12 @@ namespace ServiceStack.Aws.Tests.Sqs
         {
             if (queueUrl == null)
             {
-                queueUrl = _defaultQueueUrl;
+                queueUrl = defaultQueueUrl;
             }
 
             var maxAttempts = SqsTestAssert.IsFakeClient
-                                  ? 1
-                                  : 5;
+                ? 1
+                : 5;
 
             var receiveAttempts = 0;
 
@@ -109,17 +109,17 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             while (receiveAttempts < maxAttempts)
             {
-                received = _client.ReceiveMessage(new ReceiveMessageRequest
-                                                  {
-                                                      QueueUrl = queueUrl,
-                                                      MaxNumberOfMessages = 1,
-                                                      VisibilityTimeout = visTimeout > 0
-                                                                              ? visTimeout
-                                                                              : SqsQueueDefinition.MaxVisibilityTimeoutSeconds,
-                                                      WaitTimeSeconds = SqsTestAssert.IsFakeClient
-                                                                            ? 0
-                                                                            : 3
-                                                  });
+                received = client.ReceiveMessage(new ReceiveMessageRequest
+                {
+                    QueueUrl = queueUrl,
+                    MaxNumberOfMessages = 1,
+                    VisibilityTimeout = visTimeout > 0
+                        ? visTimeout
+                        : SqsQueueDefinition.MaxVisibilityTimeoutSeconds,
+                    WaitTimeSeconds = SqsTestAssert.IsFakeClient
+                        ? 0
+                        : 3
+                });
 
                 if (received != null)
                 {
@@ -128,7 +128,7 @@ namespace ServiceStack.Aws.Tests.Sqs
 
                 receiveAttempts++;
             }
-            
+
             Assert.IsNotNull(received);
             Assert.IsNotNull(received.Messages);
             Assert.AreEqual(1, received.Messages.Count);
@@ -144,16 +144,16 @@ namespace ServiceStack.Aws.Tests.Sqs
             }
 
             var createRequest = new CreateQueueRequest
-                                {
-                                    QueueName = queueName,
-                                    Attributes = new Dictionary<string, string>
-                                                 {
-                                                     { QueueAttributeName.VisibilityTimeout, visTimeout.ToString(CultureInfo.InvariantCulture) },
-                                                     { QueueAttributeName.ReceiveMessageWaitTimeSeconds, waitTime.ToString(CultureInfo.InvariantCulture) },
-                                                 }
-                                };
+            {
+                QueueName = queueName,
+                Attributes = new Dictionary<string, string>
+                {
+                    { QueueAttributeName.VisibilityTimeout, visTimeout.ToString(CultureInfo.InvariantCulture) },
+                    { QueueAttributeName.ReceiveMessageWaitTimeSeconds, waitTime.ToString(CultureInfo.InvariantCulture) },
+                }
+            };
 
-            var createResponse = _client.CreateQueue(createRequest);
+            var createResponse = client.CreateQueue(createRequest);
 
             Assert.IsNotNull(createResponse);
             Assert.IsNotNullOrEmpty(createResponse.QueueUrl);

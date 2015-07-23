@@ -13,31 +13,31 @@ namespace ServiceStack.Aws.Sqs
     public abstract class BaseMqServer<TWorker> : IMessageService
         where TWorker : class, IMqWorker<TWorker>
     {
-        protected readonly ILog _log;
-        protected readonly String _typeName;
-        private readonly object _msgLock = new object();
-        private readonly object _statusLock = new object();
+        protected readonly ILog log;
+        protected readonly string typeName;
+        private readonly object msgLock = new object();
+        private readonly object statusLock = new object();
 
-        protected int _status;
-        protected List<TWorker> _workers;
-        private Thread _bgThread;
-        private long _bgThreadCount;
-        
-        private long _timesStarted;
-        private long _doOperation = WorkerOperation.NoOp;
-        private long _noOfErrors = 0;
-        private int _noOfContinuousErrors = 0;
-        private string _lastExMsg = null;
+        protected int status;
+        protected List<TWorker> workers;
+        private Thread bgThread;
+        private long bgThreadCount;
+
+        private long timesStarted;
+        private long doOperation = WorkerOperation.NoOp;
+        private long noOfErrors = 0;
+        private int noOfContinuousErrors = 0;
+        private string lastExMsg = null;
 
         public BaseMqServer()
         {
             var type = GetType();
 
-            _log = LogManager.GetLogger(type);
+            log = LogManager.GetLogger(type);
 
-            _typeName = type.Name;
+            typeName = type.Name;
 
-            this.ErrorHandler = ex => _log.Error(String.Concat("Exception in ", _typeName, " MQ Server: ", ex.Message), ex);
+            this.ErrorHandler = ex => log.Error(string.Concat("Exception in ", typeName, " MQ Server: ", ex.Message), ex);
         }
 
         protected abstract void Init();
@@ -54,37 +54,37 @@ namespace ServiceStack.Aws.Sqs
 
         public IMessageHandlerStats GetStats()
         {
-            lock (_workers)
+            lock (workers)
             {
                 var total = new MessageHandlerStats("All Handlers");
-                _workers.ForEach(x => total.Add(x.GetStats()));
+                workers.ForEach(x => total.Add(x.GetStats()));
                 return total;
             }
         }
 
         public string GetStatus()
         {
-            lock (_statusLock)
+            lock (statusLock)
             {
-                return WorkerStatus.ToString(_status);
+                return WorkerStatus.ToString(status);
             }
         }
 
         public string GetStatsDescription()
         {
-            lock (_workers)
+            lock (workers)
             {
                 var sb = new StringBuilder("#MQ SERVER STATS:\n");
                 sb.AppendLine("===============");
                 sb.AppendLine("Current Status: " + GetStatus());
-                sb.AppendLine("Listening On: " + String.Join(", ", _workers.Select(x => x.QueueName).ToArray()));
-                sb.AppendLine("Times Started: " + Interlocked.CompareExchange(ref _timesStarted, 0, 0));
-                sb.AppendLine("Num of Errors: " + Interlocked.CompareExchange(ref _noOfErrors, 0, 0));
-                sb.AppendLine("Num of Continuous Errors: " + Interlocked.CompareExchange(ref _noOfContinuousErrors, 0, 0));
-                sb.AppendLine("Last ErrorMsg: " + _lastExMsg);
+                sb.AppendLine("Listening On: " + string.Join(", ", workers.Select(x => x.QueueName).ToArray()));
+                sb.AppendLine("Times Started: " + Interlocked.CompareExchange(ref timesStarted, 0, 0));
+                sb.AppendLine("Num of Errors: " + Interlocked.CompareExchange(ref noOfErrors, 0, 0));
+                sb.AppendLine("Num of Continuous Errors: " + Interlocked.CompareExchange(ref noOfContinuousErrors, 0, 0));
+                sb.AppendLine("Last ErrorMsg: " + lastExMsg);
                 sb.AppendLine("===============");
-                
-                foreach (var worker in _workers)
+
+                foreach (var worker in workers)
                 {
                     sb.AppendLine(worker.GetStats().ToString());
                     sb.AppendLine("---------------\n");
@@ -96,21 +96,19 @@ namespace ServiceStack.Aws.Sqs
 
         protected void WorkerErrorHandler(TWorker source, Exception ex)
         {
-            _log.Error(String.Concat("Received exception in Worker: ", source.QueueName), ex);
-            
-            var sourceWorker = _workers.SingleOrDefault(w => ReferenceEquals(w, source));
+            log.Error(string.Concat("Received exception in Worker: ", source.QueueName), ex);
+
+            var sourceWorker = workers.SingleOrDefault(w => ReferenceEquals(w, source));
 
             if (sourceWorker == null)
-            {
                 return;
-            }
 
-            _log.Debug(String.Concat("Starting new ", source.QueueName, " worker..."));
+            log.Debug(string.Concat("Starting new ", source.QueueName, " worker..."));
 
-            _workers.Remove(sourceWorker);
+            workers.Remove(sourceWorker);
 
             var newWorker = sourceWorker.Clone();
-            _workers.Add(newWorker);
+            workers.Add(newWorker);
             newWorker.Start();
 
             sourceWorker.Dispose();
@@ -127,19 +125,19 @@ namespace ServiceStack.Aws.Sqs
         /// Wait (in seconds) before starting the MQ Server after a restart 
         /// </summary>
         public int? WaitBeforeNextRestart { get; set; }
-        
+
         public List<Type> RegisteredTypes { get; private set; }
 
         public long BgThreadCount
         {
-            get { return Interlocked.CompareExchange(ref _bgThreadCount, 0, 0); }
+            get { return Interlocked.CompareExchange(ref bgThreadCount, 0, 0); }
         }
 
         /// <summary>
         /// Execute global error handler logic. Must be thread-safe.
         /// </summary>
         public Action<Exception> ErrorHandler { get; set; }
-        
+
         /// <summary>
         /// If you only want to enable priority queue handlers (and threads) for specific msg types
         /// </summary>
@@ -174,26 +172,26 @@ namespace ServiceStack.Aws.Sqs
 
         void DisposeWorkerThreads()
         {
-            _log.Debug(String.Concat("Disposing all ", _typeName, " MQ Server worker threads..."));
+            log.Debug(string.Concat("Disposing all ", typeName, " MQ Server worker threads..."));
 
-            if (_workers != null)
+            if (workers != null)
             {
-                _workers.ForEach(w => w.Dispose());
+                workers.ForEach(w => w.Dispose());
             }
         }
 
         public void Dispose()
         {
-            if (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Disposed)
+            if (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Disposed)
             {
                 return;
             }
 
             Stop();
 
-            if (Interlocked.CompareExchange(ref _status, WorkerStatus.Disposed, WorkerStatus.Stopped) != WorkerStatus.Stopped)
+            if (Interlocked.CompareExchange(ref status, WorkerStatus.Disposed, WorkerStatus.Stopped) != WorkerStatus.Stopped)
             {
-                Interlocked.CompareExchange(ref _status, WorkerStatus.Disposed, WorkerStatus.Stopping);
+                Interlocked.CompareExchange(ref status, WorkerStatus.Disposed, WorkerStatus.Stopping);
             }
 
             try
@@ -202,7 +200,7 @@ namespace ServiceStack.Aws.Sqs
             }
             catch (Exception ex)
             {
-                _log.Error("Error DisposeWorkerThreads(): ", ex);
+                log.Error("Error DisposeWorkerThreads(): ", ex);
             }
 
             try
@@ -220,21 +218,21 @@ namespace ServiceStack.Aws.Sqs
 
             DoDispose();
         }
-        
+
         public void Start()
         {
-            if (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Started)
+            if (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Started)
             {   // Already started, (re)start workers as needed and done
                 StartWorkerThreads();
                 return;
             }
 
-            if (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Disposed)
+            if (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Disposed)
             {
-                throw new ObjectDisposedException(String.Concat(_typeName, " MQ Host has been disposed"));
+                throw new ObjectDisposedException(string.Concat(typeName, " MQ Host has been disposed"));
             }
 
-            if (Interlocked.CompareExchange(ref _status, WorkerStatus.Starting, WorkerStatus.Stopped) != WorkerStatus.Stopped)
+            if (Interlocked.CompareExchange(ref status, WorkerStatus.Starting, WorkerStatus.Stopped) != WorkerStatus.Stopped)
             {
                 return;
             }
@@ -244,32 +242,32 @@ namespace ServiceStack.Aws.Sqs
             {
                 Init();
 
-                if (_workers == null || _workers.Count == 0)
+                if (workers == null || workers.Count == 0)
                 {
-                    _log.Warn(String.Concat("Cannot start ", _typeName, " MQ Server with no Message Handlers registered, ignoring."));
-                    Interlocked.CompareExchange(ref _status, WorkerStatus.Stopped, WorkerStatus.Starting);
+                    log.Warn(string.Concat("Cannot start ", typeName, " MQ Server with no Message Handlers registered, ignoring."));
+                    Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Starting);
                     return;
                 }
 
                 StartWorkerThreads();
 
-                if (_bgThread != Thread.CurrentThread)
+                if (bgThread != Thread.CurrentThread)
                 {
                     KillBgThreadIfExists();
 
-                    _bgThread = new Thread(RunLoop)
-                               {
-                                   IsBackground = true,
-                                   Name = String.Concat(_typeName, " MQ Server ", Interlocked.Increment(ref _bgThreadCount))
-                               };
+                    bgThread = new Thread(RunLoop)
+                    {
+                        IsBackground = true,
+                        Name = string.Concat(typeName, " MQ Server ", Interlocked.Increment(ref bgThreadCount))
+                    };
 
-                    _bgThread.Start();
+                    bgThread.Start();
 
-                    _log.Debug(String.Concat("Started Background Thread: ", _bgThread.Name));
+                    log.Debug(string.Concat("Started Background Thread: ", bgThread.Name));
                 }
                 else
                 {
-                    _log.Debug(String.Concat("Retrying RunLoop() on Thread: ", _bgThread.Name));
+                    log.Debug(string.Concat("Retrying RunLoop() on Thread: ", bgThread.Name));
 
                     RunLoop();
                 }
@@ -289,27 +287,25 @@ namespace ServiceStack.Aws.Sqs
 
         public void Stop()
         {
-            if (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Disposed)
-            {
+            if (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Disposed)
                 throw new ObjectDisposedException("MQ Host has been disposed");
-            }
 
-            if (Interlocked.CompareExchange(ref _status, WorkerStatus.Stopping, WorkerStatus.Started) == WorkerStatus.Started)
+            if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopping, WorkerStatus.Started) == WorkerStatus.Started)
             {
-                lock (_msgLock)
+                lock (msgLock)
                 {
-                    Interlocked.CompareExchange(ref _doOperation, WorkerOperation.Stop, _doOperation);
-                    Monitor.Pulse(_msgLock);
+                    Interlocked.CompareExchange(ref doOperation, WorkerOperation.Stop, doOperation);
+                    Monitor.Pulse(msgLock);
                 }
             }
 
         }
-        
+
         private void StartWorkerThreads()
         {
-            _log.Debug("Starting all SQS MQ Server worker threads...");
+            log.Debug("Starting all SQS MQ Server worker threads...");
 
-            foreach (var worker in _workers)
+            foreach (var worker in workers)
             {
                 try
                 {
@@ -322,16 +318,16 @@ namespace ServiceStack.Aws.Sqs
                         this.ErrorHandler(ex);
                     }
 
-                    _log.Warn(String.Concat("Could not START SQS MQ worker thread: ", ex.Message));
+                    log.Warn(string.Concat("Could not START SQS MQ worker thread: ", ex.Message));
                 }
             }
         }
 
         private void StopWorkerThreads()
         {
-            _log.Debug(String.Concat("Stopping all ", _typeName, " MQ Server worker threads..."));
+            log.Debug(string.Concat("Stopping all ", typeName, " MQ Server worker threads..."));
 
-            foreach (var worker in _workers)
+            foreach (var worker in workers)
             {
                 try
                 {
@@ -343,88 +339,86 @@ namespace ServiceStack.Aws.Sqs
                     {
                         this.ErrorHandler(ex);
                     }
-                    
-                    _log.Warn(String.Concat("Could not STOP ", _typeName, " MQ worker thread: ", ex.Message));
+
+                    log.Warn(string.Concat("Could not STOP ", typeName, " MQ worker thread: ", ex.Message));
                 }
             }
         }
 
         private void KillBgThreadIfExists()
         {
-            if (_bgThread == null || !_bgThread.IsAlive)
+            if (bgThread == null || !bgThread.IsAlive)
             {
                 return;
             }
 
             try
             {
-                if (!_bgThread.Join(500))
+                if (!bgThread.Join(500))
                 {
-                    _log.Warn(String.Concat("Interrupting previous Background Thread: ", _bgThread.Name));
+                    log.Warn(string.Concat("Interrupting previous Background Thread: ", bgThread.Name));
 
-                    _bgThread.Interrupt();
+                    bgThread.Interrupt();
 
-                    if (!_bgThread.Join(TimeSpan.FromSeconds(3)))
+                    if (!bgThread.Join(TimeSpan.FromSeconds(3)))
                     {
-                        _log.Warn(String.Concat(_bgThread.Name, " just wont die, so we're now aborting it..."));
-                        _bgThread.Abort();
+                        log.Warn(string.Concat(bgThread.Name, " just wont die, so we're now aborting it..."));
+                        bgThread.Abort();
                     }
                 }
 
             }
             finally
             {
-                _bgThread = null;
+                bgThread = null;
             }
         }
 
         private void RunLoop()
         {
-            if (Interlocked.CompareExchange(ref _status, WorkerStatus.Started, WorkerStatus.Starting) != WorkerStatus.Starting)
-            {
+            if (Interlocked.CompareExchange(ref status, WorkerStatus.Started, WorkerStatus.Starting) != WorkerStatus.Starting)
                 return;
-            }
 
-            Interlocked.Increment(ref _timesStarted);
+            Interlocked.Increment(ref timesStarted);
 
             try
             {
-                lock (_msgLock)
+                lock (msgLock)
                 {
                     // Reset
-                    while (Interlocked.CompareExchange(ref _status, 0, 0) == WorkerStatus.Started)
+                    while (Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Started)
                     {
-                        Monitor.Wait(_msgLock);
-                        _log.Debug("msgLock received...");
+                        Monitor.Wait(msgLock);
+                        log.Debug("msgLock received...");
 
-                        var op = Interlocked.CompareExchange(ref _doOperation, WorkerOperation.NoOp, _doOperation);
+                        var op = Interlocked.CompareExchange(ref doOperation, WorkerOperation.NoOp, doOperation);
 
                         switch (op)
                         {
                             case WorkerOperation.Stop:
-                                _log.Debug("Stop Command Issued");
+                                log.Debug("Stop Command Issued");
 
-                                if (Interlocked.CompareExchange(ref _status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
+                                if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
                                 {
-                                    Interlocked.CompareExchange(ref _status, WorkerStatus.Stopped, WorkerStatus.Stopping);
+                                    Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping);
                                 }
 
                                 StopWorkerThreads();
                                 return;
 
                             case WorkerOperation.Restart:
-                                _log.Debug("Restart Command Issued");
+                                log.Debug("Restart Command Issued");
 
-                                if (Interlocked.CompareExchange(ref _status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
+                                if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
                                 {
-                                    Interlocked.CompareExchange(ref _status, WorkerStatus.Stopped, WorkerStatus.Stopping);
+                                    Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping);
                                 }
 
                                 StopWorkerThreads();
                                 StartWorkerThreads();
 
-                                Interlocked.CompareExchange(ref _status, WorkerStatus.Started, WorkerStatus.Stopped);
-                                
+                                Interlocked.CompareExchange(ref status, WorkerStatus.Started, WorkerStatus.Stopped);
+
                                 break;
                         }
                     }
@@ -432,13 +426,13 @@ namespace ServiceStack.Aws.Sqs
             }
             catch (Exception ex)
             {
-                _lastExMsg = ex.Message;
-                Interlocked.Increment(ref _noOfErrors);
-                Interlocked.Increment(ref _noOfContinuousErrors);
+                lastExMsg = ex.Message;
+                Interlocked.Increment(ref noOfErrors);
+                Interlocked.Increment(ref noOfContinuousErrors);
 
-                if (Interlocked.CompareExchange(ref _status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
+                if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
                 {
-                    Interlocked.CompareExchange(ref _status, WorkerStatus.Stopped, WorkerStatus.Stopping);
+                    Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping);
                 }
 
                 StopWorkerThreads();
@@ -455,7 +449,7 @@ namespace ServiceStack.Aws.Sqs
                 }
             }
 
-            _log.Debug("Exiting RunLoop()...");
+            log.Debug("Exiting RunLoop()...");
         }
     }
 }

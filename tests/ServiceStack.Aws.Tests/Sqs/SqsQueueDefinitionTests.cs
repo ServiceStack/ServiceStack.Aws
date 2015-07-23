@@ -15,12 +15,12 @@ namespace ServiceStack.Aws.Tests.Sqs
         public void Valid_queue_names_are_not_modified()
         {
             var validQueueNames = new List<string>
-                                  {
-                                      "valid123queue-name",
-                                      "valid123queue_name",
-                                      "validname",
-                                      "123-_"
-                                  };
+            {
+                "valid123queue-name",
+                "valid123queue_name",
+                "validname",
+                "123-_"
+            };
 
             foreach (var qn in validQueueNames)
             {
@@ -32,17 +32,17 @@ namespace ServiceStack.Aws.Tests.Sqs
         public void Invalid_queue_names_are_modified()
         {
             var validQueueNames = new List<string>
-                                  {
-                                      "invalid123queue.name",
-                                      "invalid123queue:name",
-                                      "invalidname:",
-                                      "also.invalid:still",
-                                      "invalid as well"
-                                  };
+            {
+                "invalid123queue.name",
+                "invalid123queue:name",
+                "invalidname:",
+                "also.invalid:still",
+                "invalid as well"
+            };
 
             foreach (var qn in validQueueNames)
             {
-                Assert.AreEqual(qn.Replace(".","-").Replace(":","-").Replace(" ","-"), qn.ToValidQueueName(), "This string failed [{0}]".Fmt(qn));
+                Assert.AreEqual(qn.Replace(".", "-").Replace(":", "-").Replace(" ", "-"), qn.ToValidQueueName(), "This string failed [{0}]".Fmt(qn));
             }
         }
 
@@ -51,21 +51,21 @@ namespace ServiceStack.Aws.Tests.Sqs
         {
             var createdDt = DateTime.UtcNow.ToUnixTime();
             var rdPolicy = new SqsRedrivePolicy
-                           {
-                               deadLetterTargetArn = "http://test.dlq.targetarn.com",
-                               maxReceiveCount = 11
-                           };
+            {
+                DeadLetterTargetArn = "http://test.dlq.targetarn.com",
+                MaxReceiveCount = 11
+            };
             var qn = new SqsQueueName(Guid.NewGuid().ToString("N"));
 
             var attributes = new Dictionary<string, string>
-                             {
-                                 { QueueAttributeName.VisibilityTimeout, "17" },
-                                 { QueueAttributeName.ReceiveMessageWaitTimeSeconds, "16" },
-                                 { QueueAttributeName.CreatedTimestamp, createdDt.ToString(CultureInfo.InvariantCulture) },
-                                 { QueueAttributeName.ApproximateNumberOfMessages, "123456789" },
-                                 { QueueAttributeName.QueueArn, "http://test.queue.arn.com" },
-                                 { QueueAttributeName.RedrivePolicy, rdPolicy.ToJson() }
-                             };
+            {
+                { QueueAttributeName.VisibilityTimeout, "17" },
+                { QueueAttributeName.ReceiveMessageWaitTimeSeconds, "16" },
+                { QueueAttributeName.CreatedTimestamp, createdDt.ToString(CultureInfo.InvariantCulture) },
+                { QueueAttributeName.ApproximateNumberOfMessages, "123456789" },
+                { QueueAttributeName.QueueArn, "http://test.queue.arn.com" },
+                { QueueAttributeName.RedrivePolicy, rdPolicy.ToJson() }
+            };
 
             var qd = attributes.ToQueueDefinition(qn, "testQueueUrl", disableBuffering: true);
 
@@ -101,6 +101,6 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.IsNull(qd.QueueArn, "QueueArn");
             Assert.IsNull(qd.RedrivePolicy, "RedrivePolicy");
         }
-        
+
     }
 }

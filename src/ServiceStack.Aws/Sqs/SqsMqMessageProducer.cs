@@ -9,19 +9,19 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqMessageProducer : IMessageProducer, IOneWayClient
     {
-        protected static readonly ILog _log = LogManager.GetLogger(typeof(SqsMqMessageProducer));
+        protected static readonly ILog log = LogManager.GetLogger(typeof(SqsMqMessageProducer));
 
-        protected readonly ISqsMqBufferFactory _sqsMqBufferFactory;
-        protected readonly SqsQueueManager _sqsQueueManager;
+        protected readonly ISqsMqBufferFactory sqsMqBufferFactory;
+        protected readonly SqsQueueManager sqsQueueManager;
 
         public SqsMqMessageProducer(ISqsMqBufferFactory sqsMqBufferFactory, SqsQueueManager sqsQueueManager)
         {
-            _sqsMqBufferFactory = sqsMqBufferFactory;
-            _sqsQueueManager = sqsQueueManager;
+            this.sqsMqBufferFactory = sqsMqBufferFactory;
+            this.sqsQueueManager = sqsQueueManager;
         }
 
         public Action OnPublishedCallback { get; set; }
-        
+
         public void Publish<T>(T messageBody)
         {
             var message = messageBody as IMessage;
@@ -40,7 +40,7 @@ namespace ServiceStack.Aws.Sqs
         {
             Publish(message.ToInQueueName(), message);
         }
-        
+
         public void SendOneWay(object requestDto)
         {
             Publish(MessageFactory.Create(requestDto));
@@ -54,9 +54,7 @@ namespace ServiceStack.Aws.Sqs
         public void SendAllOneWay(IEnumerable<object> requests)
         {
             if (requests == null)
-            {
                 return;
-            }
 
             foreach (var request in requests)
             {
@@ -66,17 +64,17 @@ namespace ServiceStack.Aws.Sqs
 
         public void Publish(string queueName, IMessage message)
         {
-            using(__requestAccess())
+            using (__requestAccess())
             {
-                var queueDefinition = _sqsQueueManager.GetOrCreate(queueName);
+                var queueDefinition = sqsQueueManager.GetOrCreate(queueName);
 
-                var sqsBuffer = _sqsMqBufferFactory.GetOrCreate(queueDefinition);
+                var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
                 sqsBuffer.Send(new SendMessageRequest
-                               {
-                                   QueueUrl = queueDefinition.QueueUrl,
-                                   MessageBody = message.ToJsv()
-                               });
+                {
+                    QueueUrl = queueDefinition.QueueUrl,
+                    MessageBody = message.ToJsv()
+                });
 
                 if (OnPublishedCallback != null)
                 {
@@ -115,6 +113,5 @@ namespace ServiceStack.Aws.Sqs
         {
             // NOTE: Do not dispose the bufferFactory or queueManager here, this object didn't create them, it was given them
         }
-
     }
 }

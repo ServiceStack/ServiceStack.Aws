@@ -10,9 +10,9 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqServer : BaseMqServer<SqsMqWorker>
     {
-        private readonly Dictionary<Type, SqsMqWorkerInfo> _handlerMap = new Dictionary<Type, SqsMqWorkerInfo>();
+        private readonly Dictionary<Type, SqsMqWorkerInfo> handlerMap = new Dictionary<Type, SqsMqWorkerInfo>();
 
-        private readonly ISqsMqMessageFactory _sqsMqMessageFactory;
+        private readonly ISqsMqMessageFactory sqsMqMessageFactory;
 
         public SqsMqServer() : this(new SqsConnectionFactory()) { }
 
@@ -25,17 +25,17 @@ namespace ServiceStack.Aws.Sqs
         {
             Guard.AgainstNullArgument(sqsMqMessageFactory, "sqsMqMessageFactory");
 
-            _sqsMqMessageFactory = sqsMqMessageFactory;
+            this.sqsMqMessageFactory = sqsMqMessageFactory;
         }
         
         public override IMessageFactory MessageFactory
         {
-            get { return _sqsMqMessageFactory; }
+            get { return sqsMqMessageFactory; }
         }
 
         public SqsConnectionFactory ConnectionFactory
         {
-            get { return _sqsMqMessageFactory.ConnectionFactory; }
+            get { return sqsMqMessageFactory.ConnectionFactory; }
         }
         
         /// <summary>
@@ -43,8 +43,8 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public int RetryCount
         {
-            get { return _sqsMqMessageFactory.RetryCount; }
-            set { _sqsMqMessageFactory.RetryCount = value; }
+            get { return sqsMqMessageFactory.RetryCount; }
+            set { sqsMqMessageFactory.RetryCount = value; }
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public int BufferFlushIntervalSeconds
         {
-            get { return _sqsMqMessageFactory.BufferFlushIntervalSeconds; }
-            set { _sqsMqMessageFactory.BufferFlushIntervalSeconds = value; }
+            get { return sqsMqMessageFactory.BufferFlushIntervalSeconds; }
+            set { sqsMqMessageFactory.BufferFlushIntervalSeconds = value; }
         }
 
         /// <summary>
@@ -66,13 +66,13 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public int VisibilityTimeout
         {
-            get { return _sqsMqMessageFactory.QueueManager.DefaultVisibilityTimeout; }
+            get { return sqsMqMessageFactory.QueueManager.DefaultVisibilityTimeout; }
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxVisibilityTimeoutSeconds,
                                                 "SQS MQ VisibilityTimeout must be 0-43200");
 
-                _sqsMqMessageFactory.QueueManager.DefaultVisibilityTimeout = value;
+                sqsMqMessageFactory.QueueManager.DefaultVisibilityTimeout = value;
             }
         }
 
@@ -83,13 +83,13 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public int ReceiveWaitTime
         {
-            get { return _sqsMqMessageFactory.QueueManager.DefaultReceiveWaitTime; }
+            get { return sqsMqMessageFactory.QueueManager.DefaultReceiveWaitTime; }
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxWaitTimeSeconds,
                                                 "SQS MQ ReceiveWaitTime must be 0-20");
 
-                _sqsMqMessageFactory.QueueManager.DefaultReceiveWaitTime = value;
+                sqsMqMessageFactory.QueueManager.DefaultReceiveWaitTime = value;
             }
         }
 
@@ -98,8 +98,8 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public bool DisableBuffering
         {
-            get { return _sqsMqMessageFactory.QueueManager.DisableBuffering; }
-            set { _sqsMqMessageFactory.QueueManager.DisableBuffering = value; }
+            get { return sqsMqMessageFactory.QueueManager.DisableBuffering; }
+            set { sqsMqMessageFactory.QueueManager.DisableBuffering = value; }
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace ServiceStack.Aws.Sqs
         {
             try
             {
-                _sqsMqMessageFactory.Dispose();
+                sqsMqMessageFactory.Dispose();
             }
             catch (Exception ex)
             {
@@ -155,81 +155,70 @@ namespace ServiceStack.Aws.Sqs
         {
             var type = typeof(T);
 
-            Guard.Against<ArgumentException>(_handlerMap.ContainsKey(type), String.Concat("SQS Message handler has already been registered for type: ", type.Name));
+            Guard.Against<ArgumentException>(handlerMap.ContainsKey(type), string.Concat("SQS Message handler has already been registered for type: ", type.Name));
 
-            var retry = RetryCount = retryCount.HasValue
-                                         ? retryCount.Value
-                                         : RetryCount;
+            var retry = RetryCount = retryCount ?? RetryCount;
 
-            _handlerMap[type] = new SqsMqWorkerInfo
-                                {
-                                    MessageHandlerFactory = new MessageHandlerFactory<T>(this, processMessageFn, processExceptionEx)
-                                                            {
-                                                                RequestFilter = this.RequestFilter,
-                                                                ResponseFilter = this.ResponseFilter,
-                                                                PublishResponsesWhitelist = this.PublishResponsesWhitelist,
-                                                                RetryCount = retry
-                                                            },
-                                    MessageType = type,
-                                    RetryCount = retry,
-                                    ThreadCount = noOfThreads,
-                                    VisibilityTimeout = visibilityTimeoutSeconds.HasValue
-                                                            ? visibilityTimeoutSeconds.Value
-                                                            : this.VisibilityTimeout,
-                                    ReceiveWaitTime = receiveWaitTimeSeconds.HasValue
-                                                          ? receiveWaitTimeSeconds.Value
-                                                          : this.ReceiveWaitTime,
-                                    DisableBuffering = disableBuffering.HasValue
-                                                           ? disableBuffering.Value
-                                                           : this.DisableBuffering
-                                };
+            handlerMap[type] = new SqsMqWorkerInfo
+            {
+                MessageHandlerFactory = new MessageHandlerFactory<T>(this, processMessageFn, processExceptionEx)
+                {
+                    RequestFilter = this.RequestFilter,
+                    ResponseFilter = this.ResponseFilter,
+                    PublishResponsesWhitelist = this.PublishResponsesWhitelist,
+                    RetryCount = retry
+                },
+                MessageType = type,
+                RetryCount = retry,
+                ThreadCount = noOfThreads,
+                VisibilityTimeout = visibilityTimeoutSeconds ?? this.VisibilityTimeout,
+                ReceiveWaitTime = receiveWaitTimeSeconds ?? this.ReceiveWaitTime,
+                DisableBuffering = disableBuffering ?? this.DisableBuffering
+            };
 
-            LicenseUtils.AssertValidUsage(LicenseFeature.ServiceStack, QuotaType.Operations, _handlerMap.Count);
+            LicenseUtils.AssertValidUsage(LicenseFeature.ServiceStack, QuotaType.Operations, handlerMap.Count);
         }
         
         protected override void Init()
         {
-            if (_workers != null)
+            if (workers != null)
             {
                 return;
             }
 
-            _sqsMqMessageFactory.ErrorHandler = this.ErrorHandler;
+            sqsMqMessageFactory.ErrorHandler = this.ErrorHandler;
 
-            _workers = new List<SqsMqWorker>();
+            workers = new List<SqsMqWorker>();
 
-            foreach (var handler in _handlerMap)
+            foreach (var handler in handlerMap)
             {
                 var msgType = handler.Key;
                 var info = handler.Value;
 
                 // First build the DLQ that will become the redrive policy for other q's for this type
-                var dlqDefinition = _sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.Dlq, info);
+                var dlqDefinition = sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.Dlq, info);
 
                 // Base in q and workers
-                _sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.In, info, dlqDefinition.QueueArn);
+                sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.In, info, dlqDefinition.QueueArn);
 
-                info.ThreadCount.Times(i => _workers.Add(new SqsMqWorker(_sqsMqMessageFactory, info,
+                info.ThreadCount.Times(i => workers.Add(new SqsMqWorker(sqsMqMessageFactory, info,
                                                                          info.QueueNames.In, WorkerErrorHandler)));
                 
                 // Need an outq?
                 if (PublishResponsesWhitelist == null || PublishResponsesWhitelist.Any(x => x == msgType.Name))
                 {
-                    _sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.Out, info, dlqDefinition.QueueArn);
+                    sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.Out, info, dlqDefinition.QueueArn);
                 }
                 
                 // Priority q and workers
                 if (PriortyQueuesWhitelist == null || PriortyQueuesWhitelist.Any(x => x == msgType.Name))
                 {   // Need priority queue and workers
-                    _sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.Priority, info, dlqDefinition.QueueArn);
+                    sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.Priority, info, dlqDefinition.QueueArn);
 
-                    info.ThreadCount.Times(i => _workers.Add(new SqsMqWorker(_sqsMqMessageFactory, info,
-                                                                             info.QueueNames.Priority, WorkerErrorHandler)));
+                    info.ThreadCount.Times(i => workers.Add(new SqsMqWorker(sqsMqMessageFactory, info, info.QueueNames.Priority, WorkerErrorHandler)));
                 }
-
             }
         }
-
 
     }
 }

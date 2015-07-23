@@ -10,73 +10,69 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqBufferFactory : ISqsMqBufferFactory
     {
-        private readonly SqsConnectionFactory _sqsConnectionFactory;
-        private static readonly ConcurrentDictionary<string, ISqsMqBuffer> _queueNameBuffers = new ConcurrentDictionary<string, ISqsMqBuffer>();
-        private Timer _timer;
-        private int _processingTimer = 0;
+        private readonly SqsConnectionFactory sqsConnectionFactory;
+        private static readonly ConcurrentDictionary<string, ISqsMqBuffer> queueNameBuffers = new ConcurrentDictionary<string, ISqsMqBuffer>();
+        private Timer timer;
+        private int processingTimer = 0;
 
         public SqsMqBufferFactory(SqsConnectionFactory sqsConnectionFactory)
         {
             Guard.AgainstNullArgument(sqsConnectionFactory, "sqsConnectionFactory");
 
-            _sqsConnectionFactory = sqsConnectionFactory;
+            this.sqsConnectionFactory = sqsConnectionFactory;
         }
 
         public Action<Exception> ErrorHandler { get; set; }
 
-        private int _bufferFlushIntervalSeconds = 0;
+        private int bufferFlushIntervalSeconds = 0;
         public int BufferFlushIntervalSeconds
         {
-            get { return _bufferFlushIntervalSeconds; }
+            get { return bufferFlushIntervalSeconds; }
             set
             {
-                _bufferFlushIntervalSeconds = value > 0
-                                                  ? value
-                                                  : 0;
+                bufferFlushIntervalSeconds = value > 0
+                    ? value
+                    : 0;
 
-                if (_timer != null)
-                {
+                if (timer != null)
                     return;
-                }
 
-                _timer = new Timer(_bufferFlushIntervalSeconds)
-                         {
-                             AutoReset = false
-                         };
+                timer = new Timer(bufferFlushIntervalSeconds)
+                {
+                    AutoReset = false
+                };
 
-                _timer.Elapsed += OnTimerElapsed;
-                _timer.Start();
+                timer.Elapsed += OnTimerElapsed;
+                timer.Start();
             }
         }
 
-        private void OnTimerElapsed(Object source, ElapsedEventArgs e)
+        private void OnTimerElapsed(object source, ElapsedEventArgs e)
         {
-            if (Interlocked.CompareExchange(ref _processingTimer, 1, 0) > 0)
-            {
+            if (Interlocked.CompareExchange(ref processingTimer, 1, 0) > 0)
                 return;
-            }
 
             try
             {
-                foreach (var buffer in _queueNameBuffers)
+                foreach (var buffer in queueNameBuffers)
                 {
                     buffer.Value.Drain(fullDrain: false);
                 }
             }
             finally
             {
-                if (_bufferFlushIntervalSeconds <= 0)
+                if (bufferFlushIntervalSeconds <= 0)
                 {
-                    _timer.Stop();
-                    _timer = null;
+                    timer.Stop();
+                    timer = null;
                 }
                 else
                 {
-                    _timer.Interval = _bufferFlushIntervalSeconds;
-                    _timer.Start();
+                    timer.Interval = bufferFlushIntervalSeconds;
+                    timer.Start();
                 }
 
-                Interlocked.CompareExchange(ref _processingTimer, 0, 1);
+                Interlocked.CompareExchange(ref processingTimer, 0, 1);
             }
 
         }
@@ -87,25 +83,23 @@ namespace ServiceStack.Aws.Sqs
 
             ISqsMqBuffer buffer;
 
-            if (_queueNameBuffers.TryGetValue(queueName, out buffer))
-            {
+            if (queueNameBuffers.TryGetValue(queueName, out buffer))
                 return buffer;
-            }
 
             buffer = queueDefinition.DisableBuffering
-                         ? (ISqsMqBuffer)new SqsMqBufferNonBuffered(queueDefinition, _sqsConnectionFactory)
-                         : (ISqsMqBuffer)new SqsMqBuffer(queueDefinition, _sqsConnectionFactory);
+                ? (ISqsMqBuffer)new SqsMqBufferNonBuffered(queueDefinition, sqsConnectionFactory)
+                : (ISqsMqBuffer)new SqsMqBuffer(queueDefinition, sqsConnectionFactory);
 
             buffer.ErrorHandler = ErrorHandler;
 
-            _queueNameBuffers.TryAdd(queueName, buffer);
+            queueNameBuffers.TryAdd(queueName, buffer);
 
-            return _queueNameBuffers[queueName];
+            return queueNameBuffers[queueName];
         }
 
         public void Dispose()
         {
-            foreach (var buffer in _queueNameBuffers)
+            foreach (var buffer in queueNameBuffers)
             {
                 buffer.Value.Dispose();
             }

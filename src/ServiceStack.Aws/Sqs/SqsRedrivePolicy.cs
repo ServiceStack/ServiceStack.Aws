@@ -2,7 +2,7 @@
 {
     public class SqsRedrivePolicy
     {
-        public int maxReceiveCount { get; set; }
-        public string deadLetterTargetArn { get; set; }
+        public int MaxReceiveCount { get; set; }
+        public string DeadLetterTargetArn { get; set; }
     }
 }

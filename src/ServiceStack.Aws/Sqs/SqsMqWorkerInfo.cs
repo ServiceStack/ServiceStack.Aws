@@ -6,21 +6,21 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqWorkerInfo
     {
-        private int _visibilityTimeout;
-        private int _receiveWaitTime;
-        private Type _messageType;
+        private int visibilityTimeout;
+        private int receiveWaitTime;
+        private Type messageType;
         
         public IMessageHandlerFactory MessageHandlerFactory { get; set; }
-        public Int32 ThreadCount { get; set; }
-        public Int32 RetryCount { get; set; }
+        public int ThreadCount { get; set; }
+        public int RetryCount { get; set; }
         
         public Type MessageType
         {
-            get { return _messageType; }
+            get { return messageType; }
             set
             {
-                _messageType = value;
-                QueueNames = new QueueNames(_messageType);
+                messageType = value;
+                QueueNames = new QueueNames(messageType);
             }
         }
 
@@ -29,23 +29,22 @@ namespace ServiceStack.Aws.Sqs
         
         public int VisibilityTimeout
         {
-            get { return _visibilityTimeout; }
+            get { return visibilityTimeout; }
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxVisibilityTimeoutSeconds, "SQS MQ VisibilityTimeout must be 0-43200");
-                _visibilityTimeout = value;
+                visibilityTimeout = value;
             }
         }
 
         public int ReceiveWaitTime
         {
-            get { return _receiveWaitTime; }
+            get { return receiveWaitTime; }
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxWaitTimeSeconds, "SQS MQ ReceiveWaitTime must be 0-20");
-                _receiveWaitTime = value;
+                receiveWaitTime = value;
             }
         }
-
     }
 }

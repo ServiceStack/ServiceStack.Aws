@@ -9,9 +9,9 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqBufferNonBuffered : ISqsMqBuffer
     {
-        private readonly SqsQueueDefinition _queueDefinition;
-        private readonly SqsConnectionFactory _sqsConnectionFactory;
-        private IAmazonSQS _sqsClient;
+        private readonly SqsQueueDefinition queueDefinition;
+        private readonly SqsConnectionFactory sqsConnectionFactory;
+        private IAmazonSQS sqsClient;
 
         public SqsMqBufferNonBuffered(SqsQueueDefinition queueDefinition,
                                       SqsConnectionFactory sqsConnectionFactory)
@@ -19,23 +19,23 @@ namespace ServiceStack.Aws.Sqs
             Guard.AgainstNullArgument(queueDefinition, "queueDefinition");
             Guard.AgainstNullArgument(sqsConnectionFactory, "sqsConnectionFactory");
 
-            _queueDefinition = queueDefinition;
-            _sqsConnectionFactory = sqsConnectionFactory;
+            this.queueDefinition = queueDefinition;
+            this.sqsConnectionFactory = sqsConnectionFactory;
         }
 
         private IAmazonSQS SqsClient
         {
-            get { return _sqsClient ?? (_sqsClient = _sqsConnectionFactory.GetClient()); }
+            get { return sqsClient ?? (sqsClient = sqsConnectionFactory.GetClient()); }
         }
 
         public SqsQueueDefinition QueueDefinition
         {
-            get { return _queueDefinition; }
+            get { return queueDefinition; }
         }
         
         public Action<Exception> ErrorHandler { get; set; }
         
-        public Boolean Delete(DeleteMessageRequest request)
+        public bool Delete(DeleteMessageRequest request)
         {
             if (request == null)
             {
@@ -49,20 +49,16 @@ namespace ServiceStack.Aws.Sqs
         public bool ChangeVisibility(ChangeMessageVisibilityRequest request)
         {
             if (request == null)
-            {
                 return false;
-            }
 
             var response = SqsClient.ChangeMessageVisibility(request);
             return response != null;
         }
         
-        public Boolean Send(SendMessageRequest request)
+        public bool Send(SendMessageRequest request)
         {
             if (request == null)
-            {
                 return false;
-            }
 
             var response = SqsClient.SendMessage(request);
             return response != null;
@@ -71,17 +67,15 @@ namespace ServiceStack.Aws.Sqs
         public Message Receive(ReceiveMessageRequest request)
         {
             if (request == null)
-            {
                 return null;
-            }
 
             request.MaxNumberOfMessages = 1;
 
             var response = SqsClient.ReceiveMessage(request);
 
             return response == null
-                       ? null
-                       : response.Messages.SingleOrDefault();
+                ? null
+                : response.Messages.SingleOrDefault();
         }
 
         public int DeleteBufferCount
@@ -110,18 +104,17 @@ namespace ServiceStack.Aws.Sqs
 
         public void Dispose()
         {
-            if (_sqsClient == null)
+            if (sqsClient == null)
             {
                 return;
             }
 
             try
             {
-                _sqsClient.Dispose();
-                _sqsClient = null;
+                sqsClient.Dispose();
+                sqsClient = null;
             }
             catch { }
-
         }
     }
 }
