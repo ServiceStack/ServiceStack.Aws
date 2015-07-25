@@ -64,7 +64,7 @@ namespace ServiceStack.Aws.Sqs
 
         public void Publish(string queueName, IMessage message)
         {
-            using (__requestAccess())
+            using (AwsClientUtils.__requestAccess())
             {
                 var queueDefinition = sqsQueueManager.GetOrCreate(queueName);
 
@@ -73,7 +73,7 @@ namespace ServiceStack.Aws.Sqs
                 sqsBuffer.Send(new SendMessageRequest
                 {
                     QueueUrl = queueDefinition.QueueUrl,
-                    MessageBody = message.ToJsv()
+                    MessageBody = AwsClientUtils.ToJson(message)
                 });
 
                 if (OnPublishedCallback != null)
@@ -81,32 +81,6 @@ namespace ServiceStack.Aws.Sqs
                     OnPublishedCallback();
                 }
             }
-        }
-
-        private class AccessToken
-        {
-            private string _token;
-
-            internal static readonly AccessToken __accessToken = new AccessToken("lUjBZNG56eE9yd3FQdVFSTy9qeGl5dlI5RmZwamc4U05udl000");
-
-            private AccessToken(string token)
-            {
-                _token = token;
-            }
-        }
-
-        private class DummyDisposable : IDisposable
-        {
-            public void Dispose()
-            {
-            }
-        }
-
-        protected IDisposable __requestAccess()
-        {
-            var ra = new DummyDisposable();
-            //return LicenseUtils.RequestAccess(AccessToken.__accessToken, LicenseFeature.Client, LicenseFeature.Text);
-            return ra;
         }
 
         public void Dispose()

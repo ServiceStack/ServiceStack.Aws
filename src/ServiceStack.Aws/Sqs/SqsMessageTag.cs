@@ -9,11 +9,11 @@ namespace ServiceStack.Aws.Sqs
 
         public static string CreateTag(string queueName, string receiptHandle)
         {
-            return new SqsMessageTag
+            return AwsClientUtils.ToJson(new SqsMessageTag
             {
                 QName = queueName,
                 RHandle = receiptHandle
-            }.ToJsv();
+            });
         }
     }
 }

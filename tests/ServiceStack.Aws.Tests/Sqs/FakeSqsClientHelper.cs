@@ -31,9 +31,9 @@ namespace ServiceStack.Aws.Tests.Sqs
             public long IntValue { get; set; }
             public DateTime DtValue { get; set; }
 
-            public static string CreateJsv()
+            public static string CreateJson()
             {
-                return new FakeSqsModel().ToJsv();
+                return new FakeSqsModel().ToJson();
             }
 
         }
@@ -63,7 +63,7 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             if (count <= 1)
             {
-                var scalarResponse = client.SendMessage(queueUrl, FakeSqsModel.CreateJsv());
+                var scalarResponse = client.SendMessage(queueUrl, FakeSqsModel.CreateJson());
 
                 return string.IsNullOrEmpty(scalarResponse.MessageId)
                     ? 0
@@ -83,7 +83,7 @@ namespace ServiceStack.Aws.Tests.Sqs
                 request.Entries.Add(new SendMessageBatchRequestEntry
                 {
                     Id = model.Id,
-                    MessageBody = model.ToJsv()
+                    MessageBody = model.ToJson(),
                 });
             }
 

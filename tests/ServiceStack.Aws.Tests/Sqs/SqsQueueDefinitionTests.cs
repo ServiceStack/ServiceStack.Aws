@@ -78,7 +78,6 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.AreEqual(qd.RedrivePolicy.ToJson(), rdPolicy.ToJson(), "RedrivePolicy");
             Assert.AreEqual(qd.CreatedTimestamp, createdDt, "CreatedTimestamp");
             Assert.IsTrue(qd.DisableBuffering, "DisableBuffering");
-
         }
 
         [Test]

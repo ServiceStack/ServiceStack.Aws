@@ -68,6 +68,7 @@
     <Compile Include="Interfaces\ISqsMqBuffer.cs" />
     <Compile Include="Interfaces\ISqsMqMessageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="AwsClientUtils.cs" />
     <Compile Include="Support\Guard.cs" />
     <Compile Include="Sqs\Fake\FakeAmazonSqs.cs" />
     <Compile Include="Sqs\Fake\FakeSqsItemStatus.cs" />

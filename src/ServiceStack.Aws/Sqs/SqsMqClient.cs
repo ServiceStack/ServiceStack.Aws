@@ -30,7 +30,7 @@ namespace ServiceStack.Aws.Sqs
 
         private IMessage<T> GetMessage<T>(string queueName, int waitSeconds)
         {
-            using (__requestAccess())
+            using (AwsClientUtils.__requestAccess())
             {
                 var receiveWaitTime = waitSeconds < 0
                     ? SqsQueueDefinition.MaxWaitTimeSeconds
@@ -74,7 +74,7 @@ namespace ServiceStack.Aws.Sqs
                 return;
             }
 
-            var sqsTag = message.Tag.FromJsv<SqsMessageTag>();
+            var sqsTag = AwsClientUtils.FromJson<SqsMessageTag>(message.Tag);
 
             var queueDefinition = sqsQueueManager.GetOrCreate(sqsTag.QName);
 
@@ -97,7 +97,7 @@ namespace ServiceStack.Aws.Sqs
             if (message == null || string.IsNullOrEmpty(message.Tag))
                 return;
 
-            var sqsTag = message.Tag.FromJsv<SqsMessageTag>();
+            var sqsTag = AwsClientUtils.FromJson<SqsMessageTag>(message.Tag);
 
             var queueDefinition = sqsQueueManager.GetOrCreate(sqsTag.QName);
 
@@ -138,10 +138,7 @@ namespace ServiceStack.Aws.Sqs
 
         public IMessage<T> CreateMessage<T>(object mqResponse)
         {
-            using (__requestAccess())
-            {
-                return (IMessage<T>)mqResponse;
-            }
+            return (IMessage<T>)mqResponse;
         }
 
         public string GetTempQueueName()
@@ -150,6 +147,5 @@ namespace ServiceStack.Aws.Sqs
             var queueDefinition = sqsQueueManager.GetOrCreate(QueueNames.GetTempQueueName());
             return queueDefinition.QueueName;
         }
-
     }
 }

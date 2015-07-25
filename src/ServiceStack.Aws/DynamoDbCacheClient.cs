@@ -169,7 +169,8 @@ namespace ServiceStack.Aws
                 System.Threading.Thread.Sleep(5000); // Wait 5 seconds.
                 try
                 {
-                    var res = client.DescribeTable(new DescribeTableRequest {
+                    var res = client.DescribeTable(new DescribeTableRequest
+                    {
                         TableName = tableName
                     });
 
@@ -206,7 +207,7 @@ namespace ServiceStack.Aws
                     return false;
                 }
                 string jsonData = item[ValueName].S;
-                entry = jsonData.FromJson<T>();
+                entry = AwsClientUtils.FromJson<T>(jsonData);
                 Log.InfoFormat("Cache hit on key: {0}", key);
                 return true;
             }
@@ -241,8 +242,8 @@ namespace ServiceStack.Aws
                         TableName = CacheTableName,
                         Item = new Dictionary<string, AttributeValue>
                         {
-                            { KeyName, new AttributeValue {S = key } },
-                            { ValueName, new AttributeValue {S = value.ToJson()} },
+                            { KeyName, new AttributeValue { S = key } },
+                            { ValueName, new AttributeValue { S = AwsClientUtils.ToJson(value) } },
                             {
                                 ExpiresAtName,
                                 new AttributeValue {S = expiresAt.ToUniversalTime().ToString("s", CultureInfo.InvariantCulture)}

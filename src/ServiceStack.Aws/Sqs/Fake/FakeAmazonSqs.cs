@@ -405,7 +405,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                     { QueueAttributeName.QueueArn, q.QueueDefinition.QueueArn.ToString(CultureInfo.InvariantCulture) },
                     { QueueAttributeName.RedrivePolicy, q.QueueDefinition.RedrivePolicy == null
                         ? null
-                        : q.QueueDefinition.RedrivePolicy.ToJson() }
+                        : AwsClientUtils.ToJson(q.QueueDefinition.RedrivePolicy) }
                 }
             };
         }

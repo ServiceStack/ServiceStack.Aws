@@ -82,7 +82,7 @@ namespace ServiceStack.Aws.Sqs
                     ? attrToUse[QueueAttributeName.QueueArn]
                     : null,
                 RedrivePolicy = attrToUse.ContainsKey(QueueAttributeName.RedrivePolicy)
-                    ? attrToUse[QueueAttributeName.RedrivePolicy].FromJson<SqsRedrivePolicy>()
+                    ? AwsClientUtils.FromJson<SqsRedrivePolicy>(attrToUse[QueueAttributeName.RedrivePolicy])
                     : null
             };
         }
@@ -94,7 +94,7 @@ namespace ServiceStack.Aws.Sqs
 
             Guard.AgainstNullArgument(queueName, "queueName");
 
-            var message = sqsMessage.Body.FromJsv<Message<T>>();
+            var message = AwsClientUtils.FromJson<Message<T>>(sqsMessage.Body);
 
             message.Tag = SqsMessageTag.CreateTag(queueName, sqsMessage.ReceiptHandle);
 
