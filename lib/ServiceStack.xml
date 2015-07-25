@@ -2888,6 +2888,11 @@
             Custom state associated with the failure.
             </summary>
         </member>
+        <member name="P:ServiceStack.FluentValidation.Results.ValidationFailure.PlaceholderValues">
+            <summary>
+            Placeholder values used for string substitution when building ErrorMessage
+            </summary>
+        </member>
         <member name="M:ServiceStack.FluentValidation.Results.ValidationFailure.ToString">
             <summary>
             Creates a textual representation of the failure.
