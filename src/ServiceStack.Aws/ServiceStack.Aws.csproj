@@ -71,6 +71,8 @@
     <Compile Include="Interfaces\ISqsMqMessageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="S3\FileSystemObject.cs" />
+    <Compile Include="S3\BaseFileStorageProvider.cs" />
+    <Compile Include="S3\FileSystemStorageProvider.cs" />
     <Compile Include="S3\S3FileStorageProvider.cs" />
     <Compile Include="AwsConnectionFactory.cs" />
     <Compile Include="S3\S3ConnectionFactory.cs" />
