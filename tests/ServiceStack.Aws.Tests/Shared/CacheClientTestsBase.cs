@@ -285,14 +285,14 @@ namespace ServiceStack.Server.Tests.Shared
                 sessionB.Set("key" + i, "value" + i);
             });
 
-            var value1 = sessionA.Get<String>("key1");
+            var value1 = sessionA.Get<string>("key1");
             Assert.That(value1, Is.EqualTo("value1"));
 
             sessionA.RemoveAll();
-            value1 = sessionA.Get<String>("key1");
+            value1 = sessionA.Get<string>("key1");
             Assert.That(value1, Is.Null);
 
-            value1 = sessionB.Get<String>("key1");
+            value1 = sessionB.Get<string>("key1");
             Assert.That(value1, Is.EqualTo("value1"));
         }
     }

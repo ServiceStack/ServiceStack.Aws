@@ -20,7 +20,9 @@ namespace ServiceStack.Aws.Tests
                 };
 
                 var dynamoDbClient = new AmazonDynamoDBClient("keyId", "key", config);
-                return new DynamoDbCacheClient(dynamoDbClient, createTableIfMissing: true);
+                var cache = new DynamoDbCacheClient(dynamoDbClient);
+                cache.InitSchema();
+                return cache;
             }
         }
     }

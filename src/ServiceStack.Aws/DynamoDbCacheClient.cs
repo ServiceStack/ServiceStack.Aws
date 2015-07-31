@@ -5,16 +5,17 @@ using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
+using ServiceStack.Auth;
 using ServiceStack.Caching;
 using ServiceStack.Logging;
 
 namespace ServiceStack.Aws
 {
-    public class DynamoDbCacheClient : ICacheClient
+    public class DynamoDbCacheClient : ICacheClient, IRequiresSchema
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DynamoDbCacheClient));
 
-        private IAmazonDynamoDB client;
+        private readonly IAmazonDynamoDB client;
         private Table awsCacheTableObj;
 
         private string cacheTableName;
@@ -53,19 +54,15 @@ namespace ServiceStack.Aws
         }
 
         public DynamoDbCacheClient(IAmazonDynamoDB client, string cacheTableName = "ICacheClientDynamo",
-            int readCapacity = 10, int writeCapacity = 5, bool createTableIfMissing = false)
+            int readCapacity = 10, int writeCapacity = 5)
         {
             this.client = client;
             CacheTableName = cacheTableName;
             CacheReadCapacity = readCapacity;
             CacheWriteCapacity = writeCapacity;
-            scacheTableCreate = createTableIfMissing;
 
             if (string.IsNullOrEmpty(CacheTableName))
                 throw new MissingFieldException("DynamoCacheClient", "CacheTableName");
-
-            if (scacheTableCreate)
-                CreateDynamoCacheTable();
         }
 
         /// <summary>
@@ -80,9 +77,14 @@ namespace ServiceStack.Aws
         /// <param name="createTableIfMissing">Pass true if you'd like the client to create the DynamoDB table on startup</param>
         public DynamoDbCacheClient(string awsAccessKey, string awsSecretKey, RegionEndpoint region,
                                    string cacheTableName = "ICacheClientDynamo", int readCapacity = 10,
-                                   int writeCapacity = 5, bool createTableIfMissing = false)
-            : this(new AmazonDynamoDBClient(awsAccessKey, awsSecretKey, region), cacheTableName, readCapacity, writeCapacity, createTableIfMissing)
+                                   int writeCapacity = 5)
+            : this(new AmazonDynamoDBClient(awsAccessKey, awsSecretKey, region), cacheTableName, readCapacity, writeCapacity)
         {
+        }
+
+        public void InitSchema()
+        {
+            CreateDynamoCacheTable();
         }
 
         private void CreateDynamoCacheTable()
@@ -103,7 +105,7 @@ namespace ServiceStack.Aws
                                 AttributeName = KeyName, KeyType = KeyType.HASH,
                             }
                         },
-                        AttributeDefinitions = new List<AttributeDefinition>()
+                        AttributeDefinitions = new List<AttributeDefinition>
                         {
                             new AttributeDefinition
                             {
@@ -162,7 +164,7 @@ namespace ServiceStack.Aws
         private void WaitUntilTableReady(string tableName)
         {
             string status = null;
-            DateTime startWaitTime = DateTime.Now;
+            var startWaitTime = DateTime.UtcNow;
             // Let us wait until table is created. Call DescribeTable.
             do
             {
@@ -178,7 +180,7 @@ namespace ServiceStack.Aws
                                    res.Table.TableName,
                                    res.Table.TableStatus);
                     status = res.Table.TableStatus;
-                    if (DateTime.Now.Subtract(startWaitTime).Seconds > 60)
+                    if (DateTime.UtcNow.Subtract(startWaitTime).Seconds > 60)
                         throw new Exception("Waiting for too long for DynamoDB table to be created, please check your AWS Console");
                 }
                 catch (ResourceNotFoundException)
@@ -193,7 +195,7 @@ namespace ServiceStack.Aws
         {
             Log.InfoFormat("Attempting cache get of key: {0}", key);
             entry = default(T);
-            var itemKey = new Dictionary<string, AttributeValue> { { KeyName, new AttributeValue() { S = key } } };
+            var itemKey = new Dictionary<string, AttributeValue> { { KeyName, new AttributeValue { S = key } } };
             var response = client.GetItem(CacheTableName, itemKey);
 
             if (response.IsItemSet)

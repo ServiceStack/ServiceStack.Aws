@@ -24,7 +24,8 @@ namespace ServiceStack.Aws.Tests
             };
 
             var dynamoDbClient = new AmazonDynamoDBClient("keyId", "key", config);
-            this.cacheClient = new DynamoDbCacheClient(dynamoDbClient, createTableIfMissing: true);
+            this.cacheClient = new DynamoDbCacheClient(dynamoDbClient);
+            this.cacheClient.InitSchema();
         }
 
         [Test]
