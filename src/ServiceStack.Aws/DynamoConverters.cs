@@ -7,6 +7,7 @@ using System.Reflection;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.DataAnnotations;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws
 {
@@ -59,6 +60,9 @@ namespace ServiceStack.Aws
             if (type.IsOrHasGenericInterfaceTypeOf(typeof(IDictionary<,>)))
                 return DynamoType.Map;
 
+            if (type.IsUserType())
+                return DynamoType.Map;
+
             return DynamoType.String;
         }
 
@@ -73,6 +77,14 @@ namespace ServiceStack.Aws
                 if (to != null)
                     return to;
             }
+
+            var mapValue = value as Dictionary<string, AttributeValue>;
+            if (mapValue != null)
+                return FromMapAttributeValue(mapValue, type);
+
+            var listValue = value as List<AttributeValue>;
+            if (listValue != null)
+                return FromListAttributeValue(listValue, type);
 
             return value.ConvertTo(type);
         }
@@ -135,6 +147,26 @@ namespace ServiceStack.Aws
             };
         }
 
+        public virtual Dictionary<string, AttributeValue> ToAttributeValues(object instance, DynamoMetadataTable table)
+        {
+            if (ToAttributeValuesFn != null)
+            {
+                var ret = ToAttributeValuesFn(instance, table);
+                if (ret != null)
+                    return ret;
+            }
+
+            var to = new Dictionary<string, AttributeValue>();
+
+            foreach (var field in table.Fields)
+            {
+                var value = field.GetValue(instance);
+                to[field.Name] = ToAttributeValue(field.Type, field.DbType, value);
+            }
+
+            return to;
+        }
+
         public virtual AttributeValue ToAttributeValue(Type fieldType, string dbType, object value)
         {
             if (ToAttributeValueFn != null)
@@ -164,25 +196,63 @@ namespace ServiceStack.Aws
                 case DynamoType.StringSet:
                     return new AttributeValue { NS = value.ConvertTo<List<string>>() };
                 case DynamoType.List:
-                    return new AttributeValue
-                    {
-                        L = ((IEnumerable)value).Map(x => ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x))
-                    };
+                    return ToListAttributeValue(value);
                 case DynamoType.Map:
-                    var map = (IDictionary)value;
-                    var to = new Dictionary<string, AttributeValue>();
-                    foreach (var key in map.Keys)
-                    {
-                        var x = map[key];
-                        to[key.ToString()] = ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x);
-                    }
-                    return new AttributeValue { M = to };
+                    return ToMapAttributeValue(value);
                 default:
                     return new AttributeValue { S = AwsClientUtils.ToJsv(value) };
             }
         }
 
-        public virtual T Populate<T>(T to, DynamoMetadataTable table, Dictionary<string, AttributeValue> attributeValues)
+        public virtual AttributeValue ToMapAttributeValue(object value)
+        {
+            var map = value as IDictionary
+                ?? value.ToObjectDictionary();
+
+            var to = new Dictionary<string, AttributeValue>();
+            foreach (var key in map.Keys)
+            {
+                var x = map[key];
+                to[key.ToString()] = ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x);
+            }
+            return new AttributeValue { M = to };
+        }
+
+        public virtual object FromMapAttributeValue(Dictionary<string, AttributeValue> map, Type type)
+        {
+            var from = new Dictionary<string,object>();
+            foreach (var entry in map)
+            {
+                var attrValue = map[entry.Key];
+                from[entry.Key] = FromAttributeValue(attrValue);
+            }
+            var to = from.FromObjectDictionary(type);
+            return to;
+        }
+
+        public virtual AttributeValue ToListAttributeValue(object oList)
+        {
+            var list = (IEnumerable)oList;
+            var values = list.Map(x => ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x));
+            return new AttributeValue { L = values };
+        }
+
+        public virtual object FromListAttributeValue(List<AttributeValue> attrs, Type toType)
+        {
+            var elType = toType.GetCollectionType();
+            var from = attrs.Map(x => FromAttributeValue(x, elType));
+            var to = TranslateListWithElements.TryTranslateCollections(
+                from.GetType(), toType, from);
+            return to;
+        }
+
+        public virtual T FromAttributeValues<T>(DynamoMetadataTable table, Dictionary<string, AttributeValue> attributeValues)
+        {
+            var to = typeof(T).CreateInstance<T>();
+            return PopulateFromAttributeValues(to, table, attributeValues);
+        }
+
+        public virtual T PopulateFromAttributeValues<T>(T to, DynamoMetadataTable table, Dictionary<string, AttributeValue> attributeValues)
         {
             foreach (var entry in attributeValues)
             {
@@ -190,14 +260,12 @@ namespace ServiceStack.Aws
                 if (field == null || field.SetValueFn == null)
                     continue;
 
-                var value = FromAttributeValueFn != null
-                    ? FromAttributeValueFn(entry.Value, field.Type) ?? GetValue(entry.Value)
-                    : GetValue(entry.Value);
+                var attrValue = entry.Value;
+                var fieldType = field.Type;
 
+                var value = FromAttributeValue(attrValue, fieldType);
                 if (value == null)
                     continue;
-
-                value = ConvertValue(value, field.Type);
 
                 field.SetValueFn(to, value);
             }
@@ -205,7 +273,18 @@ namespace ServiceStack.Aws
             return to;
         }
 
-        public virtual object GetValue(AttributeValue attr)
+        private object FromAttributeValue(AttributeValue attrValue, Type fieldType)
+        {
+            var value = FromAttributeValueFn != null
+                ? FromAttributeValueFn(attrValue, fieldType) ?? FromAttributeValue(attrValue)
+                : FromAttributeValue(attrValue);
+
+            return value == null 
+                ? null 
+                : ConvertValue(value, fieldType);
+        }
+
+        public virtual object FromAttributeValue(AttributeValue attr)
         {
             if (attr == null || attr.NULL)
                 return null;
@@ -229,26 +308,6 @@ namespace ServiceStack.Aws
                 return attr.BS;
 
             return null;
-        }
-
-        public virtual Dictionary<string, AttributeValue> ToAttributeValues(object instance, DynamoMetadataTable table)
-        {
-            if (ToAttributeValuesFn != null)
-            {
-                var ret = ToAttributeValuesFn(instance, table);
-                if (ret != null)
-                    return ret;
-            }
-
-            var to = new Dictionary<string, AttributeValue>();
-
-            foreach (var field in table.Fields)
-            {
-                var value = field.GetValue(instance);
-                to[field.Name] = ToAttributeValue(field.Type, field.DbType, value);
-            }
-
-            return to;
         }
 
     }

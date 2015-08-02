@@ -19,8 +19,8 @@ namespace ServiceStack.Server.Tests.Shared
         {
             return Id == other.Id && 
                 string.Equals(Name, other.Name) && 
-                Equals(PrimaryAddress, other.PrimaryAddress) && 
-                Equals(Orders, other.Orders);
+                Equals(PrimaryAddress, other.PrimaryAddress) &&
+                Orders.EquivalentTo(other.Orders);
         }
 
         public override bool Equals(object obj)

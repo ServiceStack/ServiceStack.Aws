@@ -128,9 +128,7 @@ namespace ServiceStack.Aws
                 return default(T);
             var attributeValues = response.Item;
 
-            var to = typeof(T).CreateInstance<T>();
-
-            return DynamoMetadata.Converters.Populate(to, table, attributeValues);
+            return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
         }
 
         protected virtual PutItemRequest ToPutItemRequest(object value, DynamoMetadataTable table)

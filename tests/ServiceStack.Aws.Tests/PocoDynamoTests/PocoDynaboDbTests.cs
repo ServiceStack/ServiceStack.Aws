@@ -20,7 +20,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
             db.DeleteAllTables(TimeSpan.FromMinutes(1));
         }
 
-        private static bool CreateCustomerTables(PocoDynamo db)
+        public static bool CreateCustomerTables(PocoDynamo db)
         {
             var types = new List<Type>()
                 .Add<Customer>()
@@ -120,7 +120,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
                 TableName = typeof(Customer).Name,
                 Item = new Dictionary<string, AttributeValue>
                 {
-                    { "Id", new AttributeValue { N = "1" } },
+                    { "Id", new AttributeValue { N = "2" } },
                     { "Name", new AttributeValue { S = "Foo"} },
                     { "Orders", new AttributeValue { NULL = true } },
                     { "CustomerAddress", new AttributeValue { NULL = true } },
@@ -132,12 +132,12 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
                 TableName = typeof(Customer).Name,
                 ConsistentRead = true,
                 Key = new Dictionary<string, AttributeValue> {
-                    { "Id", new AttributeValue { N = "1" } }
+                    { "Id", new AttributeValue { N = "2" } }
                 }
             });
 
             Assert.That(response.IsItemSet);
-            Assert.That(response.Item["Id"].N, Is.EqualTo("1"));
+            Assert.That(response.Item["Id"].N, Is.EqualTo("2"));
             Assert.That(response.Item["Name"].S, Is.EqualTo("Foo"));
             Assert.That(response.Item["Orders"].NULL);
             Assert.That(response.Item["CustomerAddress"].NULL);
@@ -153,45 +153,47 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
             var customer = new Customer {
                 Id = 1,
                 Name = "Foo",
-                //Orders = new List<Order>
-                //{
-                //    new Order
-                //    {
-                //        Id = 1,
-                //        CustomerId = 1,
-                //        Cost = 2,
-                //        LineItem = "Item 1",
-                //        Qty = 3,
-                //    },
-                //    new Order
-                //    {
-                //        Id = 2,
-                //        CustomerId = 1,
-                //        Cost = 3,
-                //        LineItem = "Item 2",
-                //        Qty = 4,
-                //    },
-                //},
-                //PrimaryAddress = new CustomerAddress
-                //{
-                //    Id = 1,
-                //    CustomerId = 1,
-                //    AddressLine1 = "Line 1",
-                //    AddressLine2 = "Line 2",
-                //    City = "Darwin",
-                //    State = "NT",
-                //    Country = "AU",
-                //}
+                Orders = new List<Order>
+                {
+                    new Order
+                    {
+                        Id = 1,
+                        CustomerId = 1,
+                        LineItem = "Item 1",
+                        Qty = 3,
+                        Cost = 2,
+                    },
+                    new Order
+                    {
+                        Id = 2,
+                        CustomerId = 1,
+                        LineItem = "Item 2",
+                        Qty = 4,
+                        Cost = 3,
+                    },
+                },
+                PrimaryAddress = new CustomerAddress
+                {
+                    Id = 1,
+                    CustomerId = 1,
+                    AddressLine1 = "Line 1",
+                    AddressLine2 = "Line 2",
+                    City = "Darwin",
+                    State = "NT",
+                    Country = "AU",
+                }
             };
 
             db.Put(customer);
 
             var dbCustomer = db.GetById<Customer>(1);
 
-            Assert.That(customer, Is.EqualTo(dbCustomer));
+            dbCustomer.PrintDump();
+
+            Assert.That(dbCustomer.Equals(customer));
         }
 
-        private static PocoDynamo CreateClient()
+        public static PocoDynamo CreateClient()
         {
             var accessKey = Environment.GetEnvironmentVariable("AWSAccessKey");
             var secretKey = Environment.GetEnvironmentVariable("AWSSecretKey");
@@ -199,14 +201,12 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
             var useLocalDb = string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey);
 
             var dynamoClient = useLocalDb
-                ? DynamoDbFactory.Create(ConfigUtils.GetAppSetting("DynamoDbUrl", "http://localhost:8000"))
+                ? new AmazonDynamoDBClient("keyId", "key", new AmazonDynamoDBConfig {
+                        ServiceURL = ConfigUtils.GetAppSetting("DynamoDbUrl", "http://localhost:8000"),
+                    })
                 : new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.USEast1);
 
-            var db = new PocoDynamo(dynamoClient)
-            {
-                ExecuteBatchesAsynchronously = true,
-            };
-
+            var db = new PocoDynamo(dynamoClient);
             return db;
         }
     }

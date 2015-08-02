@@ -85,12 +85,7 @@ namespace ServiceStack.Aws
                     }
 
                     if (Log.IsDebugEnabled)
-                    {
-                        var group = responses.GroupBy(x => x.Table.TableStatus);
-
-                        Log.DebugFormat("Tables Status: {0}", AwsClientUtils.ToJsv(group));
-                        Log.DebugFormat("Tables Pending: {0}", AwsClientUtils.ToJsv(pendingTables));
-                    }
+                        Log.Debug("Tables Pending: {0}".Fmt(AwsClientUtils.ToJsv(pendingTables)));
 
                     if (pendingTables.Count == 0)
                         return true;
