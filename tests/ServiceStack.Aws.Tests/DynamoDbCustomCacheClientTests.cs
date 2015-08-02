@@ -84,7 +84,7 @@ namespace ServiceStack.Aws.Tests
             var singleResponse = this.cacheClient.Get<string>("Phone");
             Assert.That(singleResponse, Is.EqualTo("MotoX"));
 
-            this.cacheClient.RemoveAll(new List<string> { "Car", "Phone" } );
+            this.cacheClient.RemoveAll(new List<string> { "Car", "Phone" });
 
             response = this.cacheClient.GetAll<string>(new List<string> { "Car", "Phone" });
             Assert.That(response["Car"], Is.EqualTo(default(string)));
@@ -166,7 +166,7 @@ namespace ServiceStack.Aws.Tests
         [Test]
         public void Can_cache_complex_entry()
         {
-            var car = new Car {Manufacturer = "Audi", Age = 3};
+            var car = new Car { Manufacturer = "Audi", Age = 3 };
             this.cacheClient.Set("Car", car);
 
             var response = this.cacheClient.Get<Car>("Car");

@@ -32,8 +32,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AWSSDK">
-      <HintPath>..\..\src\packages\AWSSDK.2.3.44.0\lib\net45\AWSSDK.dll</HintPath>
+    <Reference Include="AWSSDK.Core, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\..\src\packages\AWSSDK.Core.3.1.0.0\lib\net45\AWSSDK.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.DynamoDBv2, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\..\src\packages\AWSSDK.DynamoDBv2.3.1.0.0\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.SQS, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\..\src\packages\AWSSDK.SQS.3.1.0.0\lib\net45\AWSSDK.SQS.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\..\src\ServiceStack.Aws\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
@@ -66,9 +75,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DynamoDbCustomCacheClientTests.cs" />
+    <Compile Include="Issues\LocalDynamoDbHangsWhenPuttingNullValue.cs" />
+    <Compile Include="PocoDynamoTests\PocoDynaboDbTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shared\CacheClientTestsBase.cs" />
     <Compile Include="DynamoDbCacheClientTests.cs" />
+    <Compile Include="Shared\DataModels.cs" />
     <Compile Include="Sqs\FakeAmazonSqsTests.cs" />
     <Compile Include="Sqs\FakeSqsClientHelper.cs" />
     <Compile Include="Sqs\SqsMqBufferTests.cs" />

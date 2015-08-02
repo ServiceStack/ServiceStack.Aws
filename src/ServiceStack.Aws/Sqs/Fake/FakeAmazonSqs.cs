@@ -52,6 +52,12 @@ namespace ServiceStack.Aws.Sqs.Fake
             throw new NotImplementedException();
         }
 
+        public Task<AddPermissionResponse> AddPermissionAsync(string queueUrl, string label, List<string> awsAccountIds, List<string> actions,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<AddPermissionResponse> AddPermissionAsync(AddPermissionRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
@@ -74,6 +80,12 @@ namespace ServiceStack.Aws.Sqs.Fake
             var success = q.ChangeVisibility(request);
 
             return new ChangeMessageVisibilityResponse();
+        }
+
+        public Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(string queueUrl, string receiptHandle, int visibilityTimeout,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
         }
 
         public Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(ChangeMessageVisibilityRequest request, CancellationToken cancellationToken = new CancellationToken())
@@ -174,6 +186,12 @@ namespace ServiceStack.Aws.Sqs.Fake
             return response;
         }
 
+        public Task<ChangeMessageVisibilityBatchResponse> ChangeMessageVisibilityBatchAsync(string queueUrl, List<ChangeMessageVisibilityBatchRequestEntry> entries,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<ChangeMessageVisibilityBatchResponse> ChangeMessageVisibilityBatchAsync(ChangeMessageVisibilityBatchRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
@@ -233,6 +251,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             };
         }
 
+        public Task<CreateQueueResponse> CreateQueueAsync(string queueName, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<CreateQueueResponse> CreateQueueAsync(CreateQueueRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
@@ -254,6 +277,12 @@ namespace ServiceStack.Aws.Sqs.Fake
             var removed = q.DeleteMessage(request);
 
             return new DeleteMessageResponse();
+        }
+
+        public Task<DeleteMessageResponse> DeleteMessageAsync(string queueUrl, string receiptHandle,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
         }
 
         public Task<DeleteMessageResponse> DeleteMessageAsync(DeleteMessageRequest request, CancellationToken cancellationToken = new CancellationToken())
@@ -354,6 +383,12 @@ namespace ServiceStack.Aws.Sqs.Fake
             return response;
         }
 
+        public Task<DeleteMessageBatchResponse> DeleteMessageBatchAsync(string queueUrl, List<DeleteMessageBatchRequestEntry> entries,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<DeleteMessageBatchResponse> DeleteMessageBatchAsync(DeleteMessageBatchRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
@@ -374,6 +409,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             queues.TryRemove(request.QueueUrl, out q);
 
             return new DeleteQueueResponse();
+        }
+
+        public Task<DeleteQueueResponse> DeleteQueueAsync(string queueUrl, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
         }
 
         public Task<DeleteQueueResponse> DeleteQueueAsync(DeleteQueueRequest request, CancellationToken cancellationToken = new CancellationToken())
@@ -410,6 +450,12 @@ namespace ServiceStack.Aws.Sqs.Fake
             };
         }
 
+        public Task<GetQueueAttributesResponse> GetQueueAttributesAsync(string queueUrl, List<string> attributeNames,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<GetQueueAttributesResponse> GetQueueAttributesAsync(GetQueueAttributesRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
@@ -436,6 +482,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             {
                 QueueUrl = q.QueueDefinition.QueueUrl
             };
+        }
+
+        public Task<GetQueueUrlResponse> GetQueueUrlAsync(string queueName, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
         }
 
         public Task<GetQueueUrlResponse> GetQueueUrlAsync(GetQueueUrlRequest request, CancellationToken cancellationToken = new CancellationToken())
@@ -478,6 +529,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             return response;
         }
 
+        public Task<ListQueuesResponse> ListQueuesAsync(string queueNamePrefix, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<ListQueuesResponse> ListQueuesAsync(ListQueuesRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
@@ -496,6 +552,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             var q = GetQueue(request.QueueUrl);
             q.Clear();
             return new PurgeQueueResponse();
+        }
+
+        public Task<PurgeQueueResponse> PurgeQueueAsync(string queueUrl, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
         }
 
         public Task<PurgeQueueResponse> PurgeQueueAsync(PurgeQueueRequest request, CancellationToken cancellationToken = new CancellationToken())
@@ -538,6 +599,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             return response;
         }
 
+        public Task<ReceiveMessageResponse> ReceiveMessageAsync(string queueUrl, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<ReceiveMessageResponse> ReceiveMessageAsync(ReceiveMessageRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
@@ -549,6 +615,11 @@ namespace ServiceStack.Aws.Sqs.Fake
         }
 
         public RemovePermissionResponse RemovePermission(RemovePermissionRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<RemovePermissionResponse> RemovePermissionAsync(string queueUrl, string label, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
         }
@@ -578,6 +649,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             {
                 MessageId = id
             };
+        }
+
+        public Task<SendMessageResponse> SendMessageAsync(string queueUrl, string messageBody, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
         }
 
         public Task<SendMessageResponse> SendMessageAsync(SendMessageRequest request, CancellationToken cancellationToken = new CancellationToken())
@@ -668,6 +744,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             return response;
         }
 
+        public Task<SendMessageBatchResponse> SendMessageBatchAsync(string queueUrl, List<SendMessageBatchRequestEntry> entries, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<SendMessageBatchResponse> SendMessageBatchAsync(SendMessageBatchRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
@@ -703,12 +784,28 @@ namespace ServiceStack.Aws.Sqs.Fake
             return new SetQueueAttributesResponse();
         }
 
+        public Task<SetQueueAttributesResponse> SetQueueAttributesAsync(string queueUrl, Dictionary<string, string> attributes,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<SetQueueAttributesResponse> SetQueueAttributesAsync(SetQueueAttributesRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();
         }
 
         public string AuthorizeS3ToSendMessage(string queueUrl, string bucket)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Dictionary<string, string> GetAttributes(string queueUrl)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetAttributes(string queueUrl, Dictionary<string, string> attributes)
         {
             throw new NotImplementedException();
         }

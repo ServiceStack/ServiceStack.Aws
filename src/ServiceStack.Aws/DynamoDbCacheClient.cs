@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using ServiceStack.Auth;
 using ServiceStack.Caching;
 using ServiceStack.Logging;
 
@@ -18,10 +18,6 @@ namespace ServiceStack.Aws
         private readonly IAmazonDynamoDB client;
         private Table awsCacheTableObj;
 
-        private string cacheTableName;
-        private int cacheReadCapacity = 10; // free-tier settings
-        private int cacheWriteCapacity = 5; // free-tier settings
-        private readonly bool scacheTableCreate;
         private const string KeyName = "urn";
         private const string ValueName = "value";
         private const string ExpiresAtName = "expiresAt";
@@ -29,29 +25,17 @@ namespace ServiceStack.Aws
         /// <summary>
         /// The name of the DynamoDB Table - either make sure it is already created with HashKey string named "urn" or pass true into constructor createTableIfMissing argument
         /// </summary>
-        public string CacheTableName
-        {
-            get { return cacheTableName; }
-            set { cacheTableName = value; }
-        }
+        public string CacheTableName { get; set; }
 
         /// <summary>
         /// If the client needs to delete/re-create the DynamoDB table, this is the Read Capacity to use
         /// </summary>
-        public int CacheReadCapacity
-        {
-            get { return cacheReadCapacity; }
-            set { cacheReadCapacity = value; }
-        }
+        public int CacheReadCapacity { get; set; }
 
         /// <summary>
         /// If the client needs to delete/re-create the DynamoDB table, this is the Write Capacity to use
         /// </summary> 
-        public int CacheWriteCapacity
-        {
-            get { return cacheWriteCapacity; }
-            set { cacheWriteCapacity = value; }
-        }
+        public int CacheWriteCapacity { get; set; }
 
         public DynamoDbCacheClient(IAmazonDynamoDB client, string cacheTableName = "ICacheClientDynamo",
             int readCapacity = 10, int writeCapacity = 5)
@@ -89,10 +73,10 @@ namespace ServiceStack.Aws
 
         private void CreateDynamoCacheTable()
         {
-            Log.InfoFormat("Attempting to load DynamoDB table {0}", cacheTableName);
+            Log.InfoFormat("Attempting to load DynamoDB table {0}", CacheTableName);
             if (!Table.TryLoadTable(client, CacheTableName, out awsCacheTableObj))
             {
-                Log.InfoFormat("DynamoDB table {0} does not exist, attempting to create", cacheTableName);
+                Log.InfoFormat("DynamoDB table {0} does not exist, attempting to create", CacheTableName);
                 try
                 {
                     client.CreateTable(new CreateTableRequest
@@ -102,14 +86,15 @@ namespace ServiceStack.Aws
                         {
                             new KeySchemaElement
                             {
-                                AttributeName = KeyName, KeyType = KeyType.HASH,
+                                AttributeName = KeyName,
+                                KeyType = KeyType.HASH,
                             }
                         },
                         AttributeDefinitions = new List<AttributeDefinition>
                         {
-                            new AttributeDefinition
-                            {
-                                AttributeName = KeyName, AttributeType = "S"
+                            new AttributeDefinition {
+                                AttributeName = KeyName,
+                                AttributeType = DynamoType.String,
                             }
                         },
                         ProvisionedThroughput = new ProvisionedThroughput
@@ -118,12 +103,12 @@ namespace ServiceStack.Aws
                             WriteCapacityUnits = CacheWriteCapacity,
                         }
                     });
-                    Log.InfoFormat("Successfully created DynamoDB table {0}", cacheTableName);
-                    WaitUntilTableReady(cacheTableName);
+                    Log.InfoFormat("Successfully created DynamoDB table {0}", CacheTableName);
+                    WaitUntilTableReady(CacheTableName);
                 }
                 catch (Exception)
                 {
-                    Log.ErrorFormat("Could not create DynamoDB table {0}", cacheTableName);
+                    Log.ErrorFormat("Could not create DynamoDB table {0}", CacheTableName);
                     throw;
                 }
 
@@ -137,7 +122,7 @@ namespace ServiceStack.Aws
             // Let us wait until table is created. Call DescribeTable.
             do
             {
-                System.Threading.Thread.Sleep(5000); // Wait 5 seconds.
+                Thread.Sleep(5000); // Wait 5 seconds.
                 try
                 {
                     var res = client.DescribeTable(new DescribeTableRequest
@@ -168,7 +153,7 @@ namespace ServiceStack.Aws
             // Let us wait until table is created. Call DescribeTable.
             do
             {
-                System.Threading.Thread.Sleep(5000); // Wait 5 seconds.
+                Thread.Sleep(5000); // Wait 5 seconds.
                 try
                 {
                     var res = client.DescribeTable(new DescribeTableRequest
@@ -176,9 +161,9 @@ namespace ServiceStack.Aws
                         TableName = tableName
                     });
 
-                    Log.InfoFormat("Table name: {0}, status: {1}",
-                                   res.Table.TableName,
-                                   res.Table.TableStatus);
+                    if (Log.IsDebugEnabled)
+                        Log.DebugFormat("Table name: {0}, status: {1}", res.Table.TableName, res.Table.TableStatus);
+
                     status = res.Table.TableStatus;
                     if (DateTime.UtcNow.Subtract(startWaitTime).Seconds > 60)
                         throw new Exception("Waiting for too long for DynamoDB table to be created, please check your AWS Console");
@@ -274,7 +259,7 @@ namespace ServiceStack.Aws
                         ValueName,
                         new AttributeValueUpdate
                         {
-                            Action = "ADD",
+                            Action = DynamoAction.Add,
                             Value = new AttributeValue
                             {
                                 N =value.ToString(CultureInfo.InvariantCulture)
@@ -282,7 +267,7 @@ namespace ServiceStack.Aws
                         }
                     }
                 },
-                ReturnValues = "ALL_NEW"
+                ReturnValues = DynamoReturn.AllNew,
             });
             return Convert.ToInt32(response.Attributes[ValueName].N);
         }
@@ -317,7 +302,7 @@ namespace ServiceStack.Aws
             client.DeleteTable(new DeleteTableRequest { TableName = CacheTableName });
             // Scaning the table is limited to 1 MB chunks, with a large cache it could result in many Read requests and many Delete requests occurring very quickly which may tap out 
             // the throughput capacity...
-            WaitUntilTableDeleted(cacheTableName);
+            WaitUntilTableDeleted(CacheTableName);
             CreateDynamoCacheTable();
         }
 
@@ -419,5 +404,14 @@ namespace ServiceStack.Aws
             if (client != null)
                 client.Dispose();
         }
+    }
+
+    public class CacheEntry
+    {
+        public string Id { get; set; }
+        public string Data { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime ModifiedDate { get; set; }
     }
 }

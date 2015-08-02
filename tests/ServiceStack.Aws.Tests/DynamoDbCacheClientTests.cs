@@ -16,7 +16,7 @@ namespace ServiceStack.Aws.Tests
                 // To setup a local dynamo instance see: https://aws.amazon.com/blogs/aws/dynamodb-local-for-desktop-development
                 var config = new AmazonDynamoDBConfig
                 {
-                    ServiceURL = ConfigUtils.GetAppSetting("DynamoDbUrl", "http://localhost:8000")
+                    ServiceURL = ConfigUtils.GetAppSetting("DynamoDbUrl", "http://localhost:8000"),
                 };
 
                 var dynamoDbClient = new AmazonDynamoDBClient("keyId", "key", config);
