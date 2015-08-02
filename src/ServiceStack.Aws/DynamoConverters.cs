@@ -213,19 +213,27 @@ namespace ServiceStack.Aws
             foreach (var key in map.Keys)
             {
                 var x = map[key];
-                to[key.ToString()] = ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x);
+                to[key.ToString()] = x != null 
+                    ? ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x)
+                    : new AttributeValue { NULL = true };
             }
             return new AttributeValue { M = to };
         }
 
         public virtual object FromMapAttributeValue(Dictionary<string, AttributeValue> map, Type type)
         {
+            var table = DynamoMetadata.GetTable(type);
+
             var from = new Dictionary<string,object>();
-            foreach (var entry in map)
+            foreach (var field in table.Fields)
             {
-                var attrValue = map[entry.Key];
-                from[entry.Key] = FromAttributeValue(attrValue);
+                AttributeValue attrValue;
+                if (!map.TryGetValue(field.Name, out attrValue))
+                    continue;
+
+                from[field.Name] = FromAttributeValue(attrValue, field.Type);
             }
+
             var to = from.FromObjectDictionary(type);
             return to;
         }
@@ -233,6 +241,7 @@ namespace ServiceStack.Aws
         public virtual AttributeValue ToListAttributeValue(object oList)
         {
             var list = (IEnumerable)oList;
+
             var values = list.Map(x => ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x));
             return new AttributeValue { L = values };
         }
@@ -276,15 +285,15 @@ namespace ServiceStack.Aws
         private object FromAttributeValue(AttributeValue attrValue, Type fieldType)
         {
             var value = FromAttributeValueFn != null
-                ? FromAttributeValueFn(attrValue, fieldType) ?? FromAttributeValue(attrValue)
-                : FromAttributeValue(attrValue);
+                ? FromAttributeValueFn(attrValue, fieldType) ?? GetAttributeValue(attrValue)
+                : GetAttributeValue(attrValue);
 
             return value == null 
                 ? null 
                 : ConvertValue(value, fieldType);
         }
 
-        public virtual object FromAttributeValue(AttributeValue attr)
+        public virtual object GetAttributeValue(AttributeValue attr)
         {
             if (attr == null || attr.NULL)
                 return null;

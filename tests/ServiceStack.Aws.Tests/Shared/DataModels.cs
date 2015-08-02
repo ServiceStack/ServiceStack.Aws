@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using ServiceStack.DataAnnotations;
 
 namespace ServiceStack.Server.Tests.Shared
@@ -17,8 +18,8 @@ namespace ServiceStack.Server.Tests.Shared
 
         protected bool Equals(Customer other)
         {
-            return Id == other.Id && 
-                string.Equals(Name, other.Name) && 
+            return Id == other.Id &&
+                string.Equals(Name, other.Name) &&
                 Equals(PrimaryAddress, other.PrimaryAddress) &&
                 Orders.EquivalentTo(other.Orders);
         }
@@ -28,7 +29,7 @@ namespace ServiceStack.Server.Tests.Shared
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((Customer) obj);
+            return Equals((Customer)obj);
         }
 
         public override int GetHashCode()
@@ -36,9 +37,9 @@ namespace ServiceStack.Server.Tests.Shared
             unchecked
             {
                 var hashCode = Id;
-                hashCode = (hashCode*397) ^ (Name != null ? Name.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (PrimaryAddress != null ? PrimaryAddress.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Orders != null ? Orders.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PrimaryAddress != null ? PrimaryAddress.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Orders != null ? Orders.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -57,12 +58,12 @@ namespace ServiceStack.Server.Tests.Shared
 
         protected bool Equals(CustomerAddress other)
         {
-            return Id == other.Id && 
-                CustomerId == other.CustomerId && 
-                string.Equals(AddressLine1, other.AddressLine1) && 
-                string.Equals(AddressLine2, other.AddressLine2) && 
-                string.Equals(City, other.City) && 
-                string.Equals(State, other.State) && 
+            return Id == other.Id &&
+                CustomerId == other.CustomerId &&
+                string.Equals(AddressLine1, other.AddressLine1) &&
+                string.Equals(AddressLine2, other.AddressLine2) &&
+                string.Equals(City, other.City) &&
+                string.Equals(State, other.State) &&
                 string.Equals(Country, other.Country);
         }
 
@@ -71,7 +72,7 @@ namespace ServiceStack.Server.Tests.Shared
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((CustomerAddress) obj);
+            return Equals((CustomerAddress)obj);
         }
 
         public override int GetHashCode()
@@ -79,12 +80,12 @@ namespace ServiceStack.Server.Tests.Shared
             unchecked
             {
                 var hashCode = Id;
-                hashCode = (hashCode*397) ^ CustomerId;
-                hashCode = (hashCode*397) ^ (AddressLine1 != null ? AddressLine1.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (AddressLine2 != null ? AddressLine2.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (City != null ? City.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (State != null ? State.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Country != null ? Country.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ CustomerId;
+                hashCode = (hashCode * 397) ^ (AddressLine1 != null ? AddressLine1.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (AddressLine2 != null ? AddressLine2.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (City != null ? City.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (State != null ? State.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Country != null ? Country.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -101,10 +102,10 @@ namespace ServiceStack.Server.Tests.Shared
 
         protected bool Equals(Order other)
         {
-            return Id == other.Id && 
-                CustomerId == other.CustomerId && 
-                string.Equals(LineItem, other.LineItem) && 
-                Qty == other.Qty && 
+            return Id == other.Id &&
+                CustomerId == other.CustomerId &&
+                string.Equals(LineItem, other.LineItem) &&
+                Qty == other.Qty &&
                 Cost == other.Cost;
         }
 
@@ -139,8 +140,8 @@ namespace ServiceStack.Server.Tests.Shared
 
         protected bool Equals(Country other)
         {
-            return Id == other.Id 
-                && string.Equals(CountryName, other.CountryName) 
+            return Id == other.Id
+                && string.Equals(CountryName, other.CountryName)
                 && string.Equals(CountryCode, other.CountryCode);
         }
 
@@ -149,7 +150,7 @@ namespace ServiceStack.Server.Tests.Shared
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((Country) obj);
+            return Equals((Country)obj);
         }
 
         public override int GetHashCode()
@@ -157,8 +158,51 @@ namespace ServiceStack.Server.Tests.Shared
             unchecked
             {
                 var hashCode = Id;
-                hashCode = (hashCode*397) ^ (CountryName != null ? CountryName.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (CountryCode != null ? CountryCode.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (CountryName != null ? CountryName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (CountryCode != null ? CountryCode.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+    }
+
+    public class Node
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public List<Node> Children { get; set; }
+
+        public Node() {}
+
+        public Node(int id, string name, IEnumerable<Node> children = null)
+        {
+            Id = id;
+            Name = name;
+            if (children != null)
+                Children = children.ToList();
+        }
+
+        protected bool Equals(Node other)
+        {
+            return Id == other.Id &&
+                string.Equals(Name, other.Name) &&
+                Children.EquivalentTo(other.Children);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Node)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Id;
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Children != null ? Children.GetHashCode() : 0);
                 return hashCode;
             }
         }

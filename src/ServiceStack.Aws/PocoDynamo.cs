@@ -6,7 +6,21 @@ using ServiceStack.Logging;
 
 namespace ServiceStack.Aws
 {
-    public partial class PocoDynamo : IDisposable
+    public interface IPocoDynamo : IDisposable
+    {
+        IAmazonDynamoDB DynamoDb { get; }
+        List<string> GetTableNames();
+        bool CreateNonExistingTables(List<DynamoMetadataTable> tables, TimeSpan? timeout = null);
+        bool DeleteAllTables(TimeSpan? timeout = null);
+        bool DeleteTables(List<string> tableNames, TimeSpan? timeout = null);
+        T GetItemById<T>(object hash);
+        PutItemResponse PutItem<T>(T value);
+        DeleteItemResponse DeleteItemById<T>(object hash);
+        bool WaitForTablesToBeReady(List<string> tableNames, TimeSpan? timeout = null);
+        bool WaitForTablesToBeRemoved(List<string> tableNames, TimeSpan? timeout = null);
+    }
+
+    public partial class PocoDynamo : IPocoDynamo
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(PocoDynamo));
 
@@ -107,20 +121,14 @@ namespace ServiceStack.Aws
             return WaitForTablesToBeRemoved(tableNames);
         }
 
-        protected virtual GetItemRequest ToGetItemRequest(object hash, DynamoMetadataTable table)
+        public T GetItemById<T>(object hash)
         {
-            return new GetItemRequest
-            {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new GetItemRequest {
                 TableName = table.Name,
                 Key = DynamoMetadata.Converters.ToAttributeKeyValue(table.HashKey, hash),
                 ConsistentRead = ConsistentRead,
             };
-        }
-
-        public T GetById<T>(object hash)
-        {
-            var table = DynamoMetadata.GetTable<T>();
-            var request = ToGetItemRequest(hash, table);
 
             var response = Exec(() => DynamoDb.GetItem(request));
 
@@ -131,22 +139,28 @@ namespace ServiceStack.Aws
             return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
         }
 
-        protected virtual PutItemRequest ToPutItemRequest(object value, DynamoMetadataTable table)
+        public PutItemResponse PutItem<T>(T value)
         {
-            var to = new PutItemRequest
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new PutItemRequest
             {
                 TableName = table.Name,
                 Item = DynamoMetadata.Converters.ToAttributeValues(value, table),
             };
-            return to;
-        }
-
-        public PutItemResponse Put<T>(T value)
-        {
-            var table = DynamoMetadata.GetTable<T>();
-            var request = ToPutItemRequest(value, table);
 
             return Exec(() => DynamoDb.PutItem(request));
+        }
+
+        public DeleteItemResponse DeleteItemById<T>(object hash)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new DeleteItemRequest
+            {
+                TableName = table.Name,
+                Key = DynamoMetadata.Converters.ToAttributeKeyValue(table.HashKey, hash),
+            };
+
+            return Exec(() => DynamoDb.DeleteItem(request));
         }
 
         public void Dispose()

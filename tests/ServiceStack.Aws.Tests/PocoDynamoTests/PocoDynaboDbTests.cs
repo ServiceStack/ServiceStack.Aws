@@ -20,13 +20,14 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
             db.DeleteAllTables(TimeSpan.FromMinutes(1));
         }
 
-        public static bool CreateCustomerTables(PocoDynamo db)
+        public static bool CreateTestTables(IPocoDynamo db)
         {
             var types = new List<Type>()
                 .Add<Customer>()
                 .Add<CustomerAddress>()
                 .Add<Order>()
-                .Add<Country>();
+                .Add<Country>()
+                .Add<Node>();
 
             var tables = DynamoMetadata.RegisterTables(types);
             var allTablesCreated = db.CreateNonExistingTables(tables, TimeSpan.FromMinutes(1));
@@ -38,7 +39,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         {
             var db = CreateClient();
 
-            var allTablesCreated = CreateCustomerTables(db);
+            var allTablesCreated = CreateTestTables(db);
 
             Assert.That(allTablesCreated, Is.True);
 
@@ -49,6 +50,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
                 "CustomerAddress",
                 "Order",
                 "Country",
+                "Node",
             }));
         }
 
@@ -57,7 +59,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         {
             var db = CreateClient();
 
-            CreateCustomerTables(db);
+            CreateTestTables(db);
 
             db.DynamoDb.PutItem(new PutItemRequest
             {
@@ -90,7 +92,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         {
             var db = CreateClient();
 
-            CreateCustomerTables(db);
+            CreateTestTables(db);
 
             var country = new Country
             {
@@ -99,9 +101,9 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
                 CountryName = "United States"
             };
 
-            db.Put(country);
+            db.PutItem(country);
 
-            var dbCountry = db.GetById<Country>(2);
+            var dbCountry = db.GetItemById<Country>(2);
 
             dbCountry.PrintDump();
 
@@ -113,7 +115,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         {
             var db = CreateClient();
 
-            CreateCustomerTables(db);
+            CreateTestTables(db);
 
             db.DynamoDb.PutItem(new PutItemRequest
             {
@@ -144,11 +146,11 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         }
 
         [Test]
-        public void Can_Put_and_Delete_Customer_with_Orders()
+        public void Can_Put_Get_and_Delete_Customer_with_Orders()
         {
             var db = CreateClient();
 
-            CreateCustomerTables(db);
+            CreateTestTables(db);
 
             var customer = new Customer {
                 Id = 1,
@@ -184,16 +186,51 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
                 }
             };
 
-            db.Put(customer);
+            db.PutItem(customer);
 
-            var dbCustomer = db.GetById<Customer>(1);
+            var dbCustomer = db.GetItemById<Customer>(1);
 
             dbCustomer.PrintDump();
 
             Assert.That(dbCustomer.Equals(customer));
+
+            db.DeleteItemById<Customer>(1);
+
+            dbCustomer = db.GetItemById<Customer>(1);
+
+            Assert.That(dbCustomer, Is.Null);
         }
 
-        public static PocoDynamo CreateClient()
+        [Test]
+        public void Can_Put_Get_and_Delete_Deeply_Nested_Nodes()
+        {
+            var db = CreateClient();
+
+            CreateTestTables(db);
+
+            var nodes = new Node(1, "/root",
+                new List<Node>
+                {
+                    new Node(2,"/root/2", new[] {
+                        new Node(4, "/root/2/4", new [] {
+                            new Node(5, "/root/2/4/5", new[] {
+                                new Node(6, "/root/2/4/5/6"), 
+                            }), 
+                        }),
+                    }),
+                    new Node(3, "/root/3")
+                });
+
+            db.PutItem(nodes);
+
+            var dbNodes = db.GetItemById<Node>(1);
+
+            dbNodes.PrintDump();
+
+            Assert.That(dbNodes, Is.EqualTo(nodes));
+        }
+
+        public static IPocoDynamo CreateClient()
         {
             var accessKey = Environment.GetEnvironmentVariable("AWSAccessKey");
             var secretKey = Environment.GetEnvironmentVariable("AWSSecretKey");
