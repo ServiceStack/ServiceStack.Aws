@@ -35,5 +35,21 @@ namespace ServiceStack.Aws
                 return o.ToJson();
             }
         }
+
+        internal static T FromJsv<T>(string json)
+        {
+            using (__requestAccess())
+            {
+                return json.FromJsv<T>();
+            }
+        }
+
+        internal static string ToJsv<T>(T o)
+        {
+            using (__requestAccess())
+            {
+                return o.ToJsv();
+            }
+        }
     }
 }
