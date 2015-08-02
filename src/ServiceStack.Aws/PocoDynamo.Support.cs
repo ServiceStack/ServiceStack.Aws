@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Text;
@@ -76,41 +75,25 @@ namespace ServiceStack.Aws
             {
                 try
                 {
-                    List<DescribeTableResponse> responses = null;
-                    if (!ExecuteBatchesAsynchronously)
-                    {
-                        responses = pendingTables.Map(x =>
-                            Exec(() => DynamoDb.DescribeTable(x)));
-                    }
-                    else
-                    {
-                        Exec(() => 
-                        {
-                            var tasks = pendingTables
-                                .Map(x => DynamoDb.DescribeTableAsync(new DescribeTableRequest {
-                                    TableName = x
-                                }))
-                                .ToArray();
+                    var responses = pendingTables.Map(x =>
+                        Exec(() => DynamoDb.DescribeTable(x)));
 
-                            Task.WaitAll(tasks, timeout.GetValueOrDefault(TimeSpan.MaxValue));
-
-                            foreach (var task in tasks)
-                            {
-                                var response = task.Result;
-                                if (response.Table.TableStatus == DynamoStatus.Active)
-                                    pendingTables.Remove(response.Table.TableName);
-                            }
-                            responses = tasks.Map(x => x.Result);
-                        });
+                    foreach (var response in responses)
+                    {
+                        if (response.Table.TableStatus == DynamoStatus.Active)
+                            pendingTables.Remove(response.Table.TableName);
                     }
 
-                    if (responses != null && Log.IsDebugEnabled)
+                    if (Log.IsDebugEnabled)
                     {
                         var group = responses.GroupBy(x => x.Table.TableStatus);
 
                         Log.DebugFormat("Tables Status: {0}", AwsClientUtils.ToJsv(group));
                         Log.DebugFormat("Tables Pending: {0}", AwsClientUtils.ToJsv(pendingTables));
                     }
+
+                    if (pendingTables.Count == 0)
+                        return true;
 
                     if (timeout != null && DateTime.UtcNow - startAt > timeout.Value)
                         return false;
@@ -122,9 +105,7 @@ namespace ServiceStack.Aws
                     // DescribeTable is eventually consistent. So you might
                     // get resource not found. So we handle the potential exception.
                 }
-            } while (pendingTables.Count > 0);
-
-            return true;
+            } while (true);
         }
 
         public bool WaitForTablesToBeRemoved(List<string> tableNames, TimeSpan? timeout = null)
@@ -143,14 +124,15 @@ namespace ServiceStack.Aws
                 if (Log.IsDebugEnabled)
                     Log.DebugFormat("Waiting for Tables to be removed: {0}", pendingTables.Dump());
 
+                if (pendingTables.Count == 0)
+                    return true;
+
                 if (timeout != null && DateTime.UtcNow - startAt > timeout.Value)
                     return false;
 
                 Thread.Sleep(PollTableStatus);
 
-            } while (pendingTables.Count > 0);
-
-            return true;
+            } while (true);
         }
     }
 }

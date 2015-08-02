@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Logging;
-using ServiceStack.Text;
 
 namespace ServiceStack.Aws
 {
@@ -20,8 +15,6 @@ namespace ServiceStack.Aws
         public bool ConsistentRead { get; set; }
         public long ReadCapacityUnits { get; set; }
         public long WriteCapacityUnits { get; set; }
-
-        public bool ExecuteBatchesAsynchronously { get; set; }
 
         public HashSet<string> RetryOnErrorCodes { get; set; } 
 
@@ -54,27 +47,13 @@ namespace ServiceStack.Aws
         {
             var existingTableNames = GetTableNames();
 
-            if (!ExecuteBatchesAsynchronously)
+            foreach (var table in tables)
             {
-                foreach (var table in tables)
-                {
-                    if (existingTableNames.Contains(table.Name))
-                        continue;
+                if (existingTableNames.Contains(table.Name))
+                    continue;
 
-                    var request = ToCreateTableRequest(table);
-                    Exec(() => DynamoDb.CreateTable(request));
-                }
-            }
-            else
-            {
-                Exec(() => {
-                    var tasks = tables
-                        .Where(x => !existingTableNames.Contains(x.Name))
-                        .Map(x => DynamoDb.CreateTableAsync(ToCreateTableRequest(x)) as Task)
-                        .ToArray();
-
-                    Task.WaitAll(tasks, timeout.GetValueOrDefault(TimeSpan.MaxValue));
-                });
+                var request = ToCreateTableRequest(table);
+                Exec(() => DynamoDb.CreateTable(request));
             }
 
             return WaitForTablesToBeReady(tables.Map(x => x.Name), timeout);
@@ -120,22 +99,9 @@ namespace ServiceStack.Aws
 
         public bool DeleteTables(List<string> tableNames, TimeSpan? timeout = null)
         {
-            if (!ExecuteBatchesAsynchronously)
+            foreach (var tableName in tableNames)
             {
-                foreach (var tableName in tableNames)
-                {
-                    Exec(() => DynamoDb.DeleteTable(new DeleteTableRequest(tableName)));
-                }
-            }
-            else
-            {
-                Exec(() => {
-                    var tasks = tableNames
-                        .Map(x => DynamoDb.DeleteTableAsync(new DeleteTableRequest(x)) as Task)
-                        .ToArray();
-
-                    Task.WaitAll(tasks, timeout.GetValueOrDefault(TimeSpan.MaxValue));
-                });
+                Exec(() => DynamoDb.DeleteTable(new DeleteTableRequest(tableName)));
             }
 
             return WaitForTablesToBeRemoved(tableNames);
