@@ -80,6 +80,7 @@
     <Compile Include="PocoDynamoTests\AddHocPocoDynamoTests.cs" />
     <Compile Include="PocoDynamoTests\PocoDynaboDbTests.cs" />
     <Compile Include="PocoDynamoTests\RangeKeyTests.cs" />
+    <Compile Include="PocoDynamoTests\SequenceGeneratorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shared\CacheClientTestsBase.cs" />
     <Compile Include="DynamoDbCacheClientTests.cs" />

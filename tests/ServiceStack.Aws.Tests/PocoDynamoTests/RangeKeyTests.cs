@@ -25,7 +25,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         {
             var db = CreatePocoDynamo();
 
-            db.CreateMissingTable(db.RegisterTable<RangeTest>());
+            db.CreateTableIfMissing(db.RegisterTable<RangeTest>());
 
             var createdDate = DateTime.UtcNow;
             db.PutItem(new RangeTest {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Aws.Support;
@@ -34,7 +33,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             if (schema == null)
             {
-                db.CreateMissingTable(metadata);
+                db.CreateTableIfMissing(metadata);
                 schema = db.GetTableSchema<CacheEntry>();
             }
         }
@@ -91,24 +90,9 @@ namespace ServiceStack.Aws.DynamoDb
             return true;
         }
 
-        private int UpdateCounter(string key, int value)
+        private int UpdateCounterBy(string key, int amount)
         {
-            var response = db.DynamoDb.UpdateItem(new UpdateItemRequest
-            {
-                TableName = metadata.Name,
-                Key = DynamoMetadata.Converters.ToAttributeKeyValue(metadata.HashKey, key),
-                AttributeUpdates = new Dictionary<string, AttributeValueUpdate> {
-                    {
-                        DataField,
-                        new AttributeValueUpdate {
-                            Action = AttributeAction.ADD,
-                            Value = new AttributeValue { N = value.ToString() }
-                        }
-                    }
-                },
-                ReturnValues = ReturnValue.ALL_NEW,
-            });
-            return Convert.ToInt32(response.Attributes[DataField].N);
+            return (int) db.IncrementById<CacheEntry>(key, DataField, amount);
         }
 
         public bool Add<T>(string key, T value, TimeSpan expiresIn)
@@ -128,7 +112,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public long Decrement(string key, uint amount)
         {
-            return UpdateCounter(key, (int)-amount);
+            return UpdateCounterBy(key, (int)-amount);
         }
 
         /// <summary>
@@ -138,7 +122,7 @@ namespace ServiceStack.Aws.DynamoDb
         public void FlushAll()
         {
             db.DeleteTable<CacheEntry>();
-            db.CreateMissingTable<CacheEntry>();
+            db.CreateTableIfMissing<CacheEntry>();
         }
 
         public T Get<T>(string key)
@@ -159,7 +143,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public long Increment(string key, uint amount)
         {
-            return UpdateCounter(key, (int)amount);
+            return UpdateCounterBy(key, (int)amount);
         }
 
         public bool Remove(string key)

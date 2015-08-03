@@ -20,6 +20,7 @@ namespace ServiceStack.Aws.DynamoDb
         T GetItemByHashAndRange<T>(object hash, object range);
         T PutItem<T>(T value, ReturnItem returnItem = ReturnItem.None);
         T DeleteItemById<T>(object hash, ReturnItem returnItem = ReturnItem.None);
+        long IncrementById<T>(object id, string fieldName, long amount = 1);
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         IPocoDynamo Clone();
@@ -254,6 +255,32 @@ namespace ServiceStack.Aws.DynamoDb
                 return default(T);
 
             return Converters.FromAttributeValues<T>(table, response.Attributes);
+        }
+
+        public long IncrementById<T>(object id, string fieldName, long amount = 1)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new UpdateItemRequest
+            {
+                TableName = table.Name,
+                Key = Converters.ToAttributeKeyValue(table.HashKey, id),
+                AttributeUpdates = new Dictionary<string, AttributeValueUpdate> {
+                    {
+                        fieldName,
+                        new AttributeValueUpdate {
+                            Action = AttributeAction.ADD,
+                            Value = new AttributeValue { N = amount.ToString() }
+                        }
+                    }
+                },
+                ReturnValues = ReturnValue.ALL_NEW,
+            };
+
+            var response = DynamoDb.UpdateItem(request);
+
+            return response.Attributes.Count > 0 
+                ? Convert.ToInt64(response.Attributes[fieldName].N) 
+                : 0;
         }
 
         public void Dispose()

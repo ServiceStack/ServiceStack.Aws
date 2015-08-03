@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq.Expressions;
+using System.Reflection;
 using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Support
@@ -48,6 +50,22 @@ namespace ServiceStack.Aws.Support
             {
                 return JsonSerializer.SerializeToString(value);
             }
+        }
+
+        internal static string GetMemberName<T>(Expression<Func<T, object>> fieldExpr)
+        {
+            var m = GetMemberExpression(fieldExpr);
+            if (m != null)
+                return m.Member.Name;
+
+            throw new NotSupportedException("Expected Property Expression");
+        }
+
+        private static MemberExpression GetMemberExpression<T>(Expression<Func<T, object>> expr)
+        {
+            var member = expr.Body as MemberExpression;
+            var unary = expr.Body as UnaryExpression;
+            return member ?? (unary != null ? unary.Operand as MemberExpression : null);
         }
     }
 }
