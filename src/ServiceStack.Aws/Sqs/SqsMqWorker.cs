@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using ServiceStack.Aws.Interfaces;
 using ServiceStack.Aws.Support;
 using ServiceStack.Logging;
 using ServiceStack.Messaging;

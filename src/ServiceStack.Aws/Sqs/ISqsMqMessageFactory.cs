@@ -1,8 +1,7 @@
 ﻿using System;
-using ServiceStack.Aws.Sqs;
 using ServiceStack.Messaging;
 
-namespace ServiceStack.Aws.Interfaces
+namespace ServiceStack.Aws.Sqs
 {
     public interface ISqsMqMessageFactory : IMessageFactory
     {

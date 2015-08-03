@@ -1,4 +1,5 @@
 ﻿using System;
+using ServiceStack.Aws.Support;
 
 namespace ServiceStack.Aws.Sqs
 {

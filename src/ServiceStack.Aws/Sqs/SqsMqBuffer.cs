@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using ServiceStack.Aws.Interfaces;
 using ServiceStack.Aws.Support;
 
 namespace ServiceStack.Aws.Sqs

@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Timers;
-using ServiceStack.Aws.Interfaces;
 using ServiceStack.Aws.Support;
 using Timer = System.Timers.Timer;
 

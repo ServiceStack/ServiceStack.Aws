@@ -1,5 +1,4 @@
 ﻿using System;
-using ServiceStack.Aws.Interfaces;
 using ServiceStack.Aws.Support;
 using ServiceStack.Messaging;
 

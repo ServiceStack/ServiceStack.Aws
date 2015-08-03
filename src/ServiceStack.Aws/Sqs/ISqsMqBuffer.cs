@@ -1,8 +1,7 @@
 ﻿using System;
 using Amazon.SQS.Model;
-using ServiceStack.Aws.Sqs;
 
-namespace ServiceStack.Aws.Interfaces
+namespace ServiceStack.Aws.Sqs
 {
     public interface ISqsMqBuffer : IDisposable
     {

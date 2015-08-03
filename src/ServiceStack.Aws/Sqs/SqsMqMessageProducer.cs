@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.SQS.Model;
-using ServiceStack.Aws.Interfaces;
+using ServiceStack.Aws.Support;
 using ServiceStack.Logging;
 using ServiceStack.Messaging;
 

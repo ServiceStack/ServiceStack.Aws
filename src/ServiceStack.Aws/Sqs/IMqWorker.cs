@@ -1,7 +1,7 @@
 ﻿using System;
 using ServiceStack.Messaging;
 
-namespace ServiceStack.Aws.Interfaces
+namespace ServiceStack.Aws.Sqs
 {
     public interface IMqWorker<out T> : IDisposable
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 using Amazon.SQS.Model;
-using ServiceStack.Aws.Interfaces;
+using ServiceStack.Aws.Support;
 using ServiceStack.Messaging;
 
 namespace ServiceStack.Aws.Sqs

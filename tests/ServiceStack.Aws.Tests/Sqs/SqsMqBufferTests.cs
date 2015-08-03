@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using Amazon.SQS.Model;
 using NUnit.Framework;
-using ServiceStack.Aws.Interfaces;
 using ServiceStack.Aws.Sqs;
 using ServiceStack.Aws.Sqs.Fake;
 
