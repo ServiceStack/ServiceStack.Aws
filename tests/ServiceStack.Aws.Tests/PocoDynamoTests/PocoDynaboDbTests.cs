@@ -1,43 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using Amazon;
-using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
-using ServiceStack.Configuration;
 using ServiceStack.Server.Tests.Shared;
 using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Tests.PocoDynamoTests
 {
     [TestFixture]
-    public class PocoDynaboDbTests
+    public class PocoDynaboDbTests : DynamoTestBase
     {
         [TestFixtureSetUp]
         public void TestFixtureSetUp()
         {
-            var db = CreateClient();
+            var db = CreatePocoDynamo();
             db.DeleteAllTables(TimeSpan.FromMinutes(1));
-        }
-
-        public static bool CreateTestTables(IPocoDynamo db)
-        {
-            var types = new List<Type>()
-                .Add<Customer>()
-                .Add<CustomerAddress>()
-                .Add<Order>()
-                .Add<Country>()
-                .Add<Node>();
-
-            var tables = DynamoMetadata.RegisterTables(types);
-            var allTablesCreated = db.CreateNonExistingTables(tables, TimeSpan.FromMinutes(1));
-            return allTablesCreated;
         }
 
         [Test]
         public void Does_Create_tables()
         {
-            var db = CreateClient();
+            var db = CreatePocoDynamo();
 
             var allTablesCreated = CreateTestTables(db);
 
@@ -57,7 +40,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         [Test]
         public void Can_put_and_delete_Country_raw()
         {
-            var db = CreateClient();
+            var db = CreatePocoDynamo();
 
             CreateTestTables(db);
 
@@ -90,7 +73,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         [Test]
         public void Can_put_and_delete_Country()
         {
-            var db = CreateClient();
+            var db = CreatePocoDynamo();
 
             CreateTestTables(db);
 
@@ -113,7 +96,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         [Test]
         public void Can_put_and_delete_basic_Customer_raw()
         {
-            var db = CreateClient();
+            var db = CreatePocoDynamo();
 
             CreateTestTables(db);
 
@@ -148,7 +131,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         [Test]
         public void Can_Put_Get_and_Delete_Customer_with_Orders()
         {
-            var db = CreateClient();
+            var db = CreatePocoDynamo();
 
             CreateTestTables(db);
 
@@ -204,7 +187,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         [Test]
         public void Can_Put_Get_and_Delete_Deeply_Nested_Nodes()
         {
-            var db = CreateClient();
+            var db = CreatePocoDynamo();
 
             CreateTestTables(db);
 
@@ -228,23 +211,6 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
             dbNodes.PrintDump();
 
             Assert.That(dbNodes, Is.EqualTo(nodes));
-        }
-
-        public static IPocoDynamo CreateClient()
-        {
-            var accessKey = Environment.GetEnvironmentVariable("AWSAccessKey");
-            var secretKey = Environment.GetEnvironmentVariable("AWSSecretKey");
-
-            var useLocalDb = string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey);
-
-            var dynamoClient = useLocalDb
-                ? new AmazonDynamoDBClient("keyId", "key", new AmazonDynamoDBConfig {
-                        ServiceURL = ConfigUtils.GetAppSetting("DynamoDbUrl", "http://localhost:8000"),
-                    })
-                : new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.USEast1);
-
-            var db = new PocoDynamo(dynamoClient);
-            return db;
         }
     }
 }

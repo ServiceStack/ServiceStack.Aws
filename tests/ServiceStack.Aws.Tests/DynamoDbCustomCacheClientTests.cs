@@ -2,30 +2,20 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.DynamoDBv2;
 using NUnit.Framework;
 using ServiceStack.Caching;
-using ServiceStack.Configuration;
 
 namespace ServiceStack.Aws.Tests
 {
     [TestFixture]
-    public class DynamoDbCustomCacheClientTests
+    public class DynamoDbCustomCacheClientTests : DynamoTestBase
     {
         private ICacheClient cacheClient;
 
         [TestFixtureSetUp]
         public void OnTestFixtureSetup()
-        {   // Change App.config entry to url of DynamoDb server you have access to.
-            // To setup a local dynamo instance see: https://aws.amazon.com/blogs/aws/dynamodb-local-for-desktop-development
-            var config = new AmazonDynamoDBConfig
-            {
-                ServiceURL = ConfigUtils.GetAppSetting("DynamoDbUrl", "http://localhost:8000")
-            };
-
-            var dynamoDbClient = new AmazonDynamoDBClient("keyId", "key", config);
-            this.cacheClient = new DynamoDbCacheClient(dynamoDbClient);
-            this.cacheClient.InitSchema();
+        {   
+            this.cacheClient = CreateCacheClient();
         }
 
         [Test]

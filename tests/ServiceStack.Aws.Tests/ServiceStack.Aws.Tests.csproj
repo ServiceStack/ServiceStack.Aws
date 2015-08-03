@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DynamoDbCustomCacheClientTests.cs" />
+    <Compile Include="DynamoTestBase.cs" />
     <Compile Include="Issues\LocalDynamoDbHangsWhenPuttingNullValue.cs" />
     <Compile Include="PocoDynamoTests\AddHocPocoDynamoTests.cs" />
     <Compile Include="PocoDynamoTests\PocoDynaboDbTests.cs" />

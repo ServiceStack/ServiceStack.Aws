@@ -6,13 +6,13 @@ using ServiceStack.Text;
 namespace ServiceStack.Aws.Tests.PocoDynamoTests
 {
     [TestFixture, Explicit]
-    public class AddHocPocoDynamoTests
+    public class AddHocPocoDynamoTests : DynamoTestBase
     {
         [Test]
         public void Can_get_Customer()
         {
-            var db = PocoDynaboDbTests.CreateClient();
-            PocoDynaboDbTests.CreateTestTables(db);
+            var db = CreatePocoDynamo();
+            CreateTestTables(db);
 
             var dbCustomer = db.GetItemById<Customer>(1);
 
@@ -22,8 +22,8 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         [Test]
         public void Can_Put_Get_and_Delete_Deeply_Nested_Nodes()
         {
-            var db = PocoDynaboDbTests.CreateClient();
-            PocoDynaboDbTests.CreateTestTables(db);
+            var db = CreatePocoDynamo();
+            CreateTestTables(db);
 
             var nodes = new Node(1, "/root",
                 new List<Node>
@@ -35,7 +35,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
                             }),
                         }),
                     }),
-                    new Node(3, "/root/3")
+                    new Node(3, "/root/3"),
                 });
 
             db.PutItem(nodes);
