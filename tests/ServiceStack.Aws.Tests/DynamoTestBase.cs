@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Amazon;
 using Amazon.DynamoDBv2;
+using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Caching;
 using ServiceStack.Configuration;
 using ServiceStack.Server.Tests.Shared;

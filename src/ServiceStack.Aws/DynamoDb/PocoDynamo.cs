@@ -4,9 +4,8 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Logging;
-using ServiceStack.Text;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.DynamoDb
 {
     public interface IPocoDynamo : IDisposable
     {

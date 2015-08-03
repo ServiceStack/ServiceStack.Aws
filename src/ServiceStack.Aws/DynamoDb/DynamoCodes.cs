@@ -1,4 +1,4 @@
-﻿namespace ServiceStack.Aws
+﻿namespace ServiceStack.Aws.DynamoDb
 {
     //http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeValue.html
     public static class DynamoType

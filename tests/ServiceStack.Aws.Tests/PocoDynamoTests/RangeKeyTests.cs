@@ -1,6 +1,7 @@
 ﻿using System;
 using Amazon.DynamoDBv2.DataModel;
 using NUnit.Framework;
+using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Tests.PocoDynamoTests

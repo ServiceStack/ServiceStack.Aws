@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.DynamoDb
 {
     public static class PocoDynamoExtensions
     {

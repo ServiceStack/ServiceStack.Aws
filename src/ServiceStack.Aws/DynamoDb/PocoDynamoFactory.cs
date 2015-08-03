@@ -1,8 +1,7 @@
-﻿using Amazon;
-using Amazon.DynamoDBv2;
+﻿using Amazon.DynamoDBv2;
 using Amib.Threading;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.DynamoDb
 {
     public interface IPocoDynamoFactory
     {

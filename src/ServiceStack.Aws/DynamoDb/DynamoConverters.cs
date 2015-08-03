@@ -10,7 +10,7 @@ using ServiceStack.Aws.Support;
 using ServiceStack.DataAnnotations;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.DynamoDb
 {
     public static class DynamoConfig
     {

@@ -3,7 +3,7 @@ using System.Globalization;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Text.Common;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.DynamoDb
 {
     public interface IAttributeValueConverter
     {

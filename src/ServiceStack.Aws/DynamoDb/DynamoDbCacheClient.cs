@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Aws.Support;
 using ServiceStack.Caching;
 using ServiceStack.Logging;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.DynamoDb
 {
     public class DynamoDbCacheClient : ICacheClientExtended, IRequiresSchema, IRemoveByPattern
     {

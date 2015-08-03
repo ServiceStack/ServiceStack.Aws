@@ -71,18 +71,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DynamoUtils.cs" />
-    <Compile Include="DynamoConverters.cs" />
-    <Compile Include="DynamoDbCacheClient.cs" />
-    <Compile Include="DynamoCodes.cs" />
-    <Compile Include="IAttributeValueConverter.cs" />
-    <Compile Include="PocoDynamoExtensions.cs" />
-    <Compile Include="PocoDynamoFactory.cs" />
+    <Compile Include="DynamoDb\DynamoUtils.cs" />
+    <Compile Include="DynamoDb\DynamoConverters.cs" />
+    <Compile Include="DynamoDb\DynamoDbCacheClient.cs" />
+    <Compile Include="DynamoDb\DynamoCodes.cs" />
+    <Compile Include="DynamoDb\IAttributeValueConverter.cs" />
+    <Compile Include="DynamoDb\PocoDynamoExtensions.cs" />
+    <Compile Include="DynamoDb\PocoDynamoFactory.cs" />
     <Compile Include="Sqs\IMqWorker.cs" />
     <Compile Include="Sqs\ISqsMqBufferFactory.cs" />
     <Compile Include="Sqs\ISqsMqBuffer.cs" />
     <Compile Include="Sqs\ISqsMqMessageFactory.cs" />
-    <Compile Include="PocoDynamo.cs" />
+    <Compile Include="DynamoDb\PocoDynamo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Support\AwsClientUtils.cs" />
     <Compile Include="Support\Guard.cs" />
@@ -111,8 +111,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <Compile Include="PocoDynamo.Support.cs" />
+    <Compile Include="DynamoDb\PocoDynamo.Support.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

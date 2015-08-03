@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.DynamoDb
 {
     public partial class PocoDynamo
     {
