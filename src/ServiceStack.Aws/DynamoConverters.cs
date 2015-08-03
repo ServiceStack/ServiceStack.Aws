@@ -23,6 +23,11 @@ namespace ServiceStack.Aws
         public static Func<AttributeValue, Type, object> FromAttributeValueFn { get; set; }
         public static Func<object, Type, object> ConvertValueFn { get; set; }
 
+        public Dictionary<Type, IAttributeValueConverter> ValueConverters = new Dictionary<Type, IAttributeValueConverter>
+        {
+            {typeof(DateTime), new DateTimeConverter() },
+        };
+
         public virtual string GetFieldName(PropertyInfo pi)
         {
             var dynoAttr = pi.FirstAttribute<DynamoDBPropertyAttribute>();
@@ -142,9 +147,12 @@ namespace ServiceStack.Aws
 
         public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(DynamoMetadataField field, object hash)
         {
-            return new Dictionary<string, AttributeValue> {
-                { field.Name, ToAttributeValue(field.Type, field.DbType, hash) },
-            };
+            using (AwsClientUtils.GetJsScope())
+            {
+                return new Dictionary<string, AttributeValue> {
+                    { field.Name, ToAttributeValue(field.Type, field.DbType, hash) },
+                };
+            }
         }
 
         public virtual Dictionary<string, AttributeValue> ToAttributeValues(object instance, DynamoMetadataTable table)
@@ -156,15 +164,18 @@ namespace ServiceStack.Aws
                     return ret;
             }
 
-            var to = new Dictionary<string, AttributeValue>();
-
-            foreach (var field in table.Fields)
+            using (AwsClientUtils.GetJsScope())
             {
-                var value = field.GetValue(instance);
-                to[field.Name] = ToAttributeValue(field.Type, field.DbType, value);
-            }
+                var to = new Dictionary<string, AttributeValue>();
 
-            return to;
+                foreach (var field in table.Fields)
+                {
+                    var value = field.GetValue(instance);
+                    to[field.Name] = ToAttributeValue(field.Type, field.DbType, value);
+                }
+
+                return to;
+            }
         }
 
         public virtual AttributeValue ToAttributeValue(Type fieldType, string dbType, object value)
@@ -178,6 +189,10 @@ namespace ServiceStack.Aws
 
             if (value == null)
                 return new AttributeValue { NULL = true };
+
+            var valueConverter = GetValueConverter(fieldType);
+            if (valueConverter != null)
+                return valueConverter.ToAttributeValue(value);
 
             switch (dbType)
             {
@@ -200,7 +215,7 @@ namespace ServiceStack.Aws
                 case DynamoType.Map:
                     return ToMapAttributeValue(value);
                 default:
-                    return new AttributeValue { S = AwsClientUtils.ToJsv(value) };
+                    return new AttributeValue { S = value.ToJsv() };
             }
         }
 
@@ -213,7 +228,7 @@ namespace ServiceStack.Aws
             foreach (var key in map.Keys)
             {
                 var x = map[key];
-                to[key.ToString()] = x != null 
+                to[key.ToString()] = x != null
                     ? ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x)
                     : new AttributeValue { NULL = true };
             }
@@ -224,7 +239,7 @@ namespace ServiceStack.Aws
         {
             var table = DynamoMetadata.GetTable(type);
 
-            var from = new Dictionary<string,object>();
+            var from = new Dictionary<string, object>();
             foreach (var field in table.Fields)
             {
                 AttributeValue attrValue;
@@ -282,14 +297,27 @@ namespace ServiceStack.Aws
             return to;
         }
 
+        IAttributeValueConverter GetValueConverter(Type type)
+        {
+            type = Nullable.GetUnderlyingType(type) ?? type;
+
+            IAttributeValueConverter valueConverter;
+            ValueConverters.TryGetValue(type, out valueConverter);
+            return valueConverter;
+        }
+
         private object FromAttributeValue(AttributeValue attrValue, Type fieldType)
         {
+            var valueConverter = GetValueConverter(fieldType);
+            if (valueConverter != null)
+                return valueConverter.FromAttributeValue(attrValue);
+
             var value = FromAttributeValueFn != null
                 ? FromAttributeValueFn(attrValue, fieldType) ?? GetAttributeValue(attrValue)
                 : GetAttributeValue(attrValue);
 
-            return value == null 
-                ? null 
+            return value == null
+                ? null
                 : ConvertValue(value, fieldType);
         }
 
@@ -320,4 +348,5 @@ namespace ServiceStack.Aws
         }
 
     }
+
 }

@@ -75,6 +75,8 @@
     <Compile Include="DynamoConverters.cs" />
     <Compile Include="DynamoDbCacheClient.cs" />
     <Compile Include="DynamoCodes.cs" />
+    <Compile Include="IAttributeValueConverter.cs" />
+    <Compile Include="PocoDynamoExtensions.cs" />
     <Compile Include="PocoDynamoFactory.cs" />
     <Compile Include="Interfaces\IMqWorker.cs" />
     <Compile Include="Interfaces\ISqsMqBufferFactory.cs" />
