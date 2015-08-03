@@ -49,11 +49,12 @@ namespace ServiceStack.Server.Tests.Shared
     {
         private readonly ICacheClient Cache;
 
-        public abstract ICacheClient CreateClient();
+        public abstract ICacheClient CreateCacheClient();
 
         protected CacheClientTestsBase()
         {
-            Cache = CreateClient();
+            Cache = CreateCacheClient();
+            Cache.FlushAll();
         }
 
         [TestFixtureTearDown]
@@ -62,24 +63,25 @@ namespace ServiceStack.Server.Tests.Shared
             Cache.Dispose();
         }
 
-        [SetUp]
-        public void SetUp()
-        {
-            Cache.FlushAll();
-        }
+        //Too slow Requires destroying/recreating table, do it once on StartUp 
+        //[SetUp]
+        //public void SetUp()
+        //{
+        //    Cache.FlushAll();
+        //}
 
-        [Test]
-        public void Does_flush_all()
-        {
-            3.Times(i =>
-                Cache.Set(i.ToUrn<Item>(), new Item { Id = i, Name = "Name" + i }));
+        //[Test]
+        //public void Does_flush_all()
+        //{
+        //    3.Times(i =>
+        //        Cache.Set(i.ToUrn<Item>(), new Item { Id = i, Name = "Name" + i }));
 
-            Assert.That(Cache.Get<Item>(1.ToUrn<Item>()), Is.Not.Null);
+        //    Assert.That(Cache.Get<Item>(1.ToUrn<Item>()), Is.Not.Null);
 
-            Cache.FlushAll();
+        //    Cache.FlushAll();
 
-            Assert.That(Cache.Get<Item>(1.ToUrn<Item>()), Is.Null);
-        }
+        //    Assert.That(Cache.Get<Item>(1.ToUrn<Item>()), Is.Null);
+        //}
 
         [Test]
         public void Can_set_and_remove_entry()
@@ -261,7 +263,7 @@ namespace ServiceStack.Server.Tests.Shared
         [Test]
         public void Can_cache_multiple_items_in_parallel()
         {
-            var cache = CreateClient();
+            var cache = CreateCacheClient();
             var fns = 10.Times(i => (Action)(() =>
             {
                 cache.Set("concurrent-test", "Data: {0}".Fmt(i));
@@ -276,8 +278,8 @@ namespace ServiceStack.Server.Tests.Shared
         [Test]
         public void Can_set_get_and_remove_ISession()
         {
-            var sessionA = new SessionFactory(CreateClient()).CreateSession("a");
-            var sessionB = new SessionFactory(CreateClient()).CreateSession("b");
+            var sessionA = new SessionFactory(CreateCacheClient()).CreateSession("a");
+            var sessionB = new SessionFactory(CreateCacheClient()).CreateSession("b");
 
             3.Times(i =>
             {
