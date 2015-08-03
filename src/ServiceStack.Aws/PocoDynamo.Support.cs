@@ -12,21 +12,24 @@ namespace ServiceStack.Aws
     public partial class PocoDynamo
     {
         //Error Handling: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ErrorHandling.html
-        public void Exec(Action fn)
+        public void Exec(Action fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
         {
             Exec(() => {
                 fn();
                 return true;
-            });
+            }, rethrowExceptions, retryOnErrorCodes);
         }
 
-        public T Exec<T>(Func<T> fn)
+        public T Exec<T>(Func<T> fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
         {
             var i = 0;
             Exception originalEx = null;
             var firstAttempt = DateTime.UtcNow;
 
             bool retry = false;
+
+            if (retryOnErrorCodes == null)
+                retryOnErrorCodes = RetryOnErrorCodes;
 
             while (DateTime.UtcNow - firstAttempt < MaxRetryOnExceptionTimeout)
             {
@@ -39,6 +42,20 @@ namespace ServiceStack.Aws
                 {
                     var ex = outerEx.UnwrapIfSingleException();
 
+                    if (rethrowExceptions != null)
+                    {
+                        foreach (var rethrowEx in rethrowExceptions)
+                        {
+                            if (ex.GetType().IsAssignableFromType(rethrowEx))
+                            {
+                                if (ex != outerEx)
+                                    throw ex;
+
+                                throw;
+                            }
+                        }
+                    }
+
                     if (originalEx == null)
                         originalEx = ex;
 
@@ -46,7 +63,7 @@ namespace ServiceStack.Aws
                     if (amazonEx != null)
                     {
                         if (amazonEx.StatusCode == HttpStatusCode.BadRequest &&
-                            !RetryOnErrorCodes.Contains(amazonEx.ErrorCode))
+                            !retryOnErrorCodes.Contains(amazonEx.ErrorCode))
                             throw;
                     }
 
@@ -63,12 +80,12 @@ namespace ServiceStack.Aws
             Thread.Sleep(nextTryMs);
         }
 
-        public bool WaitForTablesToBeReady(List<string> tableNames, TimeSpan? timeout = null)
+        public bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null)
         {
-            if (tableNames.Count == 0)
-                return true;
-
             var pendingTables = new List<string>(tableNames);
+
+            if (pendingTables.Count == 0)
+                return true;
 
             var startAt = DateTime.UtcNow;
             do
@@ -85,7 +102,7 @@ namespace ServiceStack.Aws
                     }
 
                     if (Log.IsDebugEnabled)
-                        Log.Debug("Tables Pending: {0}".Fmt(AwsClientUtils.ToJsv(pendingTables)));
+                        Log.Debug("Tables Pending: {0}".Fmt(pendingTables.ToJsv()));
 
                     if (pendingTables.Count == 0)
                         return true;
@@ -103,12 +120,12 @@ namespace ServiceStack.Aws
             } while (true);
         }
 
-        public bool WaitForTablesToBeRemoved(List<string> tableNames, TimeSpan? timeout = null)
+        public bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null)
         {
-            if (tableNames.Count == 0)
-                return true;
-
             var pendingTables = new List<string>(tableNames);
+
+            if (pendingTables.Count == 0)
+                return true;
 
             var startAt = DateTime.UtcNow;
             do
