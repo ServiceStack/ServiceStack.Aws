@@ -14,15 +14,16 @@ namespace ServiceStack.Aws
         Table GetTableSchema(Type table);
         DynamoMetadataTable GetTableMetadata(Type table);
         List<string> GetTableNames();
-        bool CreateNonExistingTables(IEnumerable<DynamoMetadataTable> tables, TimeSpan? timeout = null);
+        bool CreateMissingTables(IEnumerable<DynamoMetadataTable> tables, TimeSpan? timeout = null);
         bool DeleteAllTables(TimeSpan? timeout = null);
         bool DeleteTables(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         T GetItemById<T>(object id);
+        T GetItemByHashAndRange<T>(object hash, object range);
         T PutItem<T>(T value, ReturnItem returnItem = ReturnItem.None);
         T DeleteItemById<T>(object hash, ReturnItem returnItem = ReturnItem.None);
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
-        void RegisterTables(params Type[] types);
+        IPocoDynamo Clone();
     }
 
     public partial class PocoDynamo : IPocoDynamo
@@ -70,6 +71,19 @@ namespace ServiceStack.Aws
             };
         }
 
+        public IPocoDynamo Clone()
+        {
+            return new PocoDynamo(DynamoDb)
+            {
+                ConsistentRead = ConsistentRead,
+                ReadCapacityUnits = ReadCapacityUnits,
+                WriteCapacityUnits = WriteCapacityUnits,
+                RetryOnErrorCodes = new HashSet<string>(RetryOnErrorCodes),
+                PollTableStatus = PollTableStatus,
+                MaxRetryOnExceptionTimeout = MaxRetryOnExceptionTimeout,
+            };
+        }
+
         public DynamoMetadataTable GetTableMetadata(Type table)
         {
             return DynamoMetadata.GetTable(table);
@@ -102,7 +116,7 @@ namespace ServiceStack.Aws
             }, throwNotFoundExceptions);
         }
 
-        public bool CreateNonExistingTables(IEnumerable<DynamoMetadataTable> tables, TimeSpan? timeout = null)
+        public bool CreateMissingTables(IEnumerable<DynamoMetadataTable> tables, TimeSpan? timeout = null)
         {
             var existingTableNames = GetTableNames();
 
@@ -188,6 +202,25 @@ namespace ServiceStack.Aws
             return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
         }
 
+        public T GetItemByHashAndRange<T>(object hash, object range)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new GetItemRequest
+            {
+                TableName = table.Name,
+                Key = Converters.ToAttributeKeyValue(table, hash, range),
+                ConsistentRead = ConsistentRead,
+            };
+
+            var response = Exec(() => DynamoDb.GetItem(request), throwNotFoundExceptions);
+
+            if (!response.IsItemSet)
+                return default(T);
+            var attributeValues = response.Item;
+
+            return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
+        }
+
         public T PutItem<T>(T value, ReturnItem returnItem = ReturnItem.None)
         {
             var table = DynamoMetadata.GetTable<T>();
@@ -222,11 +255,6 @@ namespace ServiceStack.Aws
                 return default(T);
 
             return Converters.FromAttributeValues<T>(table, response.Attributes);
-        }
-
-        public void RegisterTables(params Type[] types)
-        {
-            DynamoMetadata.RegisterTables(types);
         }
 
         public void Dispose()

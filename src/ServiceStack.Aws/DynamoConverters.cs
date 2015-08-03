@@ -155,6 +155,17 @@ namespace ServiceStack.Aws
             }
         }
 
+        public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(DynamoMetadataTable table, object hash, object range)
+        {
+            using (AwsClientUtils.GetJsScope())
+            {
+                return new Dictionary<string, AttributeValue> {
+                    { table.HashKey.Name, ToAttributeValue(table.HashKey.Type, table.HashKey.DbType, hash) },
+                    { table.RangeKey.Name, ToAttributeValue(table.RangeKey.Type, table.RangeKey.DbType, range) },
+                };
+            }
+        }
+
         public virtual Dictionary<string, AttributeValue> ToAttributeValues(object instance, DynamoMetadataTable table)
         {
             if (ToAttributeValuesFn != null)
