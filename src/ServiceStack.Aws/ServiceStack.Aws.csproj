@@ -78,7 +78,7 @@
     <Compile Include="DynamoDb\IAttributeValueConverter.cs" />
     <Compile Include="DynamoDb\PocoDynamoExtensions.cs" />
     <Compile Include="DynamoDb\PocoDynamoFactory.cs" />
-    <Compile Include="DynamoDb\SequenceGenerator.cs" />
+    <Compile Include="DynamoDb\DynamoDbSequenceGenerator.cs" />
     <Compile Include="Sqs\IMqWorker.cs" />
     <Compile Include="Sqs\ISqsMqBufferFactory.cs" />
     <Compile Include="Sqs\ISqsMqBuffer.cs" />
