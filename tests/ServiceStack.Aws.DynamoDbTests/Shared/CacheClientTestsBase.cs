@@ -8,7 +8,7 @@ using ServiceStack.Auth;
 using ServiceStack.Caching;
 using ServiceStack.Text;
 
-namespace ServiceStack.Server.Tests.Shared
+namespace ServiceStack.Aws.DynamoDbTests.Shared
 {
     public class Item
     {

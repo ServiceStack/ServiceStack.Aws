@@ -5,7 +5,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
 
-namespace ServiceStack.Aws.Tests.Issues
+namespace ServiceStack.Aws.DynamoDbTests.Issues
 {
     [TestFixture,Explicit]
     public class LocalDynamoDbHangsWhenPuttingNullValue

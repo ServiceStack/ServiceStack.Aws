@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using ServiceStack.Caching;
 
-namespace ServiceStack.Aws.Tests
+namespace ServiceStack.Aws.DynamoDbTests
 {
     [TestFixture]
     public class DynamoDbCustomCacheClientTests : DynamoTestBase

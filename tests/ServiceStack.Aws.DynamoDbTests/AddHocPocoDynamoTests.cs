@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using NUnit.Framework;
-using ServiceStack.Server.Tests.Shared;
+using ServiceStack.Aws.DynamoDb;
+using ServiceStack.Aws.DynamoDbTests.Shared;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws.Tests.PocoDynamoTests
+namespace ServiceStack.Aws.DynamoDbTests
 {
     [TestFixture, Explicit]
     public class AddHocPocoDynamoTests : DynamoTestBase
@@ -12,7 +13,8 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Can_get_Customer()
         {
             var db = CreatePocoDynamo();
-            CreateTestTables(db);
+            db.RegisterTable<Customer>();
+            db.InitSchema();
 
             var dbCustomer = db.GetItemById<Customer>(1);
 
@@ -23,7 +25,8 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Can_Put_Get_and_Delete_Deeply_Nested_Nodes()
         {
             var db = CreatePocoDynamo();
-            CreateTestTables(db);
+            db.RegisterTable<Node>();
+            db.InitSchema();
 
             var nodes = new Node(1, "/root",
                 new List<Node>

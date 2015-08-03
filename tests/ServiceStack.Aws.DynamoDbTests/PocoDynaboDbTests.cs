@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
-using ServiceStack.Server.Tests.Shared;
+using ServiceStack.Aws.DynamoDb;
+using ServiceStack.Aws.DynamoDbTests.Shared;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws.Tests.PocoDynamoTests
+namespace ServiceStack.Aws.DynamoDbTests
 {
     [TestFixture]
     public class PocoDynaboDbTests : DynamoTestBase
@@ -22,17 +23,18 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Does_Create_tables()
         {
             var db = CreatePocoDynamo();
+            var types = new List<Type>()
+                .Add<Customer>()
+                .Add<Country>()
+                .Add<Node>();
 
-            var allTablesCreated = CreateTestTables(db);
-
-            Assert.That(allTablesCreated, Is.True);
+            db.RegisterTables(types);
+            db.InitSchema();
 
             var tableNames = db.GetTableNames();
 
             var expected = new[] {
                 "Customer",
-                "CustomerAddress",
-                "Order",
                 "Country",
                 "Node",
             };
@@ -43,8 +45,8 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Can_put_and_delete_Country_raw()
         {
             var db = CreatePocoDynamo();
-
-            CreateTestTables(db);
+            db.RegisterTable<Country>();
+            db.InitSchema();
 
             db.DynamoDb.PutItem(new PutItemRequest
             {
@@ -76,8 +78,8 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Can_put_and_delete_Country()
         {
             var db = CreatePocoDynamo();
-
-            CreateTestTables(db);
+            db.RegisterTable<Country>();
+            db.InitSchema();
 
             var country = new Country
             {
@@ -99,8 +101,8 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Can_put_and_delete_basic_Customer_raw()
         {
             var db = CreatePocoDynamo();
-
-            CreateTestTables(db);
+            db.RegisterTable<Customer>();
+            db.InitSchema();
 
             db.DynamoDb.PutItem(new PutItemRequest
             {
@@ -134,8 +136,8 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Can_Put_Get_and_Delete_Customer_with_Orders()
         {
             var db = CreatePocoDynamo();
-
-            CreateTestTables(db);
+            db.RegisterTable<Customer>();
+            db.InitSchema();
 
             var customer = new Customer {
                 Id = 1,
@@ -187,11 +189,67 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         }
 
         [Test]
+        public void Does_auto_populate_AutoIncrement_fields()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Customer>();
+            db.InitSchema();
+
+            db.Sequences.Reset<Customer>();
+
+            var customer = new Customer {
+                Name = "Foo",
+            };
+
+            db.PutItem(customer);
+
+            Assert.That(customer.Id, Is.EqualTo(1));
+
+            var dbCustomer = db.GetItemById<Customer>(1);
+            Assert.That(dbCustomer.Id, Is.EqualTo(1));
+
+            customer = new Customer
+            {
+                Name = "Foo",
+                Orders = new List<Order>
+                {
+                    new Order
+                    {
+                        LineItem = "Item 1",
+                        Qty = 3,
+                        Cost = 2,
+                    },
+                    new Order
+                    {
+                        LineItem = "Item 2",
+                        Qty = 4,
+                        Cost = 3,
+                    },
+                },
+                PrimaryAddress = new CustomerAddress
+                {
+                    AddressLine1 = "Line 1",
+                    AddressLine2 = "Line 2",
+                    City = "Darwin",
+                    State = "NT",
+                    Country = "AU",
+                }
+            };
+
+            db.PutItem(customer);
+
+            Assert.That(customer.Id, Is.EqualTo(2));
+            //Assert.That(customer.Orders[0].Id, Is.EqualTo(1));
+            //Assert.That(customer.Orders[1].Id, Is.EqualTo(2));
+            //Assert.That(customer.PrimaryAddress.Id, Is.EqualTo(1));
+        }
+
+        [Test]
         public void Can_Put_Get_and_Delete_Deeply_Nested_Nodes()
         {
             var db = CreatePocoDynamo();
-
-            CreateTestTables(db);
+            db.RegisterTable<Node>();
+            db.InitSchema();
 
             var nodes = new Node(1, "/root",
                 new List<Node>

@@ -4,7 +4,7 @@ using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws.Tests.PocoDynamoTests
+namespace ServiceStack.Aws.DynamoDbTests
 {
     public class RangeTest
     {
@@ -16,7 +16,6 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public string Data { get; set; }
         public DateTime? ExpiryDate { get; set; }
     }
-
 
     public class RangeKeyTests : DynamoTestBase
     {
@@ -40,7 +39,8 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
 
             Assert.That(dto.Id, Is.EqualTo("test"));
             Assert.That(dto.Data, Is.EqualTo("Data"));
-            Assert.That(dto.CreatedDate, Is.EqualTo(createdDate));
+            Assert.That(dto.CreatedDate, Is.EqualTo(createdDate)
+                .Within(TimeSpan.FromMinutes(1)));
         }
     }
 }

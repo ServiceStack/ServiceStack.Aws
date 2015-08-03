@@ -1,29 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using Amazon;
 using Amazon.DynamoDBv2;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Caching;
 using ServiceStack.Configuration;
-using ServiceStack.Server.Tests.Shared;
 
-namespace ServiceStack.Aws.Tests
+namespace ServiceStack.Aws.DynamoDbTests
 {
     public abstract class DynamoTestBase
     {
-        public static bool CreateTestTables(IPocoDynamo db)
-        {
-            var types = new List<Type>()
-                .Add<Customer>()
-                .Add<CustomerAddress>()
-                .Add<Order>()
-                .Add<Country>()
-                .Add<Node>();
-
-            var tables = db.RegisterTables(types);
-            var allTablesCreated = db.CreateMissingTables(tables, TimeSpan.FromMinutes(1));
-            return allTablesCreated;
-        }
+        public static bool UseLocalDb = true;
 
         public static IPocoDynamo CreatePocoDynamo()
         {
@@ -45,7 +31,8 @@ namespace ServiceStack.Aws.Tests
             var accessKey = Environment.GetEnvironmentVariable("AWSAccessKey");
             var secretKey = Environment.GetEnvironmentVariable("AWSSecretKey");
 
-            var useLocalDb = string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey);
+            var useLocalDb = UseLocalDb || 
+                string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey);
 
             var dynamoClient = useLocalDb
                 ? new AmazonDynamoDBClient("keyId", "key", new AmazonDynamoDBConfig {

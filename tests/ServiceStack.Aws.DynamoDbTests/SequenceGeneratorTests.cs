@@ -1,8 +1,9 @@
 ﻿using System;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
+using ServiceStack.Aws.DynamoDbTests.Shared;
 
-namespace ServiceStack.Aws.Tests.PocoDynamoTests
+namespace ServiceStack.Aws.DynamoDbTests
 {
     public class SequenceGeneratorTests : DynamoTestBase
     {
@@ -10,8 +11,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Can_increment_Seq()
         {
             var db = CreatePocoDynamo();
-
-            db.CreateTableIfMissing(db.RegisterTable<Seq>());
+            db.InitSchema();
 
             var key = Guid.NewGuid().ToString();
 
@@ -32,8 +32,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Can_decrement_Seq()
         {
             var db = CreatePocoDynamo();
-
-            db.CreateTableIfMissing(db.RegisterTable<Seq>());
+            db.InitSchema();
 
             var key = Guid.NewGuid().ToString();
 
@@ -54,8 +53,7 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
         public void Can_increment_Seq_by_expression()
         {
             var db = CreatePocoDynamo();
-
-            db.CreateTableIfMissing(db.RegisterTable<Seq>());
+            db.InitSchema();
 
             var key = Guid.NewGuid().ToString();
 
@@ -67,6 +65,25 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
 
             nextId = db.DecrementById<Seq>(key, x => x.Counter);
             Assert.That(nextId, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Does_get_next_sequences()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Customer>();
+            db.InitSchema();
+
+            db.Sequences.Reset<Customer>();
+
+            var nextId = db.Sequences.Increment<Customer>();
+
+            Assert.That(nextId, Is.EqualTo(1));
+
+            var nextIds = db.Sequences.GetNextSequences<Customer>(5);
+            var expected = new[] { 2, 3, 4, 5, 6 };
+
+            Assert.That(nextIds, Is.EquivalentTo(expected));
         }
     }
 }

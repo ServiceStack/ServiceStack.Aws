@@ -1,9 +1,9 @@
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
+using ServiceStack.Aws.DynamoDbTests.Shared;
 using ServiceStack.Caching;
-using ServiceStack.Server.Tests.Shared;
 
-namespace ServiceStack.Aws.Tests
+namespace ServiceStack.Aws.DynamoDbTests
 {
     [TestFixture]
     public class DynamoDbCacheClientTests : CacheClientTestsBase
