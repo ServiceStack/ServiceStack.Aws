@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
-using Amazon.CloudFront.Model;
 
-namespace ServiceStack.Aws.S3
+namespace ServiceStack.Aws.Models
 {
     public class FileSystemObject : ICloneable, IEquatable<FileSystemObject>
     {
@@ -26,40 +26,50 @@ namespace ServiceStack.Aws.S3
         public FileSystemObject(string path, string fileName) : this(Path.Combine(path ?? String.Empty, fileName)) { }
 
         public FileSystemObject(string filePathAndName)
+        {   // Figure out if there are mixed directory markers and adjust to the appropriate one across the board - If we have 
+            // both path separators, use only the first. If we have only one, use that
+            var slashPartIndex = filePathAndName.IndexOf("/", StringComparison.InvariantCultureIgnoreCase);
+            var backslashPartIndex = filePathAndName.IndexOf("\\", StringComparison.InvariantCultureIgnoreCase);
+
+            var useBackslashDirectorySeparator = (slashPartIndex >= 0 && backslashPartIndex >= 0)
+                                                     ? backslashPartIndex < slashPartIndex
+                                                     : backslashPartIndex >= 0;
+
+            // Set the character separator to use
+            _directorySeparatorCharacter = useBackslashDirectorySeparator
+                                               ? "\\"
+                                               : "/";
+
+            Init(filePathAndName);
+        }
+
+        public FileSystemObject(string filePathAndName, char directorySeparatorCharacter)
+        {
+            _directorySeparatorCharacter = directorySeparatorCharacter.ToString(CultureInfo.InvariantCulture);
+            Init(filePathAndName);
+        }
+
+        private void Init(string filePathAndName)
         {
             if (filePathAndName.EndsWith("\\") || filePathAndName.EndsWith("/"))
             {   // Ends with a path marker - check to see if this is actually a FILE ending with a terminator - if so, remove it
                 var isFileTestPath = filePathAndName.TrimEnd(new[] { '\\', '/' });
-                
+
                 var isFileTestExtension = Path.GetExtension(isFileTestPath);
 
-                if (!String.IsNullOrEmpty(isFileTestExtension) && isFileTestPath.EndsWith(isFileTestExtension, StringComparison.InvariantCultureIgnoreCase))
+                if (!String.IsNullOrEmpty(isFileTestExtension) &&
+                    isFileTestPath.EndsWith(isFileTestExtension, StringComparison.InvariantCultureIgnoreCase))
                 {
                     filePathAndName = isFileTestPath;
                 }
             }
 
-            // Figure out if there are mixed directory markers and adjust to the appropriate one across the board - If we have 
-            // both path separators, use only the first. If we have only one, use that
-            var unixPartIndex = filePathAndName.IndexOf("/", StringComparison.InvariantCultureIgnoreCase);
-            var windowsPartIndex = filePathAndName.IndexOf("\\", StringComparison.InvariantCultureIgnoreCase);
-
-            var useWindowsDirectorySeparator = (unixPartIndex >= 0 && windowsPartIndex >= 0)
-                                                   ? windowsPartIndex < unixPartIndex
-                                                   : windowsPartIndex >= 0;
-
-            // Set the character separator to use
-            _directorySeparatorCharacter = useWindowsDirectorySeparator
-                                               ? "\\"
-                                               : "/";
-
-            Func<string, string> pathScrubber = (f) => f.Replace(useWindowsDirectorySeparator
+            Func<string, string> pathScrubber = (f) => f.Replace(_directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
                                                                      ? "/"
                                                                      : "\\",
-                                                                 useWindowsDirectorySeparator
+                                                                 _directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
                                                                      ? "\\"
                                                                      : "/");
-
 
             FileName = pathScrubber(Path.GetFileNameWithoutExtension(filePathAndName));
             FolderName = pathScrubber(Path.GetDirectoryName(filePathAndName));
@@ -120,7 +130,7 @@ namespace ServiceStack.Aws.S3
         public bool Equals(FileSystemObject other)
         {   // Purpsely always use case-insensitive comparison for our purposes, seems safest to me
             return other != null &&
-                   FullName.Equals(other.FullName, StringComparison.InvariantCultureIgnoreCase);
+                   FullName.Equals(other.FullName, StringComparison.InvariantCulture);
         }
 
         public override bool Equals(object obj)
@@ -136,7 +146,7 @@ namespace ServiceStack.Aws.S3
 
             var fsoObject = obj as FileSystemObject;
 
-            return fsoObject != null && Equals((FileSystemObject)obj);
+            return fsoObject != null && Equals(fsoObject);
         }
 
         public override string ToString()

@@ -69,13 +69,15 @@
     <Compile Include="Interfaces\ISqsMqBufferFactory.cs" />
     <Compile Include="Interfaces\ISqsMqBuffer.cs" />
     <Compile Include="Interfaces\ISqsMqMessageFactory.cs" />
+    <Compile Include="Models\FileSystemObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="S3\FileSystemObject.cs" />
-    <Compile Include="S3\BaseFileStorageProvider.cs" />
-    <Compile Include="S3\FileSystemStorageProvider.cs" />
+    <Compile Include="S3\S3BucketKeyInfo.cs" />
     <Compile Include="S3\S3FileStorageProvider.cs" />
     <Compile Include="AwsConnectionFactory.cs" />
     <Compile Include="S3\S3ConnectionFactory.cs" />
+    <Compile Include="Services\BaseFileStorageProvider.cs" />
+    <Compile Include="Services\FileSystemStorageProvider.cs" />
+    <Compile Include="Services\InMemoryFileStorageProvider.cs" />
     <Compile Include="Support\Guard.cs" />
     <Compile Include="SQS\Fake\FakeAmazonSqs.cs" />
     <Compile Include="SQS\Fake\FakeSqsItemStatus.cs" />
@@ -98,6 +100,7 @@
     <Compile Include="SQS\SqsQueueManager.cs" />
     <Compile Include="SQS\SqsQueueDefinition.cs" />
     <Compile Include="SQS\SqsQueueName.cs" />
+    <Compile Include="Support\HashExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

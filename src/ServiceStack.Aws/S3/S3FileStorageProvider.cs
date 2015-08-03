@@ -6,16 +6,17 @@ using Amazon.S3;
 using Amazon.S3.IO;
 using Amazon.S3.Model;
 using ServiceStack.Aws.Interfaces;
+using ServiceStack.Aws.Models;
+using ServiceStack.Aws.Services;
 using ServiceStack.Aws.Support;
-using ServiceStack.Logging;
 
 namespace ServiceStack.Aws.S3
 {
-    public class S3FileStorageProvider : IFileStorageProvider, IDisposable
+    public class S3FileStorageProvider : BaseFileStorageProvider, IDisposable
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(S3FileStorageProvider));
         private readonly S3ConnectionFactory _s3ConnectionFactory;
         private IAmazonS3 _s3Client;
+        private static readonly FileSystemStorageProvider _localFs = FileSystemStorageProvider.Instance;
 
         public S3FileStorageProvider(S3ConnectionFactory s3ConnectionFactory)
         {
@@ -38,140 +39,99 @@ namespace ServiceStack.Aws.S3
             catch { }
         }
 
-        public IAmazonS3 S3Client
+        private IAmazonS3 S3Client
         {
             get { return _s3Client ?? (_s3Client = _s3ConnectionFactory.GetClient()); }
         }
 
-        public void Download(string thisFileName, string localFileSystemTarget)
+        public override char DirectorySeparatorCharacter
         {
-            var sourceFso = new FileSystemObject(thisFileName);
-            var targetFso = new FileSystemObject(localFileSystemTarget);
-            Download(sourceFso, targetFso);
-        }
-
-        public void Download(FileSystemObject thisFso, FileSystemObject localFileSystemFso)
-        {
-            Directory.CreateDirectory(localFileSystemFso.FolderName);
-            GetToLocalFile(thisFso, localFileSystemFso.FullName);
-        }
-
-        public void CopyTo(FileSystemObject sourceFso, FileSystemObject targetFso, IFileStorageProvider targetProvider = null)
-        {   
-            // If targetProvider is null or is an S3 provider, we are copying within S3, otherwise we
-            // are copying across providers
-            if (targetProvider == null)
+            get
             {
-                CopyToS3(sourceFso, targetFso);
-                return;
-            }
-
-            var s3Provider = targetProvider as S3FileStorageProvider;
-
-            if (s3Provider != null)
-            {
-                CopyToS3(sourceFso, targetFso);
-                return;
-            }
-
-            // Copying across providers. With S3 in this case, need to basically download the file
-            // to the local file system first, then copy from there to the target provder
-
-            var localFile = Path.Combine(Path.GetTempPath(), targetFso.FileNameAndExtension);
-            File.Delete(localFile);
-
-            try
-            {
-                GetToLocalFile(targetFso, localFile);
-
-                var localFileSystemFso = new FileSystemObject(localFile);
-                targetProvider.Store(localFileSystemMeta, targetMeta);
-            }
-            finally
-            {
-                File.Delete(localFile);
+                return '/';
             }
         }
 
-        private void CopyToS3(FileSystemObject sourceFso, FileSystemObject targetFso)
+        public override void Download(FileSystemObject thisFso, FileSystemObject downloadToFso)
         {
-            
+            GetToLocalFile(thisFso, downloadToFso);
         }
 
-        private void GetToLocalFile(FileSystemObject thisFso, String localFileSystemTarget)
+        private bool IsMissingObjectException(AmazonS3Exception s3x)
         {
-            var bpk = new BucketPrefixKey(thisFso.FullName);
+            return s3x.ErrorCode.Equals("NoSuchBucket", StringComparison.InvariantCultureIgnoreCase) ||
+                   s3x.ErrorCode.Equals("NoSuchKey", StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public override Stream GetStream(FileSystemObject fso)
+        {
+            var bki = new S3BucketKeyInfo(fso.FullName);
 
             var request = new GetObjectRequest
                           {
-                              BucketName = bpk.BucketName,
-                              Key = bpk.Key
+                              BucketName = bki.BucketName,
+                              Key = bki.Key
                           };
 
-            File.Delete(localFileSystemTarget);
-
-            using (var response = S3Client.GetObject(request))
+            try
             {
-                response.WriteResponseStreamToFile(localFileSystemTarget);
+                return S3Client.GetObject(request).ResponseStream;
             }
-
-        }
-
-        public void Store(FileMetaData sourceFileSystemMeta, FileMetaData targetMeta)
-        {
-            PostToS3(targetMeta, sourceFileSystemMeta.FullPathAndFileName);
-        }
-
-        public void Store(FileMetaData fileMetaData)
-        {
-            PostToS3(fileMetaData, null);
-        }
-
-        public void CreateFolder(String folderName)
-        {
-            var bpk = new BucketPrefixKey(folderName);
-
-            var awsClient = Connect();
-
-            var request = new PutBucketRequest
+            catch (AmazonS3Exception s3x)
             {
-                BucketName = bpk.BucketName,
-                UseClientRegion = true
-            };
-
-            var response = awsClient.PutBucket(request);
+                if (IsMissingObjectException(s3x))
+                {
+                    return null;
+                }
+                throw;
+            }
         }
 
-        private void PostToS3(FileMetaData targetMetaData, String sourceFilePathAndName = null)
+        public override byte[] Get(FileSystemObject fso)
         {
+            using(var stream = GetStream(fso))
+            {
+                return stream == null
+                           ? null
+                           : stream.ToBytes();
+            }
+        }
+
+        public override void Store(byte[] bytes, FileSystemObject fso)
+        {
+            using(var byteStream = new MemoryStream(bytes))
+            {
+                Store(byteStream, fso);
+            }
+        }
+
+        public override void Store(Stream stream, FileSystemObject fso)
+        {
+            var bki = new S3BucketKeyInfo(fso);
+
             var attemptedBucketCreate = false;
 
             do
             {
                 try
                 {
-                    if (String.IsNullOrEmpty(sourceFilePathAndName))
-                    {
-                        using (var byteStream = new MemoryStream(targetMetaData.Bytes))
-                        {
-                            PostToS3WithStream(targetMetaData, byteStream);
-                        }
-                    }
-                    else
-                    {
-                        using (var stream = new FileStream(sourceFilePathAndName, FileMode.Open, FileAccess.Read))
-                        {
-                            PostToS3WithStream(targetMetaData, stream);
-                        }
-                    }
+                    var request = new PutObjectRequest
+                                  {
+                                      BucketName = bki.BucketName,
+                                      Key = bki.Key,
+                                      InputStream = stream,
+                                      StorageClass = S3StorageClass.Standard
+                                  };
+
+                    S3Client.PutObject(request);
 
                     break;
                 }
                 catch (AmazonS3Exception s3x)
                 {
-                    if (!attemptedBucketCreate && s3x.ErrorCode == AmazonS3ErrorCodes.NoSuchBucket)
+                    if (!attemptedBucketCreate && IsMissingObjectException(s3x))
                     {
-                        CreateFolder(targetMetaData.FolderName);
+                        CreateFolder(fso.FolderName);
                         attemptedBucketCreate = true;
                         continue;
                     }
@@ -182,147 +142,231 @@ namespace ServiceStack.Aws.S3
             } while (true);
         }
 
-        private void PostToS3WithStream(FileMetaData fileMetaData, Stream streamToUse)
+        public override void Store(FileSystemObject localFileSystemFso, FileSystemObject targetFso)
         {
-            var bpk = new BucketPrefixKey(fileMetaData.FullPathAndFileName);
-
-            var awsClient = Connect();
-
-            var request = new PutObjectRequest
+            using (var stream = new FileStream(localFileSystemFso.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                BucketName = bpk.BucketName,
-                Key = bpk.Key,
-                InputStream = streamToUse,
-                StorageClass = VengaEnvironment.IsDevelopmentEnvironment()
-                                   ? S3StorageClass.ReducedRedundancy
-                                   : S3StorageClass.Standard
-            };
-
-            if (!String.IsNullOrEmpty(fileMetaData.DisplayName))
-            {
-                request.Metadata.Add("file-display-name", fileMetaData.DisplayName);
+                Store(stream, targetFso);
             }
-
-            var response = awsClient.PutObject(request);
         }
 
-        public void TryDeleteFolder(String folderName, Boolean recursive)
+        public override void Delete(FileSystemObject fso)
         {
+            var bki = new S3BucketKeyInfo(fso);
+            Delete(bki);
+        }
+
+        public override void Delete(IEnumerable<FileSystemObject> fsos)
+        {
+            foreach (var fso in fsos)
+            {
+                Delete(fso);
+            }
+        }
+
+        private void Delete(S3BucketKeyInfo bki)
+        {
+            var request = new DeleteObjectRequest
+                          {
+                              BucketName = bki.BucketName,
+                              Key = bki.Key
+                          };
+
             try
             {
-                DeleteFolder(folderName, recursive);
+                S3Client.DeleteObject(request);
             }
             catch (AmazonS3Exception s3x)
             {
-                if ((s3x.ErrorCode != AmazonS3ErrorCodes.NoSuchBucket) &&
-                    (s3x.ErrorCode != AmazonS3ErrorCodes.NoSuchKey))
+                if (IsMissingObjectException(s3x))
                 {
-                    throw;
-                }
-            }
-        }
-
-        public void DeleteFolder(String folderName, Boolean recursive)
-        {
-            var bpk = new BucketPrefixKey(folderName, terminateWithPathDelimiter: true);
-
-            var awsClient = Connect();
-
-            if (recursive)
-            {
-                while (true)
-                {
-                    var objects = ListFolder(bpk);
-
-                    if (!objects.Any())
-                    {
-                        break;
-                    }
-
-                    var keys = objects.Select(o => new KeyVersion { Key = o.Key }).ToList();
-
-                    var deleteObjectsRequest = new DeleteObjectsRequest
-                    {
-                        BucketName = bpk.BucketName,
-                        Quiet = true,
-                        Objects = keys
-                    };
-
-                    awsClient.DeleteObjects(deleteObjectsRequest);
-                }
-            }
-            else if (!bpk.IsBucketObject)
-            {
-                var deleteObjectRequest = new DeleteObjectRequest
-                {
-                    BucketName = bpk.BucketName,
-                    Key = bpk.Key
-                };
-                awsClient.DeleteObject(deleteObjectRequest);
-            }
-
-            if (bpk.IsBucketObject)
-            {
-                var request = new DeleteBucketRequest
-                {
-                    BucketName = bpk.BucketName,
-                    UseClientRegion = true
-                };
-
-                var response = awsClient.DeleteBucket(request);
-            }
-        }
-
-        public void Move(String source, String target)
-        {
-            var sourceBpk = new BucketPrefixKey(source);
-            var targetBpk = new BucketPrefixKey(target);
-
-            if (sourceBpk.Matches(targetBpk))
-            {
-                return;
-            }
-
-            var stored = false;
-
-            try
-            {
-                var copyRequest = new CopyObjectRequest()
-                {
-                    SourceBucket = sourceBpk.BucketName,
-                    SourceKey = sourceBpk.Key,
-                    DestinationBucket = targetBpk.BucketName,
-                    DestinationKey = targetBpk.Key
-                };
-
-                var awsClient = Connect();
-
-                awsClient.CopyObject(copyRequest);
-
-                stored = true;
-
-                Delete(sourceBpk);
-            }
-            catch (Exception)
-            {
-                if (stored)
-                {
-                    Delete(new FileMetaData(target));
+                    return;
                 }
 
                 throw;
             }
         }
 
-        public IEnumerable<String> ListFolder(String folderName, Boolean recursive = false)
+        private bool TreatAsS3Provider(IFileStorageProvider targetProvider)
         {
-            String nextMarker = null;
+            if (targetProvider == null)
+            {
+                return true;
+            }
 
-            var bpk = new BucketPrefixKey(folderName, terminateWithPathDelimiter: true);
+            var s3Provider = targetProvider as S3FileStorageProvider;
+
+            return s3Provider != null;
+        }
+
+        public override void Copy(FileSystemObject thisFso, FileSystemObject targetFso, IFileStorageProvider targetProvider = null)
+        {   // If targetProvider is null or is an S3 provider, we are copying within S3, otherwise we
+            // are copying across providers
+            if (TreatAsS3Provider(targetProvider))
+            {
+                CopyInS3(thisFso, targetFso);
+                return;
+            }
+
+            // Copying across providers. With S3 in this case, need to basically download the file
+            // to the local file system first, then copy from there to the target provder
+            
+            var localFile = new FileSystemObject(Path.Combine(Path.GetTempPath(), targetFso.FileNameAndExtension));
+
+            try
+            {
+                GetToLocalFile(thisFso, localFile);
+                targetProvider.Store(localFile, targetFso);
+            }
+            finally
+            {
+                _localFs.Delete(localFile);
+            }
+        }
+
+        private void CopyInS3(FileSystemObject sourceFso, FileSystemObject targetFso)
+        {
+            if (sourceFso.Equals(targetFso))
+            {
+                return;
+            }
+
+            var sourceBki = new S3BucketKeyInfo(sourceFso);
+            var targetBki = new S3BucketKeyInfo(targetFso);
+
+            var request = new CopyObjectRequest
+                          {
+                              SourceBucket = sourceBki.BucketName,
+                              SourceKey = sourceBki.Key,
+                              DestinationBucket = targetBki.BucketName,
+                              DestinationKey = targetBki.Key
+                          };
+
+            S3Client.CopyObject(request);
+        }
+
+        private void GetToLocalFile(FileSystemObject fso, FileSystemObject downloadToFso)
+        {
+            var bki = new S3BucketKeyInfo(fso.FullName);
+
+            var request = new GetObjectRequest
+                          {
+                              BucketName = bki.BucketName,
+                              Key = bki.Key
+                          };
+
+            _localFs.CreateFolder(downloadToFso.FolderName);
+
+            _localFs.Delete(downloadToFso);
+
+            using(var response = S3Client.GetObject(request))
+            {
+                response.WriteResponseStreamToFile(downloadToFso.FullName);
+            }
+
+        }
+
+        public override void Move(FileSystemObject sourceFso, FileSystemObject targetFso, IFileStorageProvider targetProvider = null)
+        {
+            if (TreatAsS3Provider(targetProvider))
+            {
+                MoveInS3(sourceFso, targetFso);
+                return;
+            }
+
+            // Moving across providers. With S3 in this case, need to basically download the file
+            // to the local file system first, then copy from there to the target provder
+
+            var localFile = new FileSystemObject(Path.Combine(Path.GetTempPath(), targetFso.FileNameAndExtension));
+
+            try
+            {
+                GetToLocalFile(sourceFso, localFile);
+                
+                targetProvider.Store(localFile, targetFso);
+
+                Delete(sourceFso);
+            }
+            finally
+            {
+                _localFs.Delete(localFile);
+            }
+
+        }
+
+        private void MoveInS3(FileSystemObject sourceFso, FileSystemObject targetFso)
+        {
+            if (sourceFso.Equals(targetFso))
+            {
+                return;
+            }
+
+            // Copy, then delete
+            CopyInS3(sourceFso, targetFso);
+            Delete(sourceFso);
+        }
+
+        public override bool Exists(FileSystemObject fso)
+        {
+            var bki = new S3BucketKeyInfo(fso.FullName);
+
+            var s3FileInfo = new S3FileInfo(S3Client, bki.BucketName, bki.Key);
+
+            return s3FileInfo.Exists;
+        }
+
+        public override bool FolderExists(string path)
+        {
+            if (String.IsNullOrEmpty(path))
+            {
+                return false;
+            }
+
+            var bki = new S3BucketKeyInfo(path);
+
+            // Folders aren't a thing in S3, buckets are the only things that actually matter more or less. Return true
+            // if this is a bucket object and the bucket exists, otherwise false since it actually doesn't exist
+            return bki.IsBucketObject && BucketExists(bki);
+        }
+
+        private bool BucketExists(S3BucketKeyInfo bki)
+        {
+            if (String.IsNullOrEmpty(bki.BucketName))
+            {
+                return false;
+            }
+
+            try
+            {
+                var bucketLocation = S3Client.GetBucketLocation(bki.BucketName);
+                return true;
+            }
+            catch(AmazonS3Exception s3x)
+            {
+                if (IsMissingObjectException(s3x))
+                {
+                    return false;
+                }
+
+                throw;
+            }
+            
+        }
+
+        public override IEnumerable<string> ListFolder(string folderName, bool recursive = false, bool fileNamesOnly = false)
+        {
+            if (String.IsNullOrEmpty(folderName))
+            {
+                yield break;
+            }
+
+            string nextMarker = null;
+
+            var bki = new S3BucketKeyInfo(folderName, terminateWithPathDelimiter: true);
 
             do
             {
-                var listResponse = ListFolderResponse(bpk, nextMarker);
+                var listResponse = ListFolderResponse(bki, nextMarker);
 
                 if (listResponse == null || listResponse.S3Objects == null)
                 {
@@ -330,12 +374,15 @@ namespace ServiceStack.Aws.S3
                 }
 
                 var filesOnly = listResponse.S3Objects
-                                            .Select(o => new BucketPrefixKey(bpk.BucketName, o))
+                                            .Select(o => new S3BucketKeyInfo(bki.BucketName, o))
                                             .Where(b => !String.IsNullOrEmpty(b.FileName))
                                             .Where(b => recursive
-                                                            ? b.Prefix.StartsWith(bpk.Prefix, StringComparison.InvariantCultureIgnoreCase)
-                                                            : Strings.EqualsInvariant(b.Prefix, bpk.Prefix))
-                                            .Select(b => b.FileName);
+                                                            ? b.Prefix.StartsWith(bki.Prefix, StringComparison.InvariantCulture)
+                                                            : b.Prefix.Equals(bki.Prefix, StringComparison.InvariantCulture))
+                                            .Select(b => fileNamesOnly
+                                                             ? b.FileName
+                                                             : b.ToString()
+                    );
 
                 foreach (var file in filesOnly)
                 {
@@ -355,46 +402,42 @@ namespace ServiceStack.Aws.S3
 
         }
 
-        private List<S3Object> ListFolder(BucketPrefixKey bpk)
+        private List<S3Object> ListFolder(S3BucketKeyInfo bki)
         {
-            var listResponse = ListFolderResponse(bpk);
+            var listResponse = ListFolderResponse(bki);
+
             return listResponse == null
                        ? new List<S3Object>()
                        : listResponse.S3Objects ?? new List<S3Object>();
         }
 
-        private ListObjectsResponse ListFolderResponse(BucketPrefixKey bpk, String nextMarker = null)
+        private ListObjectsResponse ListFolderResponse(S3BucketKeyInfo bki, string nextMarker = null)
         {
-            var awsClient = Connect();
-
             try
             {
                 var listRequest = new ListObjectsRequest
-                {
-                    BucketName = bpk.BucketName
-                };
+                                  {
+                                      BucketName = bki.BucketName
+                                  };
 
-                if (nextMarker.HasValue())
+                if (!String.IsNullOrEmpty(nextMarker))
                 {
                     listRequest.Marker = nextMarker;
                 }
 
-                if (bpk.HasPrefix)
+                if (bki.HasPrefix)
                 {
-                    listRequest.Prefix = bpk.Prefix;
+                    listRequest.Prefix = bki.Prefix;
                 }
 
-                var listResponse = awsClient.ListObjects(listRequest);
+                var listResponse = S3Client.ListObjects(listRequest);
 
                 return listResponse;
             }
-            catch (System.Xml.XmlException)
-            {
-            }
+            catch (System.Xml.XmlException) { }
             catch (AmazonS3Exception s3x)
             {
-                if ((s3x.ErrorCode != AmazonS3ErrorCodes.NoSuchBucket) &&
-                    (s3x.ErrorCode != AmazonS3ErrorCodes.NoSuchKey))
+                if (!IsMissingObjectException(s3x))
                 {
                     throw;
                 }
@@ -403,128 +446,100 @@ namespace ServiceStack.Aws.S3
             return null;
         }
 
-        public void Delete(FileMetaData fileMetaData)
+        public override void DeleteFolder(string path, bool recursive)
         {
-            var bpk = new BucketPrefixKey(fileMetaData.FullPathAndFileName);
-
-            Delete(bpk);
-        }
-
-        private void Delete(BucketPrefixKey file)
-        {
-            var awsClient = Connect();
-
-            var request = new DeleteObjectRequest
-            {
-                BucketName = file.BucketName,
-                Key = file.Key
-            };
-
-            var response = awsClient.DeleteObject(request);
-        }
-
-        public Boolean Exists(FileMetaData fileMetaData)
-        {
-            var bpk = new BucketPrefixKey(fileMetaData.FullPathAndFileName);
-
-            var s3FileInfo = new S3FileInfo(Connect(), bpk.BucketName, bpk.Key);
-
-            return s3FileInfo.Exists;
-        }
-
-        public Byte[] Get(FileMetaData fileMetaData)
-        {
-            var bpk = new BucketPrefixKey(fileMetaData.FullPathAndFileName);
-
-            var request = new GetObjectRequest
-            {
-                BucketName = bpk.BucketName,
-                Key = bpk.Key
-            };
-
             try
             {
-                var awsClient = Connect();
-
-                using (var response = awsClient.GetObject(request))
-                {
-                    return response.ResponseStream.ToBytes();
-                }
+                DeleteFolderInternal(path, recursive);
             }
-            catch (AmazonS3Exception)
+            catch (AmazonS3Exception s3x)
             {
-                return null;
-            }
+                if (IsMissingObjectException(s3x))
+                {
+                    return;
+                }
 
+                throw;
+            }
         }
 
-    }
-
-    public class BucketPrefixKey : IMatchable<BucketPrefixKey>
-    {
-        public BucketPrefixKey(String bucketName, S3Object s3Object) : this(Path.Combine(bucketName, s3Object.Key), false) { }
-
-        public BucketPrefixKey(String fullPathAndFileName) : this(fullPathAndFileName, false) { }
-
-        public BucketPrefixKey(String fullPathAndFileName, Boolean terminateWithPathDelimiter)
+        private void DeleteFolderInternal(string path, bool recursive)
         {
-            Guard.Against(String.IsNullOrEmpty(fullPathAndFileName), "fullPathAndFileName must not be empty.");
-
-            Key = String.Empty;
-            FileName = String.Empty;
-            Prefix = String.Empty;
-
-            fullPathAndFileName = fullPathAndFileName.Replace("\\", "/");
-
-            if (terminateWithPathDelimiter && !fullPathAndFileName.EndsWith("/"))
+            if (String.IsNullOrEmpty(path))
             {
-                fullPathAndFileName = String.Concat(fullPathAndFileName, "/");
+                return;
             }
 
-            var split = fullPathAndFileName.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            BucketName = split[0];
+            var bki = new S3BucketKeyInfo(path, terminateWithPathDelimiter: true);
 
-            if (split.Length > 1)
+            if (recursive)
             {
-                Key = String.Join("/", split, 1, split.Length - 1);
-
-                if (fullPathAndFileName.EndsWith("/"))
+                while (true)
                 {
-                    Key = Key + "/";
-                    Prefix = Key;
-                }
-                else
-                {
-                    FileName = split[split.GetUpperBound(0)];
+                    var objects = ListFolder(bki);
 
-                    if (split.Length > 2)
+                    if (!objects.Any())
                     {
-                        Prefix = String.Join("/", split, 1, split.Length - 2) + "/";
+                        break;
                     }
+
+                    var keys = objects.Select(o => new KeyVersion
+                                                   {
+                                                       Key = o.Key
+                                                   })
+                                      .ToList();
+
+                    var deleteObjectsRequest = new DeleteObjectsRequest
+                                               {
+                                                   BucketName = bki.BucketName,
+                                                   Quiet = true,
+                                                   Objects = keys
+                                               };
+
+                    S3Client.DeleteObjects(deleteObjectsRequest);
                 }
             }
-            else
+            else if (!bki.IsBucketObject)
             {
-                IsBucketObject = true;
+                var deleteObjectRequest = new DeleteObjectRequest
+                                          {
+                                              BucketName = bki.BucketName,
+                                              Key = bki.Key
+                                          };
+
+                S3Client.DeleteObject(deleteObjectRequest);
+            }
+
+            if (bki.IsBucketObject)
+            {
+                var request = new DeleteBucketRequest
+                              {
+                                  BucketName = bki.BucketName,
+                                  UseClientRegion = true
+                              };
+
+                S3Client.DeleteBucket(request);
             }
         }
 
-        public String BucketName { get; private set; }
-        public String Prefix { get; private set; }
-        public String Key { get; private set; }
-        public String FileName { get; private set; }
-
-        public Boolean IsBucketObject { get; private set; }
-
-        public Boolean HasPrefix
+        public override void CreateFolder(string path)
         {
-            get { return !String.IsNullOrEmpty(Prefix); }
-        }
+            if (String.IsNullOrEmpty(path))
+            {
+                return;
+            }
 
-        public Boolean Matches(BucketPrefixKey that)
-        {
-            return BucketName.EqualsInvariant(that.BucketName) && Key.EqualsInvariant(that.Key);
+            var bki = new S3BucketKeyInfo(path);
+
+            var request = new PutBucketRequest
+                          {
+                              BucketName = bki.BucketName,
+                              UseClientRegion = true
+                          };
+
+            S3Client.PutBucket(request);
         }
 
     }
+
 }

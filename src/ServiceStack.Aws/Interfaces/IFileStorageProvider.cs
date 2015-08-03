@@ -1,19 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using ServiceStack.Aws.Models;
 using ServiceStack.Aws.S3;
 
 namespace ServiceStack.Aws.Interfaces
 {
     public interface IFileStorageProvider
     {
+        char DirectorySeparatorCharacter { get; }
+        string NormalizePath(string path);
+
         void Download(string thisFileName, string localFileSystemTargetFileName);
         void Download(FileSystemObject thisFso, FileSystemObject localFileSystemFso);
 
-        Byte[] Get(string thisFileName);
-        Byte[] Get(FileSystemObject fso);
+        byte[] Get(string thisFileName);
+        byte[] Get(FileSystemObject fso);
+        Stream GetStream(FileSystemObject fso);
 
-        void Store(Byte[] bytes, string targetFileName);
-        void Store(Byte[] bytes, FileSystemObject fso);
+        void Store(byte[] bytes, string targetFileName);
+        void Store(byte[] bytes, FileSystemObject fso);
+        void Store(Stream stream, FileSystemObject fso);
         void Store(string localFileSystemSourceFileName, string targetFileName);
         void Store(FileSystemObject localFileSystemFso, FileSystemObject targetFso);
 
@@ -31,8 +38,9 @@ namespace ServiceStack.Aws.Interfaces
         bool Exists(string fileName);
         bool Exists(FileSystemObject fso);
 
-        IEnumerable<string> ListFolder(string folderName, Boolean recursive = false);
-        void DeleteFolder(string folderName, Boolean recursive);
+        bool FolderExists(string path);
+        IEnumerable<string> ListFolder(string folderName, bool recursive = false, bool fileNamesOnly = false);
+        void DeleteFolder(string folderName, bool recursive);
         void CreateFolder(string folderName);
     }
 }
