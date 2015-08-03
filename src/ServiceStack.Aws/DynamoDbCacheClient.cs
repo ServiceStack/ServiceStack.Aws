@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Caching;
@@ -23,7 +24,7 @@ namespace ServiceStack.Aws
         public DynamoDbCacheClient(IPocoDynamo db)
         {
             this.db = db;
-            db.RegisterTables(typeof(CacheEntry));
+            db.RegisterTable<CacheEntry>();
             metadata = db.GetTableMetadata<CacheEntry>();
         }
 
@@ -33,7 +34,7 @@ namespace ServiceStack.Aws
 
             if (schema == null)
             {
-                db.CreateNonExistingTable(metadata);
+                db.CreateMissingTable(metadata);
                 schema = db.GetTableSchema<CacheEntry>();
             }
         }
@@ -137,7 +138,7 @@ namespace ServiceStack.Aws
         public void FlushAll()
         {
             db.DeleteTable<CacheEntry>();
-            db.CreateNonExistingTable<CacheEntry>();
+            db.CreateMissingTable<CacheEntry>();
         }
 
         public T Get<T>(string key)

@@ -77,28 +77,29 @@ namespace ServiceStack.Aws
             return Tables;
         }
 
-        public static void RegisterTable(Type type)
+        public static DynamoMetadataTable RegisterTable(Type type)
         {
             if (Tables == null)
                 Tables = new List<DynamoMetadataTable>();
 
-            if (Tables.Any(x => x.Type == type))
-                return;
+            var table = Tables.FirstOrDefault(x => x.Type == type);
+            if (table != null)
+                return table;
 
             var alias = type.FirstAttribute<AliasAttribute>();
             var props = type.GetSerializableProperties();
             PropertyInfo hash, range;
             Converters.GetHashAndRangeKeyFields(type, props, out hash, out range);
 
-            var to = new DynamoMetadataTable
+            table = new DynamoMetadataTable
             {
                 Type = type,
                 Name = alias != null ? alias.Name : type.Name,
             };
-            to.Fields = props.Map(p =>
+            table.Fields = props.Map(p =>
                 new DynamoMetadataField
                 {
-                    Table = to,
+                    Table = table,
                     Type = p.PropertyType,
                     Name = Converters.GetFieldName(p),
                     DbType = Converters.GetFieldType(p.PropertyType),
@@ -107,12 +108,14 @@ namespace ServiceStack.Aws
                     SetValueFn = p.GetPropertySetterFn(),
                     GetValueFn = p.GetPropertyGetterFn(),
                 }).ToArray();
-            to.HashKey = to.Fields.First(x => x.IsHashKey);
-            to.RangeKey = to.Fields.FirstOrDefault(x => x.IsRangeKey);
+            table.HashKey = table.Fields.First(x => x.IsHashKey);
+            table.RangeKey = table.Fields.FirstOrDefault(x => x.IsRangeKey);
 
-            Tables.Add(to);
+            Tables.Add(table);
 
             LicenseUtils.AssertValidUsage(LicenseFeature.Aws, QuotaType.Tables, Tables.Count);
+
+            return table;
         }
     }
 

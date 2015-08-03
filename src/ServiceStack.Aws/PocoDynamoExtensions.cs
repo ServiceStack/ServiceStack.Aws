@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 
@@ -6,6 +7,21 @@ namespace ServiceStack.Aws
 {
     public static class PocoDynamoExtensions
     {
+        public static DynamoMetadataTable RegisterTable<T>(this IPocoDynamo db)
+        {
+            return DynamoMetadata.RegisterTable(typeof(T));
+        }
+
+        public static DynamoMetadataTable RegisterTable(this IPocoDynamo db, Type type)
+        {
+            return DynamoMetadata.RegisterTable(type);
+        }
+
+        public static List<DynamoMetadataTable> RegisterTables(this IPocoDynamo db, IEnumerable<Type> types)
+        {
+            return DynamoMetadata.RegisterTables(types);
+        }
+
         public static void AddValueConverter(this IPocoDynamo db, Type type, IAttributeValueConverter valueConverter)
         {
             DynamoMetadata.Converters.ValueConverters[type] = valueConverter;
@@ -21,15 +37,15 @@ namespace ServiceStack.Aws
             return db.GetTableMetadata(typeof(T));
         }
 
-        public static bool CreateNonExistingTable<T>(this IPocoDynamo db)
+        public static bool CreateMissingTable<T>(this IPocoDynamo db)
         {
             var table = db.GetTableMetadata<T>();
-            return db.CreateNonExistingTables(new[] { table });
+            return db.CreateMissingTables(new[] { table });
         }
 
-        public static bool CreateNonExistingTable(this IPocoDynamo db, DynamoMetadataTable table)
+        public static bool CreateMissingTable(this IPocoDynamo db, DynamoMetadataTable table)
         {
-            return db.CreateNonExistingTables(new[] { table });
+            return db.CreateMissingTables(new[] { table });
         }
 
         public static bool DeleteTable<T>(this IPocoDynamo db, TimeSpan? timeout = null)

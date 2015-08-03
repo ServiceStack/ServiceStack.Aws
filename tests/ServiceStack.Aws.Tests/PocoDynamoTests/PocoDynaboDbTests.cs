@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
 using ServiceStack.Server.Tests.Shared;
@@ -28,13 +29,14 @@ namespace ServiceStack.Aws.Tests.PocoDynamoTests
 
             var tableNames = db.GetTableNames();
 
-            Assert.That(tableNames, Is.EquivalentTo(new[] {
+            var expected = new[] {
                 "Customer",
                 "CustomerAddress",
                 "Order",
                 "Country",
                 "Node",
-            }));
+            };
+            Assert.That(expected.All(x => tableNames.Contains(x)));
         }
 
         [Test]

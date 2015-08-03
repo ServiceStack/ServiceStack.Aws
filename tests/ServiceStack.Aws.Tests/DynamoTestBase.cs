@@ -19,8 +19,8 @@ namespace ServiceStack.Aws.Tests
                 .Add<Country>()
                 .Add<Node>();
 
-            var tables = DynamoMetadata.RegisterTables(types);
-            var allTablesCreated = db.CreateNonExistingTables(tables, TimeSpan.FromMinutes(1));
+            var tables = db.RegisterTables(types);
+            var allTablesCreated = db.CreateMissingTables(tables, TimeSpan.FromMinutes(1));
             return allTablesCreated;
         }
 
