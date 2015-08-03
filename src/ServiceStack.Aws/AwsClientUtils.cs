@@ -1,4 +1,5 @@
 ﻿using System;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws
 {
@@ -36,19 +37,16 @@ namespace ServiceStack.Aws
             }
         }
 
-        internal static T FromJsv<T>(string json)
+        internal static JsConfigScope GetJsScope()
         {
-            using (__requestAccess())
-            {
-                return json.FromJsv<T>();
-            }
+            return JsConfig.With(excludeTypeInfo: false);
         }
 
-        internal static string ToJsv<T>(T o)
+        internal static string ToScopedJson<T>(T value)
         {
-            using (__requestAccess())
+            using (GetJsScope())
             {
-                return o.ToJsv();
+                return JsonSerializer.SerializeToString(value);
             }
         }
     }

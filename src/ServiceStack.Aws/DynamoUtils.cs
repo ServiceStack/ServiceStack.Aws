@@ -68,7 +68,7 @@ namespace ServiceStack.Aws
             return metadata;
         }
 
-        public static List<DynamoMetadataTable> RegisterTables(List<Type> tables)
+        public static List<DynamoMetadataTable> RegisterTables(IEnumerable<Type> tables)
         {
             foreach (var table in tables)
             {
@@ -81,6 +81,9 @@ namespace ServiceStack.Aws
         {
             if (Tables == null)
                 Tables = new List<DynamoMetadataTable>();
+
+            if (Tables.Any(x => x.Type == type))
+                return;
 
             var alias = type.FirstAttribute<AliasAttribute>();
             var props = type.GetSerializableProperties();
@@ -108,9 +111,9 @@ namespace ServiceStack.Aws
             to.RangeKey = to.Fields.FirstOrDefault(x => x.IsRangeKey);
 
             Tables.Add(to);
+
+            LicenseUtils.AssertValidUsage(LicenseFeature.Aws, QuotaType.Tables, Tables.Count);
         }
-
-
     }
 
     public class DynamoMetadataField

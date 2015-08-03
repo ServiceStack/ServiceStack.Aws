@@ -43,6 +43,13 @@
         public const string UpdatedNew = "UPDATED_NEW";
     }
 
+    public enum ReturnItem
+    {
+        None,
+        Old,
+        New
+    }
+
     public class DynamoExpr
     {
         public const string Equal = "EQ";

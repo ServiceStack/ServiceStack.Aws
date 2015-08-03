@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Threading;
-using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -11,265 +8,106 @@ using ServiceStack.Logging;
 
 namespace ServiceStack.Aws
 {
-    public class DynamoDbCacheClient : ICacheClient, IRequiresSchema
+    public class DynamoDbCacheClient : ICacheClientExtended, IRequiresSchema, IRemoveByPattern
     {
+        public const string IdField = "Id";
+        public const string DataField = "Data";
+
         private static readonly ILog Log = LogManager.GetLogger(typeof(DynamoDbCacheClient));
 
-        private readonly IAmazonDynamoDB client;
-        private Table awsCacheTableObj;
+        private readonly IPocoDynamo db;
 
-        private const string KeyName = "urn";
-        private const string ValueName = "value";
-        private const string ExpiresAtName = "expiresAt";
+        private Table schema;
+        private readonly DynamoMetadataTable metadata;
 
-        /// <summary>
-        /// The name of the DynamoDB Table - either make sure it is already created with HashKey string named "urn" or pass true into constructor createTableIfMissing argument
-        /// </summary>
-        public string CacheTableName { get; set; }
-
-        /// <summary>
-        /// If the client needs to delete/re-create the DynamoDB table, this is the Read Capacity to use
-        /// </summary>
-        public int CacheReadCapacity { get; set; }
-
-        /// <summary>
-        /// If the client needs to delete/re-create the DynamoDB table, this is the Write Capacity to use
-        /// </summary> 
-        public int CacheWriteCapacity { get; set; }
-
-        public DynamoDbCacheClient(IAmazonDynamoDB client, string cacheTableName = "ICacheClientDynamo",
-            int readCapacity = 10, int writeCapacity = 5)
+        public DynamoDbCacheClient(IPocoDynamo db)
         {
-            this.client = client;
-            CacheTableName = cacheTableName;
-            CacheReadCapacity = readCapacity;
-            CacheWriteCapacity = writeCapacity;
-
-            if (string.IsNullOrEmpty(CacheTableName))
-                throw new MissingFieldException("DynamoCacheClient", "CacheTableName");
-        }
-
-        /// <summary>
-        /// DynamoDbCacheClient constructor
-        /// </summary>
-        /// <param name="awsAccessKey">AWS Access Key ID</param>
-        /// <param name="awsSecretKey">AWS Secret Key ID</param>
-        /// <param name="region">AWS Region</param>
-        /// <param name="cacheTableName">Name of DynamoDB Table</param>
-        /// <param name="readCapacity">Desired DynamoDB Read Capacity</param>
-        /// <param name="writeCapacity">Desired DynamoDB Write Capacity</param>
-        /// <param name="createTableIfMissing">Pass true if you'd like the client to create the DynamoDB table on startup</param>
-        public DynamoDbCacheClient(string awsAccessKey, string awsSecretKey, RegionEndpoint region,
-                                   string cacheTableName = "ICacheClientDynamo", int readCapacity = 10,
-                                   int writeCapacity = 5)
-            : this(new AmazonDynamoDBClient(awsAccessKey, awsSecretKey, region), cacheTableName, readCapacity, writeCapacity)
-        {
+            this.db = db;
+            db.RegisterTables(typeof(CacheEntry));
+            metadata = db.GetTableMetadata<CacheEntry>();
         }
 
         public void InitSchema()
         {
-            CreateDynamoCacheTable();
-        }
+            schema = db.GetTableSchema<CacheEntry>();
 
-        private void CreateDynamoCacheTable()
-        {
-            Log.InfoFormat("Attempting to load DynamoDB table {0}", CacheTableName);
-            if (!Table.TryLoadTable(client, CacheTableName, out awsCacheTableObj))
+            if (schema == null)
             {
-                Log.InfoFormat("DynamoDB table {0} does not exist, attempting to create", CacheTableName);
-                try
-                {
-                    client.CreateTable(new CreateTableRequest
-                    {
-                        TableName = CacheTableName,
-                        KeySchema = new List<KeySchemaElement>
-                        {
-                            new KeySchemaElement
-                            {
-                                AttributeName = KeyName,
-                                KeyType = KeyType.HASH,
-                            }
-                        },
-                        AttributeDefinitions = new List<AttributeDefinition>
-                        {
-                            new AttributeDefinition {
-                                AttributeName = KeyName,
-                                AttributeType = DynamoType.String,
-                            }
-                        },
-                        ProvisionedThroughput = new ProvisionedThroughput
-                        {
-                            ReadCapacityUnits = CacheReadCapacity,
-                            WriteCapacityUnits = CacheWriteCapacity,
-                        }
-                    });
-                    Log.InfoFormat("Successfully created DynamoDB table {0}", CacheTableName);
-                    WaitUntilTableReady(CacheTableName);
-                }
-                catch (Exception)
-                {
-                    Log.ErrorFormat("Could not create DynamoDB table {0}", CacheTableName);
-                    throw;
-                }
-
+                db.CreateNonExistingTable(metadata);
+                schema = db.GetTableSchema<CacheEntry>();
             }
         }
 
-        private void WaitUntilTableDeleted(string tableName)
+        private T GetValue<T>(string key)
         {
-            string status;
-            DateTime startWaitTime = DateTime.UtcNow;
-            // Let us wait until table is created. Call DescribeTable.
-            do
+            var entry = db.GetItemById<CacheEntry>(key);
+            if (entry == null)
+                return default(T);
+
+            if (entry.ExpiryDate != null && DateTime.UtcNow > entry.ExpiryDate.Value.ToUniversalTime())
             {
-                Thread.Sleep(5000); // Wait 5 seconds.
-                try
-                {
-                    var res = client.DescribeTable(new DescribeTableRequest
-                    {
-                        TableName = tableName
-                    });
-
-                    Log.InfoFormat("Table name: {0}, status: {1}",
-                                   res.Table.TableName,
-                                   res.Table.TableStatus);
-                    status = res.Table.TableStatus;
-                    if (DateTime.UtcNow.Subtract(startWaitTime).Seconds > 60)
-                        throw new Exception("Waiting for too long for DynamoDB table to be deleted, please check your AWS Console");
-
-                }
-                catch (ResourceNotFoundException)
-                {
-                    // When the resource is reported as not found, it's deleted so break out of the loop
-                    break;
-                }
-            } while (status == "DELETING");
-        }
-
-        private void WaitUntilTableReady(string tableName)
-        {
-            string status = null;
-            var startWaitTime = DateTime.UtcNow;
-            // Let us wait until table is created. Call DescribeTable.
-            do
-            {
-                Thread.Sleep(5000); // Wait 5 seconds.
-                try
-                {
-                    var res = client.DescribeTable(new DescribeTableRequest
-                    {
-                        TableName = tableName
-                    });
-
-                    if (Log.IsDebugEnabled)
-                        Log.DebugFormat("Table name: {0}, status: {1}", res.Table.TableName, res.Table.TableStatus);
-
-                    status = res.Table.TableStatus;
-                    if (DateTime.UtcNow.Subtract(startWaitTime).Seconds > 60)
-                        throw new Exception("Waiting for too long for DynamoDB table to be created, please check your AWS Console");
-                }
-                catch (ResourceNotFoundException)
-                {
-                    // DescribeTable is eventually consistent. So you might
-                    // get resource not found. So we handle the potential exception.
-                }
-            } while (status != "ACTIVE");
-        }
-
-        private bool TryGetValue<T>(string key, out T entry)
-        {
-            Log.InfoFormat("Attempting cache get of key: {0}", key);
-            entry = default(T);
-            var itemKey = new Dictionary<string, AttributeValue> { { KeyName, new AttributeValue { S = key } } };
-            var response = client.GetItem(CacheTableName, itemKey);
-
-            if (response.IsItemSet)
-            {
-                var item = response.Item;
-                DateTime expiresAt = DateTime.ParseExact(item[ExpiresAtName].S, "s", CultureInfo.InvariantCulture);
-                if (DateTime.UtcNow > expiresAt)
-                {
-                    Log.InfoFormat("Cache key: {0} has expired, removing from cache!", key);
-                    Remove(key);
-                    return false;
-                }
-                string jsonData = item[ValueName].S;
-                entry = AwsClientUtils.FromJson<T>(jsonData);
-                Log.InfoFormat("Cache hit on key: {0}", key);
-                return true;
+                Remove(key);
+                return default(T);
             }
-            return false;
+
+            return entry.Data.FromJson<T>();
         }
 
-        private bool CacheAdd<T>(string key, T value, DateTime expiresAt)
+        private bool CacheAdd<T>(string key, T value, DateTime? expiresAt)
         {
-            T entry;
-            if (TryGetValue(key, out entry)) return false;
-
-            CacheSet(key, value, expiresAt);
-            return true;
-        }
-
-        private bool CacheReplace<T>(string key, T value, DateTime expiresAt)
-        {
-            T entry;
-            if (!TryGetValue(key, out entry)) return false;
-
-            CacheSet(key, value, expiresAt);
-            return true;
-        }
-
-        private bool CacheSet<T>(string key, T value, DateTime expiresAt)
-        {
-            try
-            {
-                client.PutItem(
-                    new PutItemRequest
-                    {
-                        TableName = CacheTableName,
-                        Item = new Dictionary<string, AttributeValue>
-                        {
-                            { KeyName, new AttributeValue { S = key } },
-                            { ValueName, new AttributeValue { S = AwsClientUtils.ToJson(value) } },
-                            {
-                                ExpiresAtName,
-                                new AttributeValue {S = expiresAt.ToUniversalTime().ToString("s", CultureInfo.InvariantCulture)}
-                            }
-                        }
-                    }
-                    );
-                return true;
-            }
-            catch
-            {
+            var entry = GetValue<T>(key);
+            if (!Equals(entry, default(T)))
                 return false;
-            }
+
+            CacheSet(key, value, expiresAt);
+            return true;
+        }
+
+        private bool CacheReplace<T>(string key, T value, DateTime? expiresAt)
+        {
+            var entry = GetValue<T>(key);
+            if (Equals(entry, default(T)))
+                return false;
+
+            CacheSet(key, value, expiresAt);
+            return true;
+        }
+
+        private bool CacheSet<T>(string key, T value, DateTime? expiresAt)
+        {
+            var now = DateTime.UtcNow;
+            string json = AwsClientUtils.ToScopedJson(value);
+            var entry = new CacheEntry
+            {
+                Id = key,
+                Data = json,
+                CreatedDate = now,
+                ModifiedDate = now,
+                ExpiryDate = expiresAt,
+            };
+
+            db.PutItem(entry);
+            return true;
         }
 
         private int UpdateCounter(string key, int value)
         {
-            var itemKey = new Dictionary<string, AttributeValue> { { KeyName, new AttributeValue() { S = key } } };
-            var response = client.UpdateItem(new UpdateItemRequest
+            var response = db.DynamoDb.UpdateItem(new UpdateItemRequest
             {
-                TableName = CacheTableName,
-                Key = itemKey,
-                AttributeUpdates = new Dictionary<string, AttributeValueUpdate>
-                {
+                TableName = metadata.Name,
+                Key = DynamoMetadata.Converters.ToAttributeKeyValue(metadata.HashKey, key),
+                AttributeUpdates = new Dictionary<string, AttributeValueUpdate> {
                     {
-                        ValueName,
-                        new AttributeValueUpdate
-                        {
-                            Action = DynamoAction.Add,
-                            Value = new AttributeValue
-                            {
-                                N =value.ToString(CultureInfo.InvariantCulture)
-                            }
+                        DataField,
+                        new AttributeValueUpdate {
+                            Action = AttributeAction.ADD,
+                            Value = new AttributeValue { N = value.ToString() }
                         }
                     }
                 },
-                ReturnValues = DynamoReturn.AllNew,
+                ReturnValues = ReturnValue.ALL_NEW,
             });
-            return Convert.ToInt32(response.Attributes[ValueName].N);
+            return Convert.ToInt32(response.Attributes[DataField].N);
         }
 
         public bool Add<T>(string key, T value, TimeSpan expiresIn)
@@ -284,7 +122,7 @@ namespace ServiceStack.Aws
 
         public bool Add<T>(string key, T value)
         {
-            return CacheAdd(key, value, DateTime.MaxValue.ToUniversalTime());
+            return CacheAdd(key, value, null);
         }
 
         public long Decrement(string key, uint amount)
@@ -298,18 +136,13 @@ namespace ServiceStack.Aws
         /// </summary>
         public void FlushAll()
         {
-            // Is this the cheapest method per AWS pricing to clear a table? (instead of table scan / remove each item) ??
-            client.DeleteTable(new DeleteTableRequest { TableName = CacheTableName });
-            // Scaning the table is limited to 1 MB chunks, with a large cache it could result in many Read requests and many Delete requests occurring very quickly which may tap out 
-            // the throughput capacity...
-            WaitUntilTableDeleted(CacheTableName);
-            CreateDynamoCacheTable();
+            db.DeleteTable<CacheEntry>();
+            db.CreateNonExistingTable<CacheEntry>();
         }
 
         public T Get<T>(string key)
         {
-            T value;
-            return TryGetValue(key, out value) ? value : default(T);
+            return GetValue<T>(key);
         }
 
         public IDictionary<string, T> GetAll<T>(IEnumerable<string> keys)
@@ -330,20 +163,8 @@ namespace ServiceStack.Aws
 
         public bool Remove(string key)
         {
-            try
-            {
-                var itemKey = new Dictionary<string, AttributeValue> { { KeyName, new AttributeValue() { S = key } } };
-                client.DeleteItem(new DeleteItemRequest
-                {
-                    TableName = CacheTableName,
-                    Key = itemKey
-                });
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            var existingItem = db.DeleteItemById<CacheEntry>(key, ReturnItem.Old);
+            return existingItem != null;
         }
 
         public void RemoveAll(IEnumerable<string> keys)
@@ -356,7 +177,7 @@ namespace ServiceStack.Aws
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(string.Format("Error trying to remove {0} from the cache", key), ex);
+                    Log.Error("Error trying to remove {0} from the cache".Fmt(key), ex);
                 }
             }
         }
@@ -373,7 +194,7 @@ namespace ServiceStack.Aws
 
         public bool Replace<T>(string key, T value)
         {
-            return CacheReplace(key, value, DateTime.MaxValue.ToUniversalTime());
+            return CacheReplace(key, value, null);
         }
 
         public bool Set<T>(string key, T value, TimeSpan expiresIn)
@@ -388,7 +209,7 @@ namespace ServiceStack.Aws
 
         public bool Set<T>(string key, T value)
         {
-            return CacheSet(key, value, DateTime.MaxValue.ToUniversalTime());
+            return CacheSet(key, value, null);
         }
 
         public void SetAll<T>(IDictionary<string, T> values)
@@ -399,10 +220,62 @@ namespace ServiceStack.Aws
             }
         }
 
+        public TimeSpan? GetTimeToLive(string key)
+        {
+            var entry = db.GetItemById<CacheEntry>(key);
+            if (entry == null)
+                return null;
+
+            if (entry.ExpiryDate == null)
+                return TimeSpan.MaxValue;
+
+            return entry.ExpiryDate - DateTime.UtcNow;
+        }
+
+        public void RemoveByPattern(string pattern)
+        {
+            if (pattern.EndsWith("*"))
+            {
+                var beginWith = pattern.Substring(0, pattern.Length - 1);
+                if (beginWith.Contains("*"))
+                    throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
+
+                var request = new ScanRequest
+                {
+                    Limit = 1000,
+                    TableName = metadata.Name,
+                    ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
+                        { ":pattern", new AttributeValue { S = beginWith } }
+                    },
+                    FilterExpression = "begins_with(Id,:pattern)"
+                };
+                var response = db.DynamoDb.Scan(request);
+
+                var idsToRemove = new HashSet<string>();
+                foreach (Dictionary<string, AttributeValue> values in response.Items)
+                {
+                    AttributeValue attrId;
+                    values.TryGetValue(IdField, out attrId);
+
+                    if (attrId != null && attrId.S != null)
+                        idsToRemove.Add(attrId.S);
+                }
+
+                RemoveAll(idsToRemove);
+            }
+            else
+                throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
+        }
+
+        public void RemoveByRegex(string regex)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Dispose()
         {
-            if (client != null)
-                client.Dispose();
+            if (db != null)
+                db.Dispose();
         }
     }
 

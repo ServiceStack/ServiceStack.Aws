@@ -1,23 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Logging;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws
 {
     public interface IPocoDynamo : IDisposable
     {
         IAmazonDynamoDB DynamoDb { get; }
+        Table GetTableSchema(Type table);
+        DynamoMetadataTable GetTableMetadata(Type table);
         List<string> GetTableNames();
-        bool CreateNonExistingTables(List<DynamoMetadataTable> tables, TimeSpan? timeout = null);
+        bool CreateNonExistingTables(IEnumerable<DynamoMetadataTable> tables, TimeSpan? timeout = null);
         bool DeleteAllTables(TimeSpan? timeout = null);
-        bool DeleteTables(List<string> tableNames, TimeSpan? timeout = null);
-        T GetItemById<T>(object hash);
-        PutItemResponse PutItem<T>(T value);
-        DeleteItemResponse DeleteItemById<T>(object hash);
-        bool WaitForTablesToBeReady(List<string> tableNames, TimeSpan? timeout = null);
-        bool WaitForTablesToBeRemoved(List<string> tableNames, TimeSpan? timeout = null);
+        bool DeleteTables(IEnumerable<string> tableNames, TimeSpan? timeout = null);
+        T GetItemById<T>(object id);
+        T PutItem<T>(T value, ReturnItem returnItem = ReturnItem.None);
+        T DeleteItemById<T>(object hash, ReturnItem returnItem = ReturnItem.None);
+        bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
+        bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
+        void RegisterTables(params Type[] types);
     }
 
     public partial class PocoDynamo : IPocoDynamo
@@ -27,14 +32,27 @@ namespace ServiceStack.Aws
         public IAmazonDynamoDB DynamoDb { get; private set; }
 
         public bool ConsistentRead { get; set; }
+
+        /// <summary>
+        /// If the client needs to delete/re-create the DynamoDB table, this is the Read Capacity to use
+        /// </summary>
         public long ReadCapacityUnits { get; set; }
+
+        /// <summary>
+        /// If the client needs to delete/re-create the DynamoDB table, this is the Write Capacity to use
+        /// </summary> 
         public long WriteCapacityUnits { get; set; }
 
-        public HashSet<string> RetryOnErrorCodes { get; set; } 
+        public HashSet<string> RetryOnErrorCodes { get; set; }
 
         public TimeSpan PollTableStatus { get; set; }
 
         public TimeSpan MaxRetryOnExceptionTimeout { get; set; }
+
+        private static DynamoConverters Converters
+        {
+            get { return DynamoMetadata.Converters; }
+        }
 
         public PocoDynamo(IAmazonDynamoDB dynamoDb)
         {
@@ -52,12 +70,39 @@ namespace ServiceStack.Aws
             };
         }
 
+        public DynamoMetadataTable GetTableMetadata(Type table)
+        {
+            return DynamoMetadata.GetTable(table);
+        }
+
         public List<string> GetTableNames()
         {
             return Exec(() => DynamoDb.ListTables().TableNames);
         }
 
-        public bool CreateNonExistingTables(List<DynamoMetadataTable> tables, TimeSpan? timeout = null)
+        readonly Type[] throwNotFoundExceptions = {
+            typeof(ResourceNotFoundException)
+        };
+
+        public Table GetTableSchema(Type type)
+        {
+            var table = DynamoMetadata.GetTable(type);
+            return Exec(() =>
+            {
+                try
+                {
+                    Table awsTable;
+                    Table.TryLoadTable(DynamoDb, table.Name, out awsTable);
+                    return awsTable;
+                }
+                catch (ResourceNotFoundException)
+                {
+                    return null;
+                }
+            }, throwNotFoundExceptions);
+        }
+
+        public bool CreateNonExistingTables(IEnumerable<DynamoMetadataTable> tables, TimeSpan? timeout = null)
         {
             var existingTableNames = GetTableNames();
 
@@ -65,6 +110,9 @@ namespace ServiceStack.Aws
             {
                 if (existingTableNames.Contains(table.Name))
                     continue;
+
+                if (Log.IsDebugEnabled)
+                    Log.Debug("Creating Table: " + table.Name);
 
                 var request = ToCreateTableRequest(table);
                 Exec(() => DynamoDb.CreateTable(request));
@@ -111,26 +159,27 @@ namespace ServiceStack.Aws
             return DeleteTables(GetTableNames(), timeout);
         }
 
-        public bool DeleteTables(List<string> tableNames, TimeSpan? timeout = null)
+        public bool DeleteTables(IEnumerable<string> tableNames, TimeSpan? timeout = null)
         {
             foreach (var tableName in tableNames)
             {
                 Exec(() => DynamoDb.DeleteTable(new DeleteTableRequest(tableName)));
             }
 
-            return WaitForTablesToBeRemoved(tableNames);
+            return WaitForTablesToBeDeleted(tableNames);
         }
 
-        public T GetItemById<T>(object hash)
+        public T GetItemById<T>(object id)
         {
             var table = DynamoMetadata.GetTable<T>();
-            var request = new GetItemRequest {
+            var request = new GetItemRequest
+            {
                 TableName = table.Name,
-                Key = DynamoMetadata.Converters.ToAttributeKeyValue(table.HashKey, hash),
+                Key = Converters.ToAttributeKeyValue(table.HashKey, id),
                 ConsistentRead = ConsistentRead,
             };
 
-            var response = Exec(() => DynamoDb.GetItem(request));
+            var response = Exec(() => DynamoDb.GetItem(request), throwNotFoundExceptions);
 
             if (!response.IsItemSet)
                 return default(T);
@@ -139,28 +188,45 @@ namespace ServiceStack.Aws
             return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
         }
 
-        public PutItemResponse PutItem<T>(T value)
+        public T PutItem<T>(T value, ReturnItem returnItem = ReturnItem.None)
         {
             var table = DynamoMetadata.GetTable<T>();
             var request = new PutItemRequest
             {
                 TableName = table.Name,
                 Item = DynamoMetadata.Converters.ToAttributeValues(value, table),
+                ReturnValues = returnItem.ToReturnValue(),
             };
 
-            return Exec(() => DynamoDb.PutItem(request));
+            var response = Exec(() => DynamoDb.PutItem(request));
+
+            if (response.Attributes.IsEmpty())
+                return default(T);
+
+            return Converters.FromAttributeValues<T>(table, response.Attributes);
         }
 
-        public DeleteItemResponse DeleteItemById<T>(object hash)
+        public T DeleteItemById<T>(object hash, ReturnItem returnItem = ReturnItem.None)
         {
             var table = DynamoMetadata.GetTable<T>();
             var request = new DeleteItemRequest
             {
                 TableName = table.Name,
                 Key = DynamoMetadata.Converters.ToAttributeKeyValue(table.HashKey, hash),
+                ReturnValues = returnItem.ToReturnValue(),
             };
 
-            return Exec(() => DynamoDb.DeleteItem(request));
+            var response = Exec(() => DynamoDb.DeleteItem(request));
+
+            if (response.Attributes.IsEmpty())
+                return default(T);
+
+            return Converters.FromAttributeValues<T>(table, response.Attributes);
+        }
+
+        public void RegisterTables(params Type[] types)
+        {
+            DynamoMetadata.RegisterTables(types);
         }
 
         public void Dispose()
