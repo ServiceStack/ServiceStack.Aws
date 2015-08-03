@@ -1,7 +1,7 @@
 ﻿using System;
 using ServiceStack.Text;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.Support
 {
     internal static class AwsClientUtils
     {

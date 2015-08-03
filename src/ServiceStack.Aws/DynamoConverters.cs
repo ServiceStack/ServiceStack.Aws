@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
+using ServiceStack.Aws.Support;
 using ServiceStack.DataAnnotations;
 using ServiceStack.Text;
 
