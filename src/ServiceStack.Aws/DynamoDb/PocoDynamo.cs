@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -7,18 +8,21 @@ using ServiceStack.Logging;
 
 namespace ServiceStack.Aws.DynamoDb
 {
-    public interface IPocoDynamo : IDisposable
+    public interface IPocoDynamo : IRequiresSchema, IDisposable
     {
         IAmazonDynamoDB DynamoDb { get; }
+        ISequenceSource Sequences { get; }
+        DynamoConverters Converters { get; }
+
         Table GetTableSchema(Type table);
-        DynamoMetadataTable GetTableMetadata(Type table);
+        DynamoMetadataType GetTableMetadata(Type table);
         List<string> GetTableNames();
-        bool CreateMissingTables(IEnumerable<DynamoMetadataTable> tables, TimeSpan? timeout = null);
+        bool CreateMissingTables(IEnumerable<DynamoMetadataType> tables, TimeSpan? timeout = null);
         bool DeleteAllTables(TimeSpan? timeout = null);
         bool DeleteTables(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         T GetItemById<T>(object id);
         T GetItemByHashAndRange<T>(object hash, object range);
-        T PutItem<T>(T value, ReturnItem returnItem = ReturnItem.None);
+        T PutItem<T>(T value, bool returnOld = false);
         T DeleteItemById<T>(object hash, ReturnItem returnItem = ReturnItem.None);
         long IncrementById<T>(object id, string fieldName, long amount = 1);
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
@@ -31,6 +35,10 @@ namespace ServiceStack.Aws.DynamoDb
         private static readonly ILog Log = LogManager.GetLogger(typeof(PocoDynamo));
 
         public IAmazonDynamoDB DynamoDb { get; private set; }
+
+        public ISequenceSource Sequences { get; set; }
+
+        public DynamoConverters Converters { get; set; }
 
         public bool ConsistentRead { get; set; }
 
@@ -50,14 +58,12 @@ namespace ServiceStack.Aws.DynamoDb
 
         public TimeSpan MaxRetryOnExceptionTimeout { get; set; }
 
-        private static DynamoConverters Converters
-        {
-            get { return DynamoMetadata.Converters; }
-        }
 
         public PocoDynamo(IAmazonDynamoDB dynamoDb)
         {
             this.DynamoDb = dynamoDb;
+            this.Sequences = new DynamoDbSequenceSource(this);
+            this.Converters = DynamoMetadata.Converters;
             PollTableStatus = TimeSpan.FromSeconds(2);
             MaxRetryOnExceptionTimeout = TimeSpan.FromSeconds(60);
             ReadCapacityUnits = 10;
@@ -69,6 +75,12 @@ namespace ServiceStack.Aws.DynamoDb
                 "LimitExceededException",
                 "ResourceInUseException",
             };
+        }
+
+        public void InitSchema()
+        {
+            CreateMissingTables(DynamoMetadata.GetTables());
+            Sequences.InitSchema();
         }
 
         public IPocoDynamo Clone()
@@ -84,7 +96,7 @@ namespace ServiceStack.Aws.DynamoDb
             };
         }
 
-        public DynamoMetadataTable GetTableMetadata(Type table)
+        public DynamoMetadataType GetTableMetadata(Type table)
         {
             return DynamoMetadata.GetTable(table);
         }
@@ -116,11 +128,15 @@ namespace ServiceStack.Aws.DynamoDb
             }, throwNotFoundExceptions);
         }
 
-        public bool CreateMissingTables(IEnumerable<DynamoMetadataTable> tables, TimeSpan? timeout = null)
+        public bool CreateMissingTables(IEnumerable<DynamoMetadataType> tables, TimeSpan? timeout = null)
         {
+            var tablesList = tables.Safe().ToList();
+            if (tablesList.Count == 0)
+                return true;
+
             var existingTableNames = GetTableNames();
 
-            foreach (var table in tables)
+            foreach (var table in tablesList)
             {
                 if (existingTableNames.Contains(table.Name))
                     continue;
@@ -129,13 +145,26 @@ namespace ServiceStack.Aws.DynamoDb
                     Log.Debug("Creating Table: " + table.Name);
 
                 var request = ToCreateTableRequest(table);
-                Exec(() => DynamoDb.CreateTable(request));
+                Exec(() => {
+                    try
+                    {
+                        DynamoDb.CreateTable(request);
+                    }
+                    catch (AmazonDynamoDBException ex)
+                    {
+                        const string TableAlreadyExists = "ResourceInUseException";
+                        if (ex.ErrorCode == TableAlreadyExists)
+                            return;
+
+                        throw;
+                    }
+                });
             }
 
-            return WaitForTablesToBeReady(tables.Map(x => x.Name), timeout);
+            return WaitForTablesToBeReady(tablesList.Map(x => x.Name), timeout);
         }
 
-        protected virtual CreateTableRequest ToCreateTableRequest(DynamoMetadataTable table)
+        protected virtual CreateTableRequest ToCreateTableRequest(DynamoMetadataType table)
         {
             var props = table.Type.GetSerializableProperties();
             if (props.Length == 0)
@@ -221,14 +250,14 @@ namespace ServiceStack.Aws.DynamoDb
             return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
         }
 
-        public T PutItem<T>(T value, ReturnItem returnItem = ReturnItem.None)
+        public T PutItem<T>(T value, bool returnOld = false)
         {
             var table = DynamoMetadata.GetTable<T>();
             var request = new PutItemRequest
             {
                 TableName = table.Name,
-                Item = DynamoMetadata.Converters.ToAttributeValues(value, table),
-                ReturnValues = returnItem.ToReturnValue(),
+                Item = Converters.ToAttributeValues(this, value, table),
+                ReturnValues = returnOld ? ReturnValue.ALL_OLD : ReturnValue.NONE,
             };
 
             var response = Exec(() => DynamoDb.PutItem(request));
@@ -245,7 +274,7 @@ namespace ServiceStack.Aws.DynamoDb
             var request = new DeleteItemRequest
             {
                 TableName = table.Name,
-                Key = DynamoMetadata.Converters.ToAttributeKeyValue(table.HashKey, hash),
+                Key = Converters.ToAttributeKeyValue(table.HashKey, hash),
                 ReturnValues = returnItem.ToReturnValue(),
             };
 
@@ -259,11 +288,11 @@ namespace ServiceStack.Aws.DynamoDb
 
         public long IncrementById<T>(object id, string fieldName, long amount = 1)
         {
-            var table = DynamoMetadata.GetTable<T>();
+            var type = DynamoMetadata.GetType<T>();
             var request = new UpdateItemRequest
             {
-                TableName = table.Name,
-                Key = Converters.ToAttributeKeyValue(table.HashKey, id),
+                TableName = type.Name,
+                Key = Converters.ToAttributeKeyValue(type.HashKey, id),
                 AttributeUpdates = new Dictionary<string, AttributeValueUpdate> {
                     {
                         fieldName,
