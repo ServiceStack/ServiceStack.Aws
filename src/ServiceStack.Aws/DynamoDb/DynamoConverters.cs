@@ -19,7 +19,7 @@ namespace ServiceStack.Aws.DynamoDb
     public class DynamoConverters
     {
         public static Func<Type, string> FieldTypeFn { get; set; }
-        public static Func<object, DynamoMetadataTable, Dictionary<string, AttributeValue>> ToAttributeValuesFn { get; set; }
+        public static Func<object, DynamoMetadataType, Dictionary<string, AttributeValue>> ToAttributeValuesFn { get; set; }
         public static Func<Type, object, AttributeValue> ToAttributeValueFn { get; set; }
         public static Func<AttributeValue, Type, object> FromAttributeValueFn { get; set; }
         public static Func<object, Type, object> ConvertValueFn { get; set; }
@@ -100,6 +100,9 @@ namespace ServiceStack.Aws.DynamoDb
             hash = null;
             range = null;
 
+            if (props.Length == 0)
+                return;
+
             var compositeAttrs = type.AllAttributes<CompositeIndexAttribute>();
             if (compositeAttrs.Length > 0)
             {
@@ -156,7 +159,7 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
-        public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(DynamoMetadataTable table, object hash, object range)
+        public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(DynamoMetadataType table, object hash, object range)
         {
             using (AwsClientUtils.GetJsScope())
             {
@@ -167,7 +170,7 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
-        public virtual Dictionary<string, AttributeValue> ToAttributeValues(object instance, DynamoMetadataTable table)
+        public virtual Dictionary<string, AttributeValue> ToAttributeValues(IPocoDynamo db, object instance, DynamoMetadataType table)
         {
             if (ToAttributeValuesFn != null)
             {
@@ -183,6 +186,20 @@ namespace ServiceStack.Aws.DynamoDb
                 foreach (var field in table.Fields)
                 {
                     var value = field.GetValue(instance);
+
+                    if (field.IsAutoIncrement)
+                    {
+                        var needsId = value == null ||
+                            0 == (long)Convert.ChangeType(value, typeof(long));
+
+                        if (needsId)
+                        {
+                            var nextId = db.Sequences.Increment(table.Name);
+                            value = Convert.ChangeType(nextId, field.Type);
+                            field.SetValueFn(instance, value);
+                        }
+                    }
+
                     to[field.Name] = ToAttributeValue(field.Type, field.DbType, value);
                 }
 
@@ -249,7 +266,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public virtual object FromMapAttributeValue(Dictionary<string, AttributeValue> map, Type type)
         {
-            var table = DynamoMetadata.GetTable(type);
+            var table = DynamoMetadata.GetType(type);
 
             var from = new Dictionary<string, object>();
             foreach (var field in table.Fields)
@@ -282,13 +299,13 @@ namespace ServiceStack.Aws.DynamoDb
             return to;
         }
 
-        public virtual T FromAttributeValues<T>(DynamoMetadataTable table, Dictionary<string, AttributeValue> attributeValues)
+        public virtual T FromAttributeValues<T>(DynamoMetadataType table, Dictionary<string, AttributeValue> attributeValues)
         {
             var to = typeof(T).CreateInstance<T>();
             return PopulateFromAttributeValues(to, table, attributeValues);
         }
 
-        public virtual T PopulateFromAttributeValues<T>(T to, DynamoMetadataTable table, Dictionary<string, AttributeValue> attributeValues)
+        public virtual T PopulateFromAttributeValues<T>(T to, DynamoMetadataType table, Dictionary<string, AttributeValue> attributeValues)
         {
             foreach (var entry in attributeValues)
             {

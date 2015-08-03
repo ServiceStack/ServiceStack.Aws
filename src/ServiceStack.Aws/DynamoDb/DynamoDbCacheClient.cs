@@ -18,7 +18,7 @@ namespace ServiceStack.Aws.DynamoDb
         private readonly IPocoDynamo db;
 
         private Table schema;
-        private readonly DynamoMetadataTable metadata;
+        private readonly DynamoMetadataType metadata;
 
         public DynamoDbCacheClient(IPocoDynamo db)
         {

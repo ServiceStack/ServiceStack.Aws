@@ -9,19 +9,19 @@ namespace ServiceStack.Aws.DynamoDb
 {
     public static class PocoDynamoExtensions
     {
-        public static DynamoMetadataTable RegisterTable<T>(this IPocoDynamo db)
+        public static DynamoMetadataType RegisterTable<T>(this IPocoDynamo db)
         {
             return DynamoMetadata.RegisterTable(typeof(T));
         }
 
-        public static DynamoMetadataTable RegisterTable(this IPocoDynamo db, Type type)
+        public static DynamoMetadataType RegisterTable(this IPocoDynamo db, Type tableType)
         {
-            return DynamoMetadata.RegisterTable(type);
+            return DynamoMetadata.RegisterTable(tableType);
         }
 
-        public static List<DynamoMetadataTable> RegisterTables(this IPocoDynamo db, IEnumerable<Type> types)
+        public static void RegisterTables(this IPocoDynamo db, IEnumerable<Type> tableTypes)
         {
-            return DynamoMetadata.RegisterTables(types);
+            DynamoMetadata.RegisterTables(tableTypes);
         }
 
         public static void AddValueConverter(this IPocoDynamo db, Type type, IAttributeValueConverter valueConverter)
@@ -34,7 +34,7 @@ namespace ServiceStack.Aws.DynamoDb
             return db.GetTableSchema(typeof(T));
         }
 
-        public static DynamoMetadataTable GetTableMetadata<T>(this IPocoDynamo db)
+        public static DynamoMetadataType GetTableMetadata<T>(this IPocoDynamo db)
         {
             return db.GetTableMetadata(typeof(T));
         }
@@ -45,7 +45,7 @@ namespace ServiceStack.Aws.DynamoDb
             return db.CreateMissingTables(new[] { table });
         }
 
-        public static bool CreateTableIfMissing(this IPocoDynamo db, DynamoMetadataTable table)
+        public static bool CreateTableIfMissing(this IPocoDynamo db, DynamoMetadataType table)
         {
             return db.CreateMissingTables(new[] { table });
         }
