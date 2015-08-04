@@ -9,8 +9,8 @@ namespace ServiceStack.Aws.Tests.Services
         [TestFixtureSetUp]
         public void FixtureSetup()
         {
-            _providerFactory = () => InMemoryFileStorageProvider.Instance;
-            _baseFolderName = TestSubDirectory;
+            providerFactory = () => InMemoryFileStorageProvider.Instance;
+            baseFolderName = TestSubDirectory;
             Initialize();
         }
     }

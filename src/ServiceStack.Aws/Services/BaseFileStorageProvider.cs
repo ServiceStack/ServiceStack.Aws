@@ -8,7 +8,7 @@ namespace ServiceStack.Aws.Services
 {
     public abstract class BaseFileStorageProvider : IFileStorageProvider
     {
-        private string _replaceThisDirectorySeparatorCharacter;
+        private string replaceThisDirectorySeparatorCharacter;
 
         protected BaseFileStorageProvider() { }
 
@@ -24,8 +24,8 @@ namespace ServiceStack.Aws.Services
         {
             get
             {
-                return _replaceThisDirectorySeparatorCharacter ??
-                       (_replaceThisDirectorySeparatorCharacter = DirectorySeparatorCharacter.Equals('\\')
+                return replaceThisDirectorySeparatorCharacter ??
+                       (replaceThisDirectorySeparatorCharacter = DirectorySeparatorCharacter.Equals('\\')
                                                                       ? "/"
                                                                       : "\\");
             }

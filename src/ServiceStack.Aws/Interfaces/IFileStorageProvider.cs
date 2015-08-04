@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using ServiceStack.Aws.Models;
-using ServiceStack.Aws.S3;
 
 namespace ServiceStack.Aws.Interfaces
 {

@@ -14,34 +14,34 @@ namespace ServiceStack.Aws.S3
 {
     public class S3FileStorageProvider : BaseFileStorageProvider, IDisposable
     {
-        private readonly S3ConnectionFactory _s3ConnectionFactory;
-        private IAmazonS3 _s3Client;
-        private static readonly FileSystemStorageProvider _localFs = FileSystemStorageProvider.Instance;
+        private readonly S3ConnectionFactory s3ConnectionFactory;
+        private IAmazonS3 s3Client;
+        private static readonly FileSystemStorageProvider localFs = FileSystemStorageProvider.Instance;
 
-        public S3FileStorageProvider(S3ConnectionFactory s3ConnectionFactory)
+        public S3FileStorageProvider(S3ConnectionFactory s3ConnFactory)
         {
             Guard.AgainstNullArgument(s3ConnectionFactory, "s3ConnectionFactory");
-            _s3ConnectionFactory = s3ConnectionFactory;
+            s3ConnectionFactory = s3ConnFactory;
         }
 
         public void Dispose()
         {
-            if (_s3Client == null)
+            if (s3Client == null)
             {
                 return;
             }
 
             try
             {
-                _s3Client.Dispose();
-                _s3Client = null;
+                s3Client.Dispose();
+                s3Client = null;
             }
             catch { }
         }
 
         private IAmazonS3 S3Client
         {
-            get { return _s3Client ?? (_s3Client = _s3ConnectionFactory.GetClient()); }
+            get { return s3Client ?? (s3Client = s3ConnectionFactory.GetClient()); }
         }
 
         public override char DirectorySeparatorCharacter
@@ -220,7 +220,7 @@ namespace ServiceStack.Aws.S3
             }
             finally
             {
-                _localFs.Delete(localFile);
+                localFs.Delete(localFile);
             }
         }
 
@@ -255,9 +255,9 @@ namespace ServiceStack.Aws.S3
                               Key = bki.Key
                           };
 
-            _localFs.CreateFolder(downloadToFso.FolderName);
+            localFs.CreateFolder(downloadToFso.FolderName);
 
-            _localFs.Delete(downloadToFso);
+            localFs.Delete(downloadToFso);
 
             using(var response = S3Client.GetObject(request))
             {
@@ -289,7 +289,7 @@ namespace ServiceStack.Aws.S3
             }
             finally
             {
-                _localFs.Delete(localFile);
+                localFs.Delete(localFile);
             }
 
         }
@@ -317,7 +317,7 @@ namespace ServiceStack.Aws.S3
 
         public override bool FolderExists(string path)
         {
-            if (String.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(path))
             {
                 return false;
             }
@@ -331,7 +331,7 @@ namespace ServiceStack.Aws.S3
 
         private bool BucketExists(S3BucketKeyInfo bki)
         {
-            if (String.IsNullOrEmpty(bki.BucketName))
+            if (string.IsNullOrEmpty(bki.BucketName))
             {
                 return false;
             }
@@ -355,7 +355,7 @@ namespace ServiceStack.Aws.S3
 
         public override IEnumerable<string> ListFolder(string folderName, bool recursive = false, bool fileNamesOnly = false)
         {
-            if (String.IsNullOrEmpty(folderName))
+            if (string.IsNullOrEmpty(folderName))
             {
                 yield break;
             }
@@ -375,7 +375,7 @@ namespace ServiceStack.Aws.S3
 
                 var filesOnly = listResponse.S3Objects
                                             .Select(o => new S3BucketKeyInfo(bki.BucketName, o))
-                                            .Where(b => !String.IsNullOrEmpty(b.FileName))
+                                            .Where(b => !string.IsNullOrEmpty(b.FileName))
                                             .Where(b => recursive
                                                             ? b.Prefix.StartsWith(bki.Prefix, StringComparison.InvariantCulture)
                                                             : b.Prefix.Equals(bki.Prefix, StringComparison.InvariantCulture))
@@ -420,7 +420,7 @@ namespace ServiceStack.Aws.S3
                                       BucketName = bki.BucketName
                                   };
 
-                if (!String.IsNullOrEmpty(nextMarker))
+                if (!string.IsNullOrEmpty(nextMarker))
                 {
                     listRequest.Marker = nextMarker;
                 }
@@ -465,7 +465,7 @@ namespace ServiceStack.Aws.S3
 
         private void DeleteFolderInternal(string path, bool recursive)
         {
-            if (String.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(path))
             {
                 return;
             }
@@ -524,7 +524,7 @@ namespace ServiceStack.Aws.S3
 
         public override void CreateFolder(string path)
         {
-            if (String.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(path))
             {
                 return;
             }

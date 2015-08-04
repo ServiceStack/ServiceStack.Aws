@@ -16,15 +16,15 @@ namespace ServiceStack.Aws.S3
         {
             Guard.Against(String.IsNullOrEmpty(fullPathAndFileName), "fullPathAndFileName must not be empty.");
 
-            Key = String.Empty;
-            FileName = String.Empty;
-            Prefix = String.Empty;
+            Key = string.Empty;
+            FileName = string.Empty;
+            Prefix = string.Empty;
 
             fullPathAndFileName = fullPathAndFileName.Replace("\\", "/");
 
             if (terminateWithPathDelimiter && !fullPathAndFileName.EndsWith("/"))
             {
-                fullPathAndFileName = String.Concat(fullPathAndFileName, "/");
+                fullPathAndFileName = string.Concat(fullPathAndFileName, "/");
             }
 
             var split = fullPathAndFileName.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -32,7 +32,7 @@ namespace ServiceStack.Aws.S3
 
             if (split.Length > 1)
             {
-                Key = String.Join("/", split, 1, split.Length - 1);
+                Key = string.Join("/", split, 1, split.Length - 1);
 
                 if (fullPathAndFileName.EndsWith("/"))
                 {
@@ -45,7 +45,7 @@ namespace ServiceStack.Aws.S3
 
                     if (split.Length > 2)
                     {
-                        Prefix = String.Join("/", split, 1, split.Length - 2) + "/";
+                        Prefix = string.Join("/", split, 1, split.Length - 2) + "/";
                     }
                 }
             }
@@ -55,16 +55,16 @@ namespace ServiceStack.Aws.S3
             }
         }
 
-        public String BucketName { get; private set; }
-        public String Prefix { get; private set; }
-        public String Key { get; private set; }
-        public String FileName { get; private set; }
+        public string BucketName { get; private set; }
+        public string Prefix { get; private set; }
+        public string Key { get; private set; }
+        public string FileName { get; private set; }
 
-        public Boolean IsBucketObject { get; private set; }
+        public bool IsBucketObject { get; private set; }
 
-        public Boolean HasPrefix
+        public bool HasPrefix
         {
-            get { return !String.IsNullOrEmpty(Prefix); }
+            get { return !string.IsNullOrEmpty(Prefix); }
         }
         
         public bool Equals(S3BucketKeyInfo other)
@@ -92,14 +92,14 @@ namespace ServiceStack.Aws.S3
 
         public override string ToString()
         {
-            return String.Concat(BucketName,
+            return string.Concat(BucketName,
                                  BucketName.EndsWith("/")
-                                     ? String.Empty
+                                     ? string.Empty
                                      : "/",
                                  Key);
         }
         
-        public override Int32 GetHashCode()
+        public override int GetHashCode()
         {
             return ToString().GetHashCode();
         }

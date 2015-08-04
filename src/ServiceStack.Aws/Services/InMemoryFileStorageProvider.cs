@@ -16,20 +16,20 @@ namespace ServiceStack.Aws.Services
 
     public class InMemoryFileStorageProvider : BaseFileStorageProvider
     {
-        private readonly ConcurrentDictionary<string, MemoryFileMeta> _fileMap;
-        private static readonly FileSystemStorageProvider _localFs = FileSystemStorageProvider.Instance;
-        private static readonly InMemoryFileStorageProvider _instance = new InMemoryFileStorageProvider();
+        private readonly ConcurrentDictionary<string, MemoryFileMeta> fileMap;
+        private static readonly FileSystemStorageProvider localFs = FileSystemStorageProvider.Instance;
+        private static readonly InMemoryFileStorageProvider instance = new InMemoryFileStorageProvider();
 
         static InMemoryFileStorageProvider() { }
         
         public InMemoryFileStorageProvider()
         {
-            _fileMap = new ConcurrentDictionary<string, MemoryFileMeta>();
+            fileMap = new ConcurrentDictionary<string, MemoryFileMeta>();
         }
 
         public static InMemoryFileStorageProvider Instance
         {
-            get { return _instance; }
+            get { return instance; }
         }
 
         public override void Download(FileSystemObject thisFso, FileSystemObject downloadToFso)
@@ -41,7 +41,7 @@ namespace ServiceStack.Aws.Services
                 throw new FileNotFoundException("File does not exist in memory provider", thisFso.FullName);
             }
 
-            _localFs.Store(bytes, downloadToFso);
+            localFs.Store(bytes, downloadToFso);
         }
         
         public override Stream GetStream(FileSystemObject fso)
@@ -74,13 +74,13 @@ namespace ServiceStack.Aws.Services
 
         public override void Store(FileSystemObject localFileSystemFso, FileSystemObject targetFso)
         {
-            SaveToMap(_localFs.Get(localFileSystemFso), targetFso);
+            SaveToMap(localFs.Get(localFileSystemFso), targetFso);
         }
         
         public override void Delete(FileSystemObject fso)
         {
             MemoryFileMeta map;
-            _fileMap.TryRemove(fso.FullName, out map);
+            fileMap.TryRemove(fso.FullName, out map);
         }
 
         public override void Delete(IEnumerable<FileSystemObject> fsos)
@@ -143,7 +143,7 @@ namespace ServiceStack.Aws.Services
 
         public override bool Exists(FileSystemObject fso)
         {
-            return _fileMap.ContainsKey(fso.FullName);
+            return fileMap.ContainsKey(fso.FullName);
         }
 
         public override bool FolderExists(string path)
@@ -153,7 +153,7 @@ namespace ServiceStack.Aws.Services
 
         public override IEnumerable<string> ListFolder(string folderName, bool recursive = false, bool fileNamesOnly = false)
         {
-            return _fileMap.Where(f => recursive
+            return fileMap.Where(f => recursive
                                            ? f.Value.Fso.FolderName.StartsWith(folderName, StringComparison.InvariantCulture)
                                            : f.Value.Fso.FolderName.Equals(folderName, StringComparison.InvariantCulture))
                            .Select(f => fileNamesOnly
@@ -163,7 +163,7 @@ namespace ServiceStack.Aws.Services
 
         public override void DeleteFolder(string path, bool recursive)
         {
-            var keysToDelete = _fileMap.Where(i => i.Value.Fso.FolderName.StartsWith(path, StringComparison.InvariantCulture))
+            var keysToDelete = fileMap.Where(i => i.Value.Fso.FolderName.StartsWith(path, StringComparison.InvariantCulture))
                                        .Select(kvp => kvp.Key);
 
             Delete(keysToDelete);
@@ -190,7 +190,7 @@ namespace ServiceStack.Aws.Services
         {
             MemoryFileMeta item;
 
-            return _fileMap.TryGetValue(key, out item)
+            return fileMap.TryGetValue(key, out item)
                        ? item
                        : null;
         }
@@ -203,7 +203,7 @@ namespace ServiceStack.Aws.Services
                 Fso = target.Clone()
             };
 
-            _fileMap[target.FullName] = s;
+            fileMap[target.FullName] = s;
         }
 
     }

@@ -5,6 +5,7 @@
 *.suo
 *.user
 *.sln.docstates
+.vs/
 
 # Build results
 [Dd]ebug/
@@ -190,3 +191,5 @@ App_Data/
 src/TechStacks/TechStacks/webdeploy.zip
 .idea/
 *.txt
+src/ServiceStack.Aws.v2.ncrunchproject
+*.ncrunchsolution

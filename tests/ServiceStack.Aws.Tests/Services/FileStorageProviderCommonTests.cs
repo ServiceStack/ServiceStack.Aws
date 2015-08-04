@@ -15,21 +15,21 @@ namespace ServiceStack.Aws.Tests.Services
     {
         protected const string TestSubDirectory = "servicestack-fileprovider-tests";
 
-        protected Func<IFileStorageProvider> _providerFactory;
-        protected string _baseFolderName;
+        protected Func<IFileStorageProvider> providerFactory;
+        protected string baseFolderName;
 
         protected void Initialize()
         {
-            var provider = _providerFactory();
-            provider.DeleteFolder(_baseFolderName, recursive: true);
-            provider.CreateFolder(_baseFolderName);
+            var provider = providerFactory();
+            provider.DeleteFolder(baseFolderName, recursive: true);
+            provider.CreateFolder(baseFolderName);
         }
 
         [TestFixtureTearDown]
         public void FixtureTeardown()
         {
-            var provider = _providerFactory();
-            provider.DeleteFolder(_baseFolderName, recursive: true);
+            var provider = providerFactory();
+            provider.DeleteFolder(baseFolderName, recursive: true);
         }
 
         protected FileSystemObject GetTestFso(string subDirectory = null)
@@ -37,8 +37,8 @@ namespace ServiceStack.Aws.Tests.Services
             var fileName = String.Concat(Guid.NewGuid().ToString("N"), ".txt");
 
             var baseFolder = String.IsNullOrEmpty(subDirectory)
-                                 ? _baseFolderName
-                                 : Path.Combine(_baseFolderName, subDirectory);
+                                 ? baseFolderName
+                                 : Path.Combine(baseFolderName, subDirectory);
 
             return new FileSystemObject(baseFolder, fileName);
         }
@@ -51,7 +51,7 @@ namespace ServiceStack.Aws.Tests.Services
 
         private void CreateAndFillPathForTesting(string testSubFolder, IFileStorageProvider provider)
         {
-            var testFolder = Path.Combine(_baseFolderName, testSubFolder);
+            var testFolder = Path.Combine(baseFolderName, testSubFolder);
 
             provider.DeleteFolder(testFolder, recursive: true);
 
@@ -75,13 +75,13 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void List_With_Subfolder_Returns_Appropriate_Number_Of_Files()
+        public void ListWithSubfolderReturnsAppropriateNumberOfFiles()
         {
             const string testSubFolder = "nested-list-folder1";
 
-            var testFolder = Path.Combine(_baseFolderName, testSubFolder);
+            var testFolder = Path.Combine(baseFolderName, testSubFolder);
 
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             CreateAndFillPathForTesting(testSubFolder, provider);
 
@@ -104,13 +104,13 @@ namespace ServiceStack.Aws.Tests.Services
         }
         
         [Test]
-        public void List_Returns_Full_Name_And_Path_By_Default()
+        public void ListReturnsFullNameAndPathByDefault()
         {
             const string testSubFolder = "list-fullname-default";
 
-            var testFolder = Path.Combine(_baseFolderName, testSubFolder);
+            var testFolder = Path.Combine(baseFolderName, testSubFolder);
             
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             CreateAndFillPathForTesting(testSubFolder, provider);
 
@@ -122,13 +122,13 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void List_Returns_FileName_Only_When_Requested()
+        public void ListReturnsFileNameOnlyWhenRequested()
         {
             const string testSubFolder = "list-fullname-nameonly";
 
-            var testFolder = Path.Combine(_baseFolderName, testSubFolder);
+            var testFolder = Path.Combine(baseFolderName, testSubFolder);
 
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             CreateAndFillPathForTesting(testSubFolder, provider);
 
@@ -138,13 +138,13 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void Can_Delete_Non_Empty_Nested_Folder()
+        public void CanDeleteNonEmptyNestedFolder()
         {
             const string testSubFolder = "nested-delete-folder1";
 
-            var testFolder = Path.Combine(_baseFolderName, testSubFolder);
+            var testFolder = Path.Combine(baseFolderName, testSubFolder);
 
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             CreateAndFillPathForTesting(testSubFolder, provider);
             
@@ -159,10 +159,10 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void Can_Download_To_Local_File()
+        public void CanDownloadToLocalFile()
         {
             var file = GetTestFso();
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             // Put a test file at the provider for download
             var testFileContents = GetTestFileBytes(file.FileName);
@@ -181,12 +181,12 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void Can_Copy_To_InMemory_Provider()
+        public void CanCopyToInMemoryProvider()
         {
             var sourceFile = GetTestFso();
             var memFile = GetTestFso();
 
-            var sourceProvider = _providerFactory();
+            var sourceProvider = providerFactory();
             var memProvider = InMemoryFileStorageProvider.Instance;
 
             var sourceFileContents = GetTestFileBytes(sourceFile.FileName);
@@ -206,12 +206,12 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void Can_Move_To_InMemory_Provider()
+        public void CanMoveToInMemoryProvider()
         {
             var sourceFile = GetTestFso();
             var memFile = GetTestFso();
 
-            var sourceProvider = _providerFactory();
+            var sourceProvider = providerFactory();
             var memProvider = InMemoryFileStorageProvider.Instance;
 
             var sourceFileContents = GetTestFileBytes(sourceFile.FileName);
@@ -231,20 +231,20 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void Get_Returns_Null_For_Object_That_Does_Not_Exist()
+        public void GetReturnsNullForObjectThatDoesNotExist()
         {
             var file = GetTestFso();
-            var provider = _providerFactory();
+            var provider = providerFactory();
             var contents = provider.Get(file);
 
             Assert.IsNull(contents);
         }
 
         [Test]
-        public void Can_Copy_Within_Same_Provider_By_Default()
+        public void CanCopyWithinSameProviderByDefault()
         {
             var file = GetTestFso();
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             var testFileContents = GetTestFileBytes(file.FileName);
             StoreGet(provider, file, sourceBytes: testFileContents);
@@ -265,10 +265,10 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void Can_Move_Within_Same_Provider_By_Default()
+        public void CanMoveWithinSameProviderByDefault()
         {
             var file = GetTestFso();
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             var testFileContents = GetTestFileBytes(file.FileName);
             StoreGet(provider, file, sourceBytes: testFileContents);
@@ -289,21 +289,21 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void Can_Post_And_Get_With_Bytes()
+        public void CanPostAndGetWithBytes()
         {
             var file = GetTestFso();
             CanPostAndGet(file, sourceBytes: GetTestFileBytes(file.FileName));
         }
 
         [Test]
-        public void Can_Post_When_Folder_Does_Not_Exist_With_Bytes()
+        public void CanPostWhenFolderDoesNotExistWithBytes()
         {
             var file = GetTestFso("can-post-when-folder-does-not-exist-bytes");
             CanPostAndGet(file, deleteFolderBeforeStore: true, sourceBytes: GetTestFileBytes(file.FileName));
         }
 
         [Test]
-        public void Can_Post_And_Get_With_Source_File()
+        public void CanPostAndGetWithSourceFile()
         {
             var sourceFile = GetTestFso();
             var targetFile = GetTestFso();
@@ -314,7 +314,7 @@ namespace ServiceStack.Aws.Tests.Services
             CanPostAndGet(targetFile, sourceFileData: sourceFile, deleteAfterGet: false);
 
             // Source and target files have different names, verify
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             var postedFileExists = provider.Exists(targetFile);
             Assert.IsTrue(postedFileExists);
@@ -328,7 +328,7 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void Can_Post_And_Get_When_Folder_Does_Not_Exist_With_Source_File()
+        public void CanPostAndGetWhenFolderDoesNotExistWithSourceFile()
         {
             var sourceFile = GetTestFso("can-post-when-foder-doesnot-exist-sourcefile");
             var targetFile = GetTestFso("can-post-when-foder-doesnot-exist-targetfile");
@@ -339,7 +339,7 @@ namespace ServiceStack.Aws.Tests.Services
             CanPostAndGet(targetFile, deleteFolderBeforeStore: true, sourceFileData: sourceFile, deleteAfterGet: false);
 
             // Source and target files have different names, verify
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             var postedFileExists = provider.Exists(targetFile);
             Assert.IsTrue(postedFileExists);
@@ -353,11 +353,11 @@ namespace ServiceStack.Aws.Tests.Services
         }
 
         [Test]
-        public void Can_Create_And_Delete_Folder()
+        public void CanCreateAndDeleteFolder()
         {
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
-            var folderName = Path.Combine(_baseFolderName, "can-create-and-delete-subfolder");
+            var folderName = Path.Combine(baseFolderName, "can-create-and-delete-subfolder");
 
             // Delete should not fail if not there
             provider.DeleteFolder(folderName, recursive: true);
@@ -377,7 +377,7 @@ namespace ServiceStack.Aws.Tests.Services
                                    byte[] sourceBytes = null,
                                    bool deleteAfterGet = true)
         {
-            var provider = _providerFactory();
+            var provider = providerFactory();
 
             if (deleteFolderBeforeStore)
             {

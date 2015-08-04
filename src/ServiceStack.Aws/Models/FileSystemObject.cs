@@ -19,11 +19,11 @@ namespace ServiceStack.Aws.Models
         }
         #endregion ICloneable
 
-        private readonly string _directorySeparatorCharacter;
+        private readonly string directorySeparatorCharacter;
 
         public FileSystemObject() { }
 
-        public FileSystemObject(string path, string fileName) : this(Path.Combine(path ?? String.Empty, fileName)) { }
+        public FileSystemObject(string path, string fileName) : this(Path.Combine(path ?? string.Empty, fileName)) { }
 
         public FileSystemObject(string filePathAndName)
         {   // Figure out if there are mixed directory markers and adjust to the appropriate one across the board - If we have 
@@ -36,16 +36,16 @@ namespace ServiceStack.Aws.Models
                                                      : backslashPartIndex >= 0;
 
             // Set the character separator to use
-            _directorySeparatorCharacter = useBackslashDirectorySeparator
+            directorySeparatorCharacter = useBackslashDirectorySeparator
                                                ? "\\"
                                                : "/";
 
             Init(filePathAndName);
         }
 
-        public FileSystemObject(string filePathAndName, char directorySeparatorCharacter)
+        public FileSystemObject(string filePathAndName, char dirSeparatorCharacter)
         {
-            _directorySeparatorCharacter = directorySeparatorCharacter.ToString(CultureInfo.InvariantCulture);
+            directorySeparatorCharacter = dirSeparatorCharacter.ToString(CultureInfo.InvariantCulture);
             Init(filePathAndName);
         }
 
@@ -64,10 +64,10 @@ namespace ServiceStack.Aws.Models
                 }
             }
 
-            Func<string, string> pathScrubber = (f) => f.Replace(_directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
+            Func<string, string> pathScrubber = (f) => f.Replace(directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
                                                                      ? "/"
                                                                      : "\\",
-                                                                 _directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
+                                                                 directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
                                                                      ? "\\"
                                                                      : "/");
 
@@ -92,18 +92,18 @@ namespace ServiceStack.Aws.Models
 
             foreach (var path in paths)
             {
-                if (String.IsNullOrEmpty(path))
+                if (string.IsNullOrEmpty(path))
                 {
                     continue;
                 }
 
-                returnVal = String.Concat(returnVal,
+                returnVal = string.Concat(returnVal,
                                           appendSeparator
-                                              ? _directorySeparatorCharacter
-                                              : String.Empty,
+                                              ? directorySeparatorCharacter
+                                              : string.Empty,
                                           path);
-                
-                appendSeparator = !path.EndsWith(_directorySeparatorCharacter, StringComparison.InvariantCultureIgnoreCase);
+
+                appendSeparator = !path.EndsWith(directorySeparatorCharacter, StringComparison.InvariantCultureIgnoreCase);
             }
 
             return returnVal;
@@ -113,17 +113,17 @@ namespace ServiceStack.Aws.Models
         {
             get
             {
-                return Combine(String.IsNullOrEmpty(FolderName) ? String.Empty : FolderName, FileNameAndExtension);
+                return Combine(string.IsNullOrEmpty(FolderName) ? string.Empty : FolderName, FileNameAndExtension);
             }
         }
 
-        public String FileNameAndExtension
+        public string FileNameAndExtension
         {
             get
             {
-                return String.IsNullOrEmpty(FileExtension)
+                return string.IsNullOrEmpty(FileExtension)
                            ? FileName
-                           : String.Concat(FileName, ".", FileExtension);
+                           : string.Concat(FileName, ".", FileExtension);
             }
         }
         
@@ -154,7 +154,7 @@ namespace ServiceStack.Aws.Models
             return FullName;
         }
         
-        public override Int32 GetHashCode()
+        public override int GetHashCode()
         {
             return ToString().GetHashCode();
         }

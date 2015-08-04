@@ -9,13 +9,13 @@ namespace ServiceStack.Aws.Services
 {
     public class FileSystemStorageProvider : BaseFileStorageProvider
     {
-        private static readonly FileSystemStorageProvider _instance = new FileSystemStorageProvider();
+        private static readonly FileSystemStorageProvider instance = new FileSystemStorageProvider();
 
         static FileSystemStorageProvider() { }
         
         public static FileSystemStorageProvider Instance
         {
-            get { return _instance; }
+            get { return instance; }
         }
 
         public override void Download(FileSystemObject thisFso, FileSystemObject downloadToFso)
@@ -139,7 +139,7 @@ namespace ServiceStack.Aws.Services
 
         public override bool FolderExists(string path)
         {
-            return !String.IsNullOrEmpty(path) && Directory.Exists(path);
+            return !string.IsNullOrEmpty(path) && Directory.Exists(path);
         }
 
         public override IEnumerable<string> ListFolder(string folderName, bool recursive = false, bool fileNamesOnly = false)
@@ -165,7 +165,7 @@ namespace ServiceStack.Aws.Services
 
         public override void CreateFolder(string path)
         {
-            if (!String.IsNullOrEmpty(path))
+            if (!string.IsNullOrEmpty(path))
             {
                 Directory.CreateDirectory(path);
             }

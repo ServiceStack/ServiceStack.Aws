@@ -9,9 +9,9 @@ namespace ServiceStack.Aws.Support
     {
         public static string ToSha256HashString64(this string toHash, Encoding encoding = null)
         {
-            if (String.IsNullOrEmpty(toHash))
+            if (string.IsNullOrEmpty(toHash))
             {
-                return String.Empty;
+                return string.Empty;
             }
             if (encoding == null)
             {

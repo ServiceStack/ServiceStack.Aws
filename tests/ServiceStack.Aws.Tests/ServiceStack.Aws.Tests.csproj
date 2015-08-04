@@ -32,12 +32,28 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AWSSDK, Version=2.3.44.0, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
-      <HintPath>..\..\src\ServiceStack.Aws\packages\AWSSDK.2.3.44.0\lib\net45\AWSSDK.dll</HintPath>
+    <Reference Include="AWSSDK.Core, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\..\src\packages\AWSSDK.Core.3.1.0.0\lib\net45\AWSSDK.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.DynamoDBv2, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\..\src\packages\AWSSDK.DynamoDBv2.3.1.0.0\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.SQS, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\..\src\packages\AWSSDK.SQS.3.1.0.0\lib\net45\AWSSDK.SQS.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\..\src\ServiceStack.Aws\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\ServiceStack.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.Client, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\ServiceStack.Client.dll</HintPath>
     </Reference>
     <Reference Include="ServiceStack.Common">
       <HintPath>..\..\lib\ServiceStack.Common.dll</HintPath>
@@ -50,6 +66,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -57,23 +74,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DynamoDbCacheClientTests.cs" />
     <Compile Include="Models\FileSystemObjectTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="S3\S3FileStorageProviderTests.cs" />
     <Compile Include="Services\FileStorageProviderCommonTests.cs" />
     <Compile Include="Services\FileSystemStorageProviderTests.cs" />
     <Compile Include="Services\InMemoryStorageProviderTests.cs" />
-    <Compile Include="SQS\FakeAmazonSqsTests.cs" />
-    <Compile Include="SQS\FakeSqsClientHelper.cs" />
-    <Compile Include="SQS\SqsMqBufferTests.cs" />
-    <Compile Include="SQS\SqsMqServerTests.cs" />
-    <Compile Include="SQS\SqsQueueDefinitionTests.cs" />
-    <Compile Include="SQS\SqsQueueManagerTests.cs" />
-    <Compile Include="SQS\SqsTestAssert.cs" />
-    <Compile Include="SQS\SqsTestClientFactory.cs" />
+    <Compile Include="Shared\DataModels.cs" />
+    <Compile Include="Sqs\FakeAmazonSqsTests.cs" />
+    <Compile Include="Sqs\FakeSqsClientHelper.cs" />
+    <Compile Include="Sqs\SqsMqBufferTests.cs" />
+    <Compile Include="Sqs\SqsMqServerTests.cs" />
+    <Compile Include="Sqs\SqsQueueDefinitionTests.cs" />
+    <Compile Include="Sqs\SqsQueueManagerTests.cs" />
+    <Compile Include="Sqs\SqsTestAssert.cs" />
+    <Compile Include="Sqs\SqsTestClientFactory.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

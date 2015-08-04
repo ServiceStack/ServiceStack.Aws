@@ -10,8 +10,8 @@ namespace ServiceStack.Aws.Tests.Services
         [TestFixtureSetUp]
         public void FixtureSetup()
         {
-            _providerFactory = () => FileSystemStorageProvider.Instance;
-            _baseFolderName = Path.Combine(Path.GetTempPath(), TestSubDirectory);
+            providerFactory = () => FileSystemStorageProvider.Instance;
+            baseFolderName = Path.Combine(Path.GetTempPath(), TestSubDirectory);
             Initialize();
         }
     }

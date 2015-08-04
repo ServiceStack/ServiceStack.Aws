@@ -1,6 +1,7 @@
 ﻿using System;
 using Amazon;
 using Amazon.S3;
+using ServiceStack.Aws.Services;
 
 namespace ServiceStack.Aws.S3
 {

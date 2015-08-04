@@ -35,8 +35,20 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AWSSDK, Version=2.3.44.0, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
-      <HintPath>packages\AWSSDK.2.3.44.0\lib\net45\AWSSDK.dll</HintPath>
+    <Reference Include="AWSSDK.Core, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.Core.3.1.0.0\lib\net45\AWSSDK.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.DynamoDBv2, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.DynamoDBv2.3.1.0.0\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.S3, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.S3.3.1.1.0\lib\net45\AWSSDK.S3.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.SQS, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.SQS.3.1.0.0\lib\net45\AWSSDK.SQS.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="ServiceStack">
@@ -63,47 +75,58 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Dynamo\DynamoDbCacheClient.cs" />
     <Compile Include="Interfaces\IFileStorageProvider.cs" />
-    <Compile Include="Interfaces\IMqWorker.cs" />
-    <Compile Include="Interfaces\ISqsMqBufferFactory.cs" />
-    <Compile Include="Interfaces\ISqsMqBuffer.cs" />
-    <Compile Include="Interfaces\ISqsMqMessageFactory.cs" />
     <Compile Include="Models\FileSystemObject.cs" />
+    <Compile Include="DynamoDb\DynamoUtils.cs" />
+    <Compile Include="DynamoDb\DynamoConverters.cs" />
+    <Compile Include="DynamoDb\DynamoDbCacheClient.cs" />
+    <Compile Include="DynamoDb\DynamoCodes.cs" />
+    <Compile Include="DynamoDb\IAttributeValueConverter.cs" />
+    <Compile Include="DynamoDb\PocoDynamoExtensions.cs" />
+    <Compile Include="DynamoDb\PocoDynamoFactory.cs" />
+    <Compile Include="DynamoDb\DynamoDbSequenceGenerator.cs" />
+    <Compile Include="DynamoDb\PocoDynamo.cs" />
+    <Compile Include="Services\AwsConnectionFactory.cs" />
+    <Compile Include="Sqs\IMqWorker.cs" />
+    <Compile Include="Sqs\ISqsMqBufferFactory.cs" />
+    <Compile Include="Sqs\ISqsMqBuffer.cs" />
+    <Compile Include="Sqs\ISqsMqMessageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Support\AwsClientUtils.cs" />
     <Compile Include="S3\S3BucketKeyInfo.cs" />
     <Compile Include="S3\S3FileStorageProvider.cs" />
-    <Compile Include="AwsConnectionFactory.cs" />
     <Compile Include="S3\S3ConnectionFactory.cs" />
     <Compile Include="Services\BaseFileStorageProvider.cs" />
     <Compile Include="Services\FileSystemStorageProvider.cs" />
     <Compile Include="Services\InMemoryFileStorageProvider.cs" />
     <Compile Include="Support\Guard.cs" />
-    <Compile Include="SQS\Fake\FakeAmazonSqs.cs" />
-    <Compile Include="SQS\Fake\FakeSqsItemStatus.cs" />
-    <Compile Include="SQS\Fake\FakeSqsQueue.cs" />
-    <Compile Include="SQS\Fake\FakeSqsQueueItem.cs" />
-    <Compile Include="SQS\SqsConnectionFactory.cs" />
-    <Compile Include="SQS\SqsMessageTag.cs" />
-    <Compile Include="SQS\SqsExtensions.cs" />
-    <Compile Include="SQS\SqsMqBufferNonBuffered.cs" />
-    <Compile Include="SQS\SqsMqBufferFactory.cs" />
-    <Compile Include="SQS\SqsMqBuffer.cs" />
-    <Compile Include="SQS\SqsMqClient.cs" />
-    <Compile Include="SQS\SqsMqMessageFactory.cs" />
-    <Compile Include="SQS\SqsMqMessageProducer.cs" />
-    <Compile Include="SQS\BaseMqServer.cs" />
-    <Compile Include="SQS\SqsMqServer.cs" />
-    <Compile Include="SQS\SqsMqWorker.cs" />
-    <Compile Include="SQS\SqsMqWorkerInfo.cs" />
-    <Compile Include="SQS\SqsRedrivePolicy.cs" />
-    <Compile Include="SQS\SqsQueueManager.cs" />
-    <Compile Include="SQS\SqsQueueDefinition.cs" />
-    <Compile Include="SQS\SqsQueueName.cs" />
+    <Compile Include="Sqs\Fake\FakeAmazonSqs.cs" />
+    <Compile Include="Sqs\Fake\FakeSqsItemStatus.cs" />
+    <Compile Include="Sqs\Fake\FakeSqsQueue.cs" />
+    <Compile Include="Sqs\Fake\FakeSqsQueueItem.cs" />
+    <Compile Include="Sqs\SqsConnectionFactory.cs" />
+    <Compile Include="Sqs\SqsMessageTag.cs" />
+    <Compile Include="Sqs\SqsExtensions.cs" />
+    <Compile Include="Sqs\SqsMqBufferNonBuffered.cs" />
+    <Compile Include="Sqs\SqsMqBufferFactory.cs" />
+    <Compile Include="Sqs\SqsMqBuffer.cs" />
+    <Compile Include="Sqs\SqsMqClient.cs" />
+    <Compile Include="Sqs\SqsMqMessageFactory.cs" />
+    <Compile Include="Sqs\SqsMqMessageProducer.cs" />
+    <Compile Include="Sqs\BaseMqServer.cs" />
+    <Compile Include="Sqs\SqsMqServer.cs" />
+    <Compile Include="Sqs\SqsMqWorker.cs" />
+    <Compile Include="Sqs\SqsMqWorkerInfo.cs" />
+    <Compile Include="Sqs\SqsRedrivePolicy.cs" />
+    <Compile Include="Sqs\SqsQueueManager.cs" />
+    <Compile Include="Sqs\SqsQueueDefinition.cs" />
+    <Compile Include="Sqs\SqsQueueName.cs" />
     <Compile Include="Support\HashExtensions.cs" />
+    <Compile Include="Support\PropertyInvoker.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <Compile Include="DynamoDb\PocoDynamo.Support.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
