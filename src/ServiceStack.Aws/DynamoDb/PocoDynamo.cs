@@ -13,6 +13,7 @@ namespace ServiceStack.Aws.DynamoDb
         IAmazonDynamoDB DynamoDb { get; }
         ISequenceSource Sequences { get; }
         DynamoConverters Converters { get; }
+        TimeSpan MaxRetryOnExceptionTimeout { get; }
 
         Table GetTableSchema(Type table);
         DynamoMetadataType GetTableMetadata(Type table);
@@ -218,7 +219,7 @@ namespace ServiceStack.Aws.DynamoDb
             var request = new GetItemRequest
             {
                 TableName = table.Name,
-                Key = Converters.ToAttributeKeyValue(table.HashKey, id),
+                Key = Converters.ToAttributeKeyValue(this, table.HashKey, id),
                 ConsistentRead = ConsistentRead,
             };
 
@@ -237,7 +238,7 @@ namespace ServiceStack.Aws.DynamoDb
             var request = new GetItemRequest
             {
                 TableName = table.Name,
-                Key = Converters.ToAttributeKeyValue(table, hash, range),
+                Key = Converters.ToAttributeKeyValue(this, table, hash, range),
                 ConsistentRead = ConsistentRead,
             };
 
@@ -274,7 +275,7 @@ namespace ServiceStack.Aws.DynamoDb
             var request = new DeleteItemRequest
             {
                 TableName = table.Name,
-                Key = Converters.ToAttributeKeyValue(table.HashKey, hash),
+                Key = Converters.ToAttributeKeyValue(this, table.HashKey, hash),
                 ReturnValues = returnItem.ToReturnValue(),
             };
 
@@ -292,7 +293,7 @@ namespace ServiceStack.Aws.DynamoDb
             var request = new UpdateItemRequest
             {
                 TableName = type.Name,
-                Key = Converters.ToAttributeKeyValue(type.HashKey, id),
+                Key = Converters.ToAttributeKeyValue(this, type.HashKey, id),
                 AttributeUpdates = new Dictionary<string, AttributeValueUpdate> {
                     {
                         fieldName,

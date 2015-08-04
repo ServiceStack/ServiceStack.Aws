@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using ServiceStack.Aws.Support;
 using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDb
@@ -66,17 +67,11 @@ namespace ServiceStack.Aws.DynamoDb
                             throw;
                     }
 
-                    SleepBackOffMultiplier(i);
+                    AwsClientUtils.SleepBackOffMultiplier(i);
                 }
             }
 
             throw new TimeoutException("Exceeded timeout of {0}".Fmt(MaxRetryOnExceptionTimeout), originalEx);
-        }
-
-        private static void SleepBackOffMultiplier(int i)
-        {
-            var nextTryMs = (2 ^ i) * 50;
-            Thread.Sleep(nextTryMs);
         }
 
         public bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null)
