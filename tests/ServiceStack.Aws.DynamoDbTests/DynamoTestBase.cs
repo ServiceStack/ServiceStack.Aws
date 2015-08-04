@@ -9,6 +9,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 {
     public abstract class DynamoTestBase
     {
+        //Run ./build/start-local-dynamodb.bat to start local DynamoDB instance on 8000
         public static bool UseLocalDb = true;
 
         public static IPocoDynamo CreatePocoDynamo()

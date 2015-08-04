@@ -86,8 +86,26 @@ namespace ServiceStack.Aws.DynamoDb
                 ExpiryDate = expiresAt,
             };
 
-            db.PutItem(entry);
-            return true;
+            Exception lastEx = null;
+            var i = 0;
+            var firstAttempt = DateTime.UtcNow;
+            while (DateTime.UtcNow - firstAttempt < db.MaxRetryOnExceptionTimeout)
+            {
+                i++;
+                try
+                {
+                    db.PutItem(entry);
+                    return true;
+                }
+                catch (ResourceNotFoundException ex)
+                {
+                    lastEx = ex;
+                    //Table could temporarily not exist after a FlushAll()
+                    AwsClientUtils.SleepBackOffMultiplier(i);
+                }
+            }
+
+            throw new TimeoutException("Exceeded timeout of {0}".Fmt(db.MaxRetryOnExceptionTimeout), lastEx);
         }
 
         private int UpdateCounterBy(string key, int amount)

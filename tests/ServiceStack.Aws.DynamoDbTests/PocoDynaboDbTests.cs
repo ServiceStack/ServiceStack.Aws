@@ -140,22 +140,22 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.InitSchema();
 
             var customer = new Customer {
-                Id = 1,
+                Id = 11,
                 Name = "Foo",
                 Orders = new List<Order>
                 {
                     new Order
                     {
-                        Id = 1,
-                        CustomerId = 1,
+                        Id = 21,
+                        CustomerId = 11,
                         LineItem = "Item 1",
                         Qty = 3,
                         Cost = 2,
                     },
                     new Order
                     {
-                        Id = 2,
-                        CustomerId = 1,
+                        Id = 22,
+                        CustomerId = 11,
                         LineItem = "Item 2",
                         Qty = 4,
                         Cost = 3,
@@ -163,8 +163,8 @@ namespace ServiceStack.Aws.DynamoDbTests
                 },
                 PrimaryAddress = new CustomerAddress
                 {
-                    Id = 1,
-                    CustomerId = 1,
+                    Id = 31,
+                    CustomerId = 11,
                     AddressLine1 = "Line 1",
                     AddressLine2 = "Line 2",
                     City = "Darwin",
@@ -175,15 +175,13 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(customer);
 
-            var dbCustomer = db.GetItemById<Customer>(1);
-
-            dbCustomer.PrintDump();
+            var dbCustomer = db.GetItemById<Customer>(11);
 
             Assert.That(dbCustomer.Equals(customer));
 
-            db.DeleteItemById<Customer>(1);
+            db.DeleteItemById<Customer>(11);
 
-            dbCustomer = db.GetItemById<Customer>(1);
+            dbCustomer = db.GetItemById<Customer>(11);
 
             Assert.That(dbCustomer, Is.Null);
         }
@@ -195,7 +193,9 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.RegisterTable<Customer>();
             db.InitSchema();
 
-            db.Sequences.Reset<Customer>();
+            db.Sequences.Reset<Customer>(10);
+            db.Sequences.Reset<Order>(20);
+            db.Sequences.Reset<CustomerAddress>(30);
 
             var customer = new Customer {
                 Name = "Foo",
@@ -203,10 +203,14 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(customer);
 
-            Assert.That(customer.Id, Is.EqualTo(1));
+            Assert.That(customer.Id, Is.EqualTo(11));
 
-            var dbCustomer = db.GetItemById<Customer>(1);
-            Assert.That(dbCustomer.Id, Is.EqualTo(1));
+            Assert.That(db.Sequences.Current<Customer>(), Is.EqualTo(11));
+            Assert.That(db.Sequences.Current<Order>(), Is.EqualTo(20));
+            Assert.That(db.Sequences.Current<CustomerAddress>(), Is.EqualTo(30));
+
+            var dbCustomer = db.GetItemById<Customer>(11);
+            Assert.That(dbCustomer.Id, Is.EqualTo(11));
 
             customer = new Customer
             {
@@ -238,10 +242,10 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(customer);
 
-            Assert.That(customer.Id, Is.EqualTo(2));
-            //Assert.That(customer.Orders[0].Id, Is.EqualTo(1));
-            //Assert.That(customer.Orders[1].Id, Is.EqualTo(2));
-            //Assert.That(customer.PrimaryAddress.Id, Is.EqualTo(1));
+            Assert.That(customer.Id, Is.EqualTo(12));
+            Assert.That(customer.Orders[0].Id, Is.EqualTo(21));
+            Assert.That(customer.Orders[1].Id, Is.EqualTo(22));
+            Assert.That(customer.PrimaryAddress.Id, Is.EqualTo(31));
         }
 
         [Test]

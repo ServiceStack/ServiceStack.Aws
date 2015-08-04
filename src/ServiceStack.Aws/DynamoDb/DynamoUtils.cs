@@ -77,7 +77,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static DynamoMetadataType GetType<T>()
         {
-            return GetTable(typeof(T));
+            return GetType(typeof(T));
         }
 
         public static DynamoMetadataType GetType(Type type)
@@ -174,6 +174,30 @@ namespace ServiceStack.Aws.DynamoDb
         }
     }
 
+    public class DynamoMetadataType
+    {
+        public string Name { get; set; }
+
+        public bool IsTable { get; set; }
+
+        public Type Type { get; set; }
+
+        public DynamoMetadataField[] Fields { get; set; }
+
+        public DynamoMetadataField HashKey { get; set; }
+
+        public DynamoMetadataField RangeKey { get; set; }
+
+        public DynamoMetadataField GetField(string fieldName)
+        {
+            return Fields.FirstOrDefault(x => x.Name == fieldName);
+        }
+
+        public DynamoMetadataField GetField(Type type)
+        {
+            return Fields.FirstOrDefault(x => x.Type == type);
+        }
+    }
 
     public class DynamoMetadataField
     {
@@ -199,21 +223,18 @@ namespace ServiceStack.Aws.DynamoDb
         {
             return this.GetValueFn == null ? null : this.GetValueFn(onInstance);
         }
+
+        public object SetValue(object instance, object value)
+        {
+            if (SetValueFn == null)
+                return value;
+
+            if (value != null && value.GetType() != Type)
+                value = Convert.ChangeType(value, Type);
+
+            SetValueFn(instance, value);
+
+            return value;
+        }
     }
-
-    public class DynamoMetadataType
-    {
-        public string Name { get; set; }
-
-        public bool IsTable { get; set; }
-
-        public Type Type { get; set; }
-
-        public DynamoMetadataField[] Fields { get; set; }
-
-        public DynamoMetadataField HashKey { get; set; }
-
-        public DynamoMetadataField RangeKey { get; set; }
-    }
-
 }

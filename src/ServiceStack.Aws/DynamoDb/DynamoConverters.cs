@@ -149,23 +149,23 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
-        public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(DynamoMetadataField field, object hash)
+        public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(IPocoDynamo db, DynamoMetadataField field, object hash)
         {
             using (AwsClientUtils.GetJsScope())
             {
                 return new Dictionary<string, AttributeValue> {
-                    { field.Name, ToAttributeValue(field.Type, field.DbType, hash) },
+                    { field.Name, ToAttributeValue(db, field.Type, field.DbType, hash) },
                 };
             }
         }
 
-        public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(DynamoMetadataType table, object hash, object range)
+        public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(IPocoDynamo db, DynamoMetadataType table, object hash, object range)
         {
             using (AwsClientUtils.GetJsScope())
             {
                 return new Dictionary<string, AttributeValue> {
-                    { table.HashKey.Name, ToAttributeValue(table.HashKey.Type, table.HashKey.DbType, hash) },
-                    { table.RangeKey.Name, ToAttributeValue(table.RangeKey.Type, table.RangeKey.DbType, range) },
+                    { table.HashKey.Name, ToAttributeValue(db, table.HashKey.Type, table.HashKey.DbType, hash) },
+                    { table.RangeKey.Name, ToAttributeValue(db, table.RangeKey.Type, table.RangeKey.DbType, range) },
                 };
             }
         }
@@ -187,27 +187,34 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     var value = field.GetValue(instance);
 
-                    if (field.IsAutoIncrement)
-                    {
-                        var needsId = value == null ||
-                            0 == (long)Convert.ChangeType(value, typeof(long));
+                    value = ApplyFieldBehavior(db, table, field, instance, value);
 
-                        if (needsId)
-                        {
-                            var nextId = db.Sequences.Increment(table.Name);
-                            value = Convert.ChangeType(nextId, field.Type);
-                            field.SetValueFn(instance, value);
-                        }
-                    }
-
-                    to[field.Name] = ToAttributeValue(field.Type, field.DbType, value);
+                    to[field.Name] = ToAttributeValue(db, field.Type, field.DbType, value);
                 }
 
                 return to;
             }
         }
 
-        public virtual AttributeValue ToAttributeValue(Type fieldType, string dbType, object value)
+        private static object ApplyFieldBehavior(IPocoDynamo db, DynamoMetadataType type, DynamoMetadataField field, object instance, object value)
+        {
+            if (type == null || field == null || !field.IsAutoIncrement)
+                return value;
+
+            var needsId = IsNumberDefault(value);
+            if (!needsId)
+                return value;
+
+            var nextId = db.Sequences.Increment(type.Name);
+            return field.SetValue(instance, nextId);
+        }
+
+        private static bool IsNumberDefault(object value)
+        {
+            return value == null || 0 == (long)Convert.ChangeType(value, typeof(long));
+        }
+
+        public virtual AttributeValue ToAttributeValue(IPocoDynamo db, Type fieldType, string dbType, object value)
         {
             if (ToAttributeValueFn != null)
             {
@@ -240,25 +247,36 @@ namespace ServiceStack.Aws.DynamoDb
                 case DynamoType.StringSet:
                     return new AttributeValue { NS = value.ConvertTo<List<string>>() };
                 case DynamoType.List:
-                    return ToListAttributeValue(value);
+                    return ToListAttributeValue(db, value);
                 case DynamoType.Map:
-                    return ToMapAttributeValue(value);
+                    return ToMapAttributeValue(db, value);
                 default:
                     return new AttributeValue { S = value.ToJsv() };
             }
         }
 
-        public virtual AttributeValue ToMapAttributeValue(object value)
+        public virtual AttributeValue ToMapAttributeValue(IPocoDynamo db, object oMap)
         {
-            var map = value as IDictionary
-                ?? value.ToObjectDictionary();
+            var map = oMap as IDictionary
+                ?? oMap.ToObjectDictionary();
+
+            var meta = DynamoMetadata.GetType(oMap.GetType());
 
             var to = new Dictionary<string, AttributeValue>();
             foreach (var key in map.Keys)
             {
-                var x = map[key];
-                to[key.ToString()] = x != null
-                    ? ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x)
+                var value = map[key];
+                if (value != null)
+                {
+                    value = ApplyFieldBehavior(db, 
+                        meta,
+                        meta != null ? meta.GetField((string)key) : null,
+                        oMap,
+                        value);
+                }
+
+                to[key.ToString()] = value != null
+                    ? ToAttributeValue(db, value.GetType(), GetFieldType(value.GetType()), value)
                     : new AttributeValue { NULL = true };
             }
             return new AttributeValue { M = to };
@@ -282,11 +300,32 @@ namespace ServiceStack.Aws.DynamoDb
             return to;
         }
 
-        public virtual AttributeValue ToListAttributeValue(object oList)
+        public virtual AttributeValue ToListAttributeValue(IPocoDynamo db, object oList)
         {
-            var list = (IEnumerable)oList;
+            var list = ((IEnumerable)oList).Map(x => x);
+            if (list.Count <= 0)
+                return new AttributeValue { L = new List<AttributeValue>() };
 
-            var values = list.Map(x => ToAttributeValue(x.GetType(), GetFieldType(x.GetType()), x));
+            var elType = list[0].GetType();
+            var elMeta = DynamoMetadata.GetType(elType);
+            if (elMeta != null)
+            {
+                var autoIncrFields = elMeta.Fields.Where(x => x.IsAutoIncrement).ToList();
+                foreach (var field in autoIncrFields)
+                {
+                    //Avoid N+1 by fetching a batch of ids
+                    var autoIds = db.Sequences.GetNextSequences(elMeta, list.Count);
+                    for (var i = 0; i < list.Count; i++)
+                    {
+                        var instance = list[i];
+                        var value = field.GetValue(instance);
+                        if (IsNumberDefault(value))
+                            field.SetValue(instance, autoIds[i]);
+                    }
+                }
+            }
+
+            var values = list.Map(x => ToAttributeValue(db, x.GetType(), GetFieldType(x.GetType()), x));
             return new AttributeValue { L = values };
         }
 

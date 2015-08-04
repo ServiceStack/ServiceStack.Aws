@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Support
@@ -74,6 +75,12 @@ namespace ServiceStack.Aws.Support
             var member = expr.Body as MemberExpression;
             var unary = expr.Body as UnaryExpression;
             return member ?? (unary != null ? unary.Operand as MemberExpression : null);
+        }
+
+        internal static void SleepBackOffMultiplier(int i)
+        {
+            var nextTryMs = (2 ^ i) * 50;
+            Thread.Sleep(nextTryMs);
         }
     }
 }
