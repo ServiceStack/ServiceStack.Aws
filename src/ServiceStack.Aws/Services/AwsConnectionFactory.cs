@@ -7,10 +7,10 @@ namespace ServiceStack.Aws.Services
     {
         private readonly Func<T> clientFactory;
 
-        protected AwsConnectionFactory(Func<T> cliFactory)
+        protected AwsConnectionFactory(Func<T> clientFactory)
         {
             Guard.AgainstNullArgument(clientFactory, "clientFactory");
-            clientFactory = cliFactory;
+            this.clientFactory = clientFactory;
         }
 
         public T GetClient()
