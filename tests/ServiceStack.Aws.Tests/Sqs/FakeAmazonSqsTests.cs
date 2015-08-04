@@ -269,7 +269,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.AreEqual(0, response.Messages.Count);
 
             Thread.Sleep(1000);
-
+            
             // Should be a single item (same one) back on q again
             var messageRepeat = helper.ReceiveSingle(newQueueUrl);
             Assert.AreEqual(message.MessageId, messageRepeat.MessageId);

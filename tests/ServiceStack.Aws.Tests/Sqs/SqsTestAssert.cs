@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Threading;
 using Amazon.SQS;
 using NUnit.Framework;
 using ServiceStack.Aws.Sqs.Fake;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Tests.Sqs
 {
@@ -78,6 +80,23 @@ namespace ServiceStack.Aws.Tests.Sqs
                 Assert.Fail("Real SQS client - expected to throw exception, but it did not throw one.");
             }
 
+        }
+
+        public static void WaitUntilTrueOrTimeout(Func<bool> doneWhenTrue, int timeoutSeconds = 10)
+        {
+            var timeoutAt = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+            "Waiting for max of {0}s for processing".Print(timeoutSeconds);
+
+            while (DateTime.UtcNow <= timeoutAt)
+            {
+                if (doneWhenTrue())
+                {
+                    break;
+                }
+
+                Thread.Sleep(300);
+            }
         }
 
     }
