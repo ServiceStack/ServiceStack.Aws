@@ -26,6 +26,9 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             nextId = db.IncrementById<Seq>(key, "Counter", 10);
             Assert.That(nextId, Is.EqualTo(22));
+
+            nextId = db.IncrementById<Seq>(key, "Counter", 0);
+            Assert.That(nextId, Is.EqualTo(22));
         }
 
         [Test]
@@ -82,7 +85,10 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var nextIds = db.Sequences.GetNextSequences<Customer>(5);
             var expected = new[] { 2, 3, 4, 5, 6 };
+            Assert.That(nextIds, Is.EquivalentTo(expected));
 
+            nextIds = db.Sequences.GetNextSequences<Customer>(5);
+            expected = new[] { 7, 8, 9, 10, 11 };
             Assert.That(nextIds, Is.EquivalentTo(expected));
         }
     }
