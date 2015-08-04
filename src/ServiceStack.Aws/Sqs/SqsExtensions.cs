@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -101,33 +99,5 @@ namespace ServiceStack.Aws.Sqs
             return message;
         }
 
-        public static string ToSha256HashString64(this string toHash, Encoding encoding = null)
-        {
-            if (string.IsNullOrEmpty(toHash))
-                return string.Empty;
-
-            if (encoding == null)
-            {
-                encoding = Encoding.Unicode;
-            }
-
-            var bytes = encoding.GetBytes(toHash).ToSha256ByteHash();
-            return Convert.ToBase64String(bytes);
-        }
-
-        public static byte[] ToSha256ByteHash(this byte[] byteBuffer)
-        {
-            if (byteBuffer == null || !byteBuffer.Any())
-                return null;
-
-            var ha = SHA256.Create();
-
-            if (ha == null)
-                return null;
-
-            var hashValue = ha.ComputeHash(byteBuffer);
-            ha.Clear();
-            return hashValue;
-        }
     }
 }

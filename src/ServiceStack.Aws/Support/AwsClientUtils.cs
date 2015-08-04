@@ -18,9 +18,17 @@ namespace ServiceStack.Aws.Support
             }
         }
 
+        public class DummyDis : IDisposable
+        {
+            public void Dispose()
+            {
+            }
+        }
+
         internal static IDisposable __requestAccess()
         {
-            return LicenseUtils.RequestAccess(AccessToken.__accessToken, LicenseFeature.Client, LicenseFeature.Text);
+            return new DummyDis();
+            //return LicenseUtils.RequestAccess(AccessToken.__accessToken, LicenseFeature.Client, LicenseFeature.Text);
         }
 
         internal static T FromJson<T>(string json)

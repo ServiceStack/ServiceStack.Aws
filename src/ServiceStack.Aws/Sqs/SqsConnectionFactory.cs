@@ -1,30 +1,18 @@
 ﻿using System;
 using Amazon;
 using Amazon.SQS;
-using ServiceStack.Aws.Support;
+using ServiceStack.Aws.Services;
 
 namespace ServiceStack.Aws.Sqs
 {
-    public class SqsConnectionFactory
+    public class SqsConnectionFactory : AwsConnectionFactory<IAmazonSQS>
     {
-        private readonly Func<IAmazonSQS> clientFactory;
-
-        public SqsConnectionFactory() : this(() => new AmazonSQSClient()) { }
+        public SqsConnectionFactory() : base(() => new AmazonSQSClient()) { }
 
         public SqsConnectionFactory(string awsAccessKey, string awsSecretKey, RegionEndpoint region)
-            : this(() => new AmazonSQSClient(awsAccessKey, awsSecretKey, region)) { }
+            : base(() => new AmazonSQSClient(awsAccessKey, awsSecretKey, region)) { }
 
         public SqsConnectionFactory(Func<IAmazonSQS> clientFactory)
-        {
-            Guard.AgainstNullArgument(clientFactory, "clientFactory");
-
-            this.clientFactory = clientFactory;
-        }
-
-        public IAmazonSQS GetClient()
-        {
-            return clientFactory();
-        }
-
+            : base(clientFactory) { }
     }
 }

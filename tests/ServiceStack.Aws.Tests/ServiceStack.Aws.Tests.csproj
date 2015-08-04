@@ -74,7 +74,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\FileSystemObjectTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="S3\S3FileStorageProviderTests.cs" />
+    <Compile Include="Services\FileStorageProviderCommonTests.cs" />
+    <Compile Include="Services\FileSystemStorageProviderTests.cs" />
+    <Compile Include="Services\InMemoryStorageProviderTests.cs" />
     <Compile Include="Shared\DataModels.cs" />
     <Compile Include="Sqs\FakeAmazonSqsTests.cs" />
     <Compile Include="Sqs\FakeSqsClientHelper.cs" />

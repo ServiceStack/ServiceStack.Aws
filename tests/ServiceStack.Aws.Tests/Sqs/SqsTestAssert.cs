@@ -57,7 +57,7 @@ namespace ServiceStack.Aws.Tests.Sqs
                 {
                     code();
                 }
-                catch (T typedEx)
+                catch(T)
                 {
                     return;
                 }

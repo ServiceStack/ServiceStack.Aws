@@ -43,6 +43,10 @@
       <HintPath>..\packages\AWSSDK.DynamoDBv2.3.1.0.0\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="AWSSDK.S3, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.S3.3.1.1.0\lib\net45\AWSSDK.S3.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="AWSSDK.SQS, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.SQS.3.1.0.0\lib\net45\AWSSDK.SQS.dll</HintPath>
       <Private>True</Private>
@@ -71,6 +75,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\IFileStorageProvider.cs" />
+    <Compile Include="Models\FileSystemObject.cs" />
     <Compile Include="DynamoDb\DynamoUtils.cs" />
     <Compile Include="DynamoDb\DynamoConverters.cs" />
     <Compile Include="DynamoDb\DynamoDbCacheClient.cs" />
@@ -79,13 +85,20 @@
     <Compile Include="DynamoDb\PocoDynamoExtensions.cs" />
     <Compile Include="DynamoDb\PocoDynamoFactory.cs" />
     <Compile Include="DynamoDb\DynamoDbSequenceGenerator.cs" />
+    <Compile Include="DynamoDb\PocoDynamo.cs" />
+    <Compile Include="Services\AwsConnectionFactory.cs" />
     <Compile Include="Sqs\IMqWorker.cs" />
     <Compile Include="Sqs\ISqsMqBufferFactory.cs" />
     <Compile Include="Sqs\ISqsMqBuffer.cs" />
     <Compile Include="Sqs\ISqsMqMessageFactory.cs" />
-    <Compile Include="DynamoDb\PocoDynamo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Support\AwsClientUtils.cs" />
+    <Compile Include="S3\S3BucketKeyInfo.cs" />
+    <Compile Include="S3\S3FileStorageProvider.cs" />
+    <Compile Include="S3\S3ConnectionFactory.cs" />
+    <Compile Include="Services\BaseFileStorageProvider.cs" />
+    <Compile Include="Services\FileSystemStorageProvider.cs" />
+    <Compile Include="Services\InMemoryFileStorageProvider.cs" />
     <Compile Include="Support\Guard.cs" />
     <Compile Include="Sqs\Fake\FakeAmazonSqs.cs" />
     <Compile Include="Sqs\Fake\FakeSqsItemStatus.cs" />
@@ -108,6 +121,7 @@
     <Compile Include="Sqs\SqsQueueManager.cs" />
     <Compile Include="Sqs\SqsQueueDefinition.cs" />
     <Compile Include="Sqs\SqsQueueName.cs" />
+    <Compile Include="Support\HashExtensions.cs" />
     <Compile Include="Support\PropertyInvoker.cs" />
   </ItemGroup>
   <ItemGroup>
