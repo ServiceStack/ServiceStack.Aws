@@ -16,7 +16,7 @@
     <copyright>ServiceStack 2015 and Contributors</copyright>
     <dependencies>
       <dependency id="ServiceStack.Common" version="4.0" />
-      <dependency id="AWSSDK" version="2.3.26.0" />
+      <dependency id="AWSSDK" version="3.1.0.0" />
     </dependencies>
   </metadata>
   <files>
