@@ -13,6 +13,8 @@ namespace ServiceStack.Aws.DynamoDb
         public const string IdField = "Id";
         public const string DataField = "Data";
 
+        public int PagingLimit { get; set; }
+
         private static readonly ILog Log = LogManager.GetLogger(typeof(DynamoDbCacheClient));
 
         private readonly IPocoDynamo db;
@@ -23,6 +25,7 @@ namespace ServiceStack.Aws.DynamoDb
         public DynamoDbCacheClient(IPocoDynamo db)
         {
             this.db = db;
+            this.PagingLimit = 1000;
             db.RegisterTable<CacheEntry>();
             metadata = db.GetTableMetadata<CacheEntry>();
         }
@@ -235,8 +238,37 @@ namespace ServiceStack.Aws.DynamoDb
             return entry.ExpiryDate - DateTime.UtcNow;
         }
 
-        public void RemoveByPattern(string pattern)
+        public IEnumerable<string> GetAllScanResults(ScanRequest request, string fieldName)
         {
+            ScanResponse response = null;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = db.DynamoDb.Scan(request);
+                var fields = GetColumn(response, fieldName);
+
+                foreach (var field in fields)
+                {
+                    yield return field;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty());
+        } 
+
+        public IEnumerable<string> GetKeysByPattern(string pattern)
+        {
+            if (pattern == "*")
+            {
+                var request = new ScanRequest
+                {
+                    Limit = PagingLimit,
+                    TableName = metadata.Name,
+                    AttributesToGet = new ArrayOfString(IdField)
+                };
+                return GetAllScanResults(request, IdField);
+            }
             if (pattern.EndsWith("*"))
             {
                 var beginWith = pattern.Substring(0, pattern.Length - 1);
@@ -245,29 +277,37 @@ namespace ServiceStack.Aws.DynamoDb
 
                 var request = new ScanRequest
                 {
-                    Limit = 1000,
+                    Limit = PagingLimit,
                     TableName = metadata.Name,
                     ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
                         { ":pattern", new AttributeValue { S = beginWith } }
                     },
                     FilterExpression = "begins_with(Id,:pattern)"
                 };
-                var response = db.DynamoDb.Scan(request);
-
-                var idsToRemove = new HashSet<string>();
-                foreach (Dictionary<string, AttributeValue> values in response.Items)
-                {
-                    AttributeValue attrId;
-                    values.TryGetValue(IdField, out attrId);
-
-                    if (attrId != null && attrId.S != null)
-                        idsToRemove.Add(attrId.S);
-                }
-
-                RemoveAll(idsToRemove);
+                return GetAllScanResults(request, IdField);
             }
-            else
-                throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
+
+            throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
+        }
+
+        private static HashSet<string> GetColumn(ScanResponse response, string fieldName)
+        {
+            var to = new HashSet<string>();
+            foreach (Dictionary<string, AttributeValue> values in response.Items)
+            {
+                AttributeValue attrId;
+                values.TryGetValue(fieldName, out attrId);
+
+                if (attrId != null && attrId.S != null)
+                    to.Add(attrId.S);
+            }
+            return to;
+        }
+
+        public void RemoveByPattern(string pattern)
+        {
+            var idsToRemove = GetKeysByPattern(pattern);
+            RemoveAll(idsToRemove);
         }
 
         public void RemoveByRegex(string regex)
