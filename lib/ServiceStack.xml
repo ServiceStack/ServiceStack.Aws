@@ -2971,6 +2971,11 @@
             End a HttpHandler Request
             </summary>
         </member>
+        <member name="M:ServiceStack.HttpExtensions.EndMqRequest(ServiceStack.Web.IResponse,System.Boolean)">
+            <summary>
+            End an MQ Request
+            </summary>
+        </member>
         <member name="M:ServiceStack.HttpExtensions.EndRequestWithNoContent(ServiceStack.Web.IResponse)">
             <summary>
             End a ServiceStack Request with no content
