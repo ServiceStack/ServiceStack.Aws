@@ -332,7 +332,9 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             var allSesssions = Cache.GetAll<IAuthSession>(sessionKeys);
             Assert.That(allSesssions.Values.Count(x => x != null), Is.EqualTo(sessionKeys.Count));
 
-            var allKeys = Cache.GetAllKeys().ToList();
+            var allKeys = Cache.GetAllKeys().ToList()
+                .Where(x => x.StartsWith("urn:iauthsession:") || x.StartsWith("otherkey")).ToList();
+
             Assert.That(allKeys.Count, Is.EqualTo(10));
 
             JsConfig.Reset();
