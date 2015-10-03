@@ -1,2 +1,2 @@
-COPY C:\src\ServiceStack\src\ServiceStack\bin\Release\ServiceStack.* .
-COPY C:\src\ServiceStack.Text\src\ServiceStack.Text\bin\Release\ServiceStack.Text.* .
+COPY C:\src\ServiceStack\src\ServiceStack.Razor\bin\Release\* .
+COPY C:\src\ServiceStack\src\ServiceStack.Server\bin\Release\* .
