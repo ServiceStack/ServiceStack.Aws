@@ -36,6 +36,7 @@ namespace ServiceStack.Aws.DynamoDb
         IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter);
         IEnumerable<T> ScanAll<T>();
         IEnumerable<T> Scan<T>(string filterExpression, Dictionary<string, object> args);
+        List<T> Scan<T>(string filterExpression, Dictionary<string, object> args, int limit);
 
         void Close();
     }
@@ -418,10 +419,8 @@ namespace ServiceStack.Aws.DynamoDb
             return Scan(request, r => r.ConvertAll<T>());
         }
 
-        public IEnumerable<T> Scan<T>(string filterExpression, Dictionary<string, object> args)
+        private Dictionary<string, AttributeValue> ToExpressionAttributeValues(Dictionary<string, object> args)
         {
-            var type = DynamoMetadata.GetType<T>();
-
             var attrValues = new Dictionary<string, AttributeValue>();
             foreach (var arg in args)
             {
@@ -434,16 +433,35 @@ namespace ServiceStack.Aws.DynamoDb
 
                 attrValues[key] = Converters.ToAttributeValue(this, argType, dbType, arg.Value);
             }
+            return attrValues;
+        }
 
+        public IEnumerable<T> Scan<T>(string filterExpression, Dictionary<string, object> args)
+        {
+            var type = DynamoMetadata.GetType<T>();
             var request = new ScanRequest
             {
                 TableName = type.Name,
                 Limit = PagingLimit,
                 FilterExpression = filterExpression,
-                ExpressionAttributeValues = attrValues,
+                ExpressionAttributeValues = ToExpressionAttributeValues(args),
             };
 
             return Scan(request, r => r.ConvertAll<T>());
+        }
+
+        public List<T> Scan<T>(string filterExpression, Dictionary<string, object> args, int limit)
+        {
+            var type = DynamoMetadata.GetType<T>();
+            var request = new ScanRequest
+            {
+                TableName = type.Name,
+                Limit = limit,
+                FilterExpression = filterExpression,
+                ExpressionAttributeValues = ToExpressionAttributeValues(args),
+            };
+
+            return Scan(request, r => r.ConvertAll<T>()).Take(limit).ToList();
         }
 
         public IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter)

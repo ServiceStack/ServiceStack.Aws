@@ -338,7 +338,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItems(items);
 
-            var low5 = db.Scan<Poco>("Id < :Count", 
+            var low5 = db.Scan<Poco>("Id < :Count",
                 new Dictionary<string, object> { { "Count", 5 } })
                 .ToList();
 
@@ -350,6 +350,33 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             low5 = db.Scan<Poco>("Id < :Count", new { Count = 5 }).ToList();
             Assert.That(low5, Is.EquivalentTo(expected));
+        }
+
+        [Test]
+        public void Can_Scan_by_FilterExpression_with_Limit()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Poco>();
+            db.InitSchema();
+
+            var items = 10.Times(i => new Poco { Id = i, Name = "Name " + i });
+
+            db.PutItems(items);
+
+            var low5 = db.Scan<Poco>("Id < :Count",
+                new Dictionary<string, object> { { "Count", 5 } }, limit:5);
+
+            low5.PrintDump();
+
+            var expected = items.Where(x => x.Id < 5).ToList();
+            Assert.That(low5.Count, Is.EqualTo(5));
+            Assert.That(low5, Is.EquivalentTo(expected));
+
+            low5 = db.Scan<Poco>("Id < :Count", new { Count = 5 }, limit: 5);
+            Assert.That(low5, Is.EquivalentTo(expected));
+
+            var low3 = db.Scan<Poco>("Id < :Count", new { Count = 5 }, limit: 3);
+            Assert.That(low3.Count, Is.EqualTo(3));
         }
     }
 }

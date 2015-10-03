@@ -133,5 +133,10 @@ namespace ServiceStack.Aws.DynamoDb
         {
             return db.Scan<T>(filterExpression, args.ToObjectDictionary());
         }
+
+        public static List<T> Scan<T>(this IPocoDynamo db, string filterExpression, object args, int limit)
+        {
+            return db.Scan<T>(filterExpression, args.ToObjectDictionary(), limit:limit);
+        }
     }
 }
