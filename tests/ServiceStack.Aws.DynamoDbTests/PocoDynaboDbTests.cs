@@ -326,5 +326,30 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             Assert.That(results, Is.EquivalentTo(items));
         }
+
+        [Test]
+        public void Can_Scan_by_FilterExpression()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Poco>();
+            db.InitSchema();
+
+            var items = 10.Times(i => new Poco { Id = i, Name = "Name " + i });
+
+            db.PutItems(items);
+
+            var low5 = db.Scan<Poco>("Id < :Count", 
+                new Dictionary<string, object> { { "Count", 5 } })
+                .ToList();
+
+            low5.PrintDump();
+
+            var expected = items.Where(x => x.Id < 5).ToList();
+            Assert.That(low5.Count, Is.EqualTo(5));
+            Assert.That(low5, Is.EquivalentTo(expected));
+
+            low5 = db.Scan<Poco>("Id < :Count", new { Count = 5 }).ToList();
+            Assert.That(low5, Is.EquivalentTo(expected));
+        }
     }
 }

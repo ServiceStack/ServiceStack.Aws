@@ -128,5 +128,10 @@ namespace ServiceStack.Aws.DynamoDb
         {
             return db.GetItemsByIds<T>(ids.Map(x => (object)x));
         }
+
+        public static IEnumerable<T> Scan<T>(this IPocoDynamo db, string filterExpression, object args)
+        {
+            return db.Scan<T>(filterExpression, args.ToObjectDictionary());
+        }
     }
 }

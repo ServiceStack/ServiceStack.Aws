@@ -35,6 +35,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter);
         IEnumerable<T> ScanAll<T>();
+        IEnumerable<T> Scan<T>(string filterExpression, Dictionary<string, object> args);
 
         void Close();
     }
@@ -412,6 +413,34 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 Limit = PagingLimit,
                 TableName = type.Name,
+            };
+
+            return Scan(request, r => r.ConvertAll<T>());
+        }
+
+        public IEnumerable<T> Scan<T>(string filterExpression, Dictionary<string, object> args)
+        {
+            var type = DynamoMetadata.GetType<T>();
+
+            var attrValues = new Dictionary<string, AttributeValue>();
+            foreach (var arg in args)
+            {
+                var key = arg.Key.StartsWith(":")
+                    ? arg.Key
+                    : ":" + arg.Key;
+
+                var argType = arg.Value.GetType();
+                var dbType = Converters.GetFieldType(argType);
+
+                attrValues[key] = Converters.ToAttributeValue(this, argType, dbType, arg.Value);
+            }
+
+            var request = new ScanRequest
+            {
+                TableName = type.Name,
+                Limit = PagingLimit,
+                FilterExpression = filterExpression,
+                ExpressionAttributeValues = attrValues,
             };
 
             return Scan(request, r => r.ConvertAll<T>());
