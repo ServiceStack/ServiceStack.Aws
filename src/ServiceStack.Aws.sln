@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceStack.Aws.Tests", ".
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceStack.Aws.DynamoDbTests", "..\tests\ServiceStack.Aws.DynamoDbTests\ServiceStack.Aws.DynamoDbTests.csproj", "{24709E60-D226-4A9C-9561-F3844DCD05E9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host.Console", "Host.Console\Host.Console.csproj", "{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{24709E60-D226-4A9C-9561-F3844DCD05E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24709E60-D226-4A9C-9561-F3844DCD05E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24709E60-D226-4A9C-9561-F3844DCD05E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
