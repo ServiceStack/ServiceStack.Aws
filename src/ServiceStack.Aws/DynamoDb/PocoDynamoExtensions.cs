@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
 using ServiceStack.Aws.Support;
 
 namespace ServiceStack.Aws.DynamoDb
@@ -78,6 +80,38 @@ namespace ServiceStack.Aws.DynamoDb
                 : returnItem == ReturnItem.Old
                     ? ReturnValue.ALL_OLD
                     : ReturnValue.NONE;
+        }
+
+        public static HashSet<string> ToStrings(this ScanResponse response, string fieldName)
+        {
+            var to = new HashSet<string>();
+            foreach (Dictionary<string, AttributeValue> values in response.Items)
+            {
+                AttributeValue attrId;
+                values.TryGetValue(fieldName, out attrId);
+
+                if (attrId != null && attrId.S != null)
+                    to.Add(attrId.S);
+            }
+            return to;
+        }
+
+        public static T ConvertTo<T>(this DynamoMetadataType table,
+            Dictionary<string, AttributeValue> attributeValues)
+        {
+            return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
+        }
+
+        public static List<T> ConvertAll<T>(this ScanResponse response)
+        {
+            return response.Items
+                .Select(values => DynamoMetadata.GetType<T>().ConvertTo<T>(values))
+                .ToList();
+        }
+
+        public static List<T> GetAll<T>(this IPocoDynamo db)
+        {
+            return db.ScanAll<T>().ToList();
         }
     }
 }

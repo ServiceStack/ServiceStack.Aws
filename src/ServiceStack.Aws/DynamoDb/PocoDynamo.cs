@@ -29,6 +29,9 @@ namespace ServiceStack.Aws.DynamoDb
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         IPocoDynamo Clone();
+
+        IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter);
+        IEnumerable<T> ScanAll<T>();
     }
 
     public partial class PocoDynamo : IPocoDynamo
@@ -53,6 +56,8 @@ namespace ServiceStack.Aws.DynamoDb
         /// </summary> 
         public long WriteCapacityUnits { get; set; }
 
+        public int PagingLimit { get; set; }
+
         public HashSet<string> RetryOnErrorCodes { get; set; }
 
         public TimeSpan PollTableStatus { get; set; }
@@ -70,6 +75,7 @@ namespace ServiceStack.Aws.DynamoDb
             ReadCapacityUnits = 10;
             WriteCapacityUnits = 5;
             ConsistentRead = true;
+            PagingLimit = 1000;
             RetryOnErrorCodes = new HashSet<string> {
                 "ThrottlingException",
                 "ProvisionedThroughputExceededException",
@@ -311,6 +317,37 @@ namespace ServiceStack.Aws.DynamoDb
             return response.Attributes.Count > 0 
                 ? Convert.ToInt64(response.Attributes[fieldName].N) 
                 : 0;
+        }
+
+        public IEnumerable<T> ScanAll<T>()
+        {
+            var type = DynamoMetadata.GetType<T>();
+            var request = new ScanRequest
+            {
+                Limit = PagingLimit,
+                TableName = type.Name,
+            };
+
+            return Scan(request, r => r.ConvertAll<T>());
+        }
+
+        public IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter)
+        {
+            ScanResponse response = null;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = DynamoDb.Scan(request);
+                var results = converter(response);
+
+                foreach (var result in results)
+                {
+                    yield return result;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty());
         }
 
         public void Dispose()

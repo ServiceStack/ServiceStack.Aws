@@ -238,25 +238,6 @@ namespace ServiceStack.Aws.DynamoDb
             return entry.ExpiryDate - DateTime.UtcNow;
         }
 
-        public IEnumerable<string> GetAllScanResults(ScanRequest request, string fieldName)
-        {
-            ScanResponse response = null;
-            do
-            {
-                if (response != null)
-                    request.ExclusiveStartKey = response.LastEvaluatedKey;
-
-                response = db.DynamoDb.Scan(request);
-                var fields = GetColumn(response, fieldName);
-
-                foreach (var field in fields)
-                {
-                    yield return field;
-                }
-
-            } while (!response.LastEvaluatedKey.IsEmpty());
-        } 
-
         public IEnumerable<string> GetKeysByPattern(string pattern)
         {
             if (pattern == "*")
@@ -265,9 +246,9 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     Limit = PagingLimit,
                     TableName = metadata.Name,
-                    AttributesToGet = new ArrayOfString(IdField)
+                    AttributesToGet = new List<string> { IdField },
                 };
-                return GetAllScanResults(request, IdField);
+                return db.Scan(request, r => r.ToStrings(IdField));
             }
             if (pattern.EndsWith("*"))
             {
@@ -282,26 +263,12 @@ namespace ServiceStack.Aws.DynamoDb
                     ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
                         { ":pattern", new AttributeValue { S = beginWith } }
                     },
-                    FilterExpression = "begins_with(Id,:pattern)"
+                    FilterExpression = "begins_with({0},:pattern)".Fmt(IdField)
                 };
-                return GetAllScanResults(request, IdField);
+                return db.Scan(request, r => r.ToStrings(IdField));
             }
 
             throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
-        }
-
-        private static HashSet<string> GetColumn(ScanResponse response, string fieldName)
-        {
-            var to = new HashSet<string>();
-            foreach (Dictionary<string, AttributeValue> values in response.Items)
-            {
-                AttributeValue attrId;
-                values.TryGetValue(fieldName, out attrId);
-
-                if (attrId != null && attrId.S != null)
-                    to.Add(attrId.S);
-            }
-            return to;
         }
 
         public void RemoveByPattern(string pattern)
