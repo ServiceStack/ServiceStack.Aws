@@ -113,5 +113,20 @@ namespace ServiceStack.Aws.DynamoDb
         {
             return db.ScanAll<T>().ToList();
         }
+
+        public static List<T> GetItemsByIds<T>(this IPocoDynamo db, IEnumerable<int> ids)
+        {
+            return db.GetItemsByIds<T>(ids.Map(x => (object)x));
+        }
+
+        public static List<T> GetItemsByIds<T>(this IPocoDynamo db, IEnumerable<long> ids)
+        {
+            return db.GetItemsByIds<T>(ids.Map(x => (object)x));
+        }
+
+        public static List<T> GetItemsByIds<T>(this IPocoDynamo db, IEnumerable<string> ids)
+        {
+            return db.GetItemsByIds<T>(ids.Map(x => (object)x));
+        }
     }
 }

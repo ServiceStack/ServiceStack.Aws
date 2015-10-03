@@ -77,7 +77,7 @@ namespace ServiceStack.Aws.Support
             return member ?? (unary != null ? unary.Operand as MemberExpression : null);
         }
 
-        internal static void SleepBackOffMultiplier(int i)
+        internal static void SleepBackOffMultiplier(this int i)
         {
             var nextTryMs = (2 ^ i) * 50;
             Thread.Sleep(nextTryMs);
