@@ -139,7 +139,8 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.RegisterTable<Customer>();
             db.InitSchema();
 
-            var customer = new Customer {
+            var customer = new Customer
+            {
                 Id = 11,
                 Name = "Foo",
                 Orders = new List<Order>
@@ -197,7 +198,8 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.Sequences.Reset<Order>(20);
             db.Sequences.Reset<CustomerAddress>(30);
 
-            var customer = new Customer {
+            var customer = new Customer
+            {
                 Name = "Foo",
             };
 
@@ -261,8 +263,8 @@ namespace ServiceStack.Aws.DynamoDbTests
                     new Node(2,"/root/2", new[] {
                         new Node(4, "/root/2/4", new [] {
                             new Node(5, "/root/2/4/5", new[] {
-                                new Node(6, "/root/2/4/5/6"), 
-                            }), 
+                                new Node(6, "/root/2/4/5/6"),
+                            }),
                         }),
                     }),
                     new Node(3, "/root/3")
@@ -275,6 +277,22 @@ namespace ServiceStack.Aws.DynamoDbTests
             dbNodes.PrintDump();
 
             Assert.That(dbNodes, Is.EqualTo(nodes));
+        }
+
+        [Test]
+        public void Can_GetAll()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Poco>();
+            db.InitSchema();
+
+            var items = 10.Times(i => new Poco { Id = i, Name = "Name " + i });
+
+            items.Each(x => db.PutItem(x));
+
+            var results = db.GetAll<Poco>();
+
+            Assert.That(results, Is.EquivalentTo(items));
         }
     }
 }
