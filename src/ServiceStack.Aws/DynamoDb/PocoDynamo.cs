@@ -8,7 +8,7 @@ using ServiceStack.Logging;
 
 namespace ServiceStack.Aws.DynamoDb
 {
-    public interface IPocoDynamo : IRequiresSchema, IDisposable
+    public interface IPocoDynamo : IRequiresSchema
     {
         IAmazonDynamoDB DynamoDb { get; }
         ISequenceSource Sequences { get; }
@@ -32,6 +32,8 @@ namespace ServiceStack.Aws.DynamoDb
 
         IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter);
         IEnumerable<T> ScanAll<T>();
+
+        void Close();
     }
 
     public partial class PocoDynamo : IPocoDynamo
@@ -350,7 +352,7 @@ namespace ServiceStack.Aws.DynamoDb
             } while (!response.LastEvaluatedKey.IsEmpty());
         }
 
-        public void Dispose()
+        public void Close()
         {
             if (DynamoDb == null)
                 return;

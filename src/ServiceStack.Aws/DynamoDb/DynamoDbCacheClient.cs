@@ -285,7 +285,7 @@ namespace ServiceStack.Aws.DynamoDb
         public void Dispose()
         {
             if (db != null)
-                db.Dispose();
+                db.Close();
         }
     }
 
