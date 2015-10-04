@@ -350,6 +350,9 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             low5 = db.Scan<Poco>("Id < :Count", new { Count = 5 }).ToList();
             Assert.That(low5, Is.EquivalentTo(expected));
+
+            low5 = db.Scan<Poco>(x => x.Id < 5).ToList();
+            Assert.That(low5, Is.EquivalentTo(expected));
         }
 
         [Test]
@@ -375,7 +378,13 @@ namespace ServiceStack.Aws.DynamoDbTests
             low5 = db.Scan<Poco>("Id < :Count", new { Count = 5 }, limit: 5);
             Assert.That(low5, Is.EquivalentTo(expected));
 
+            low5 = db.Scan<Poco>(x => x.Id < 5, limit: 5);
+            Assert.That(low5, Is.EquivalentTo(expected));
+
             var low3 = db.Scan<Poco>("Id < :Count", new { Count = 5 }, limit: 3);
+            Assert.That(low3.Count, Is.EqualTo(3));
+
+            low3 = db.Scan<Poco>(x => x.Id < 5, limit: 3);
             Assert.That(low3.Count, Is.EqualTo(3));
         }
     }

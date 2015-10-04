@@ -68,6 +68,14 @@ namespace ServiceStack.Aws.DynamoDb
             return metadata;
         }
 
+        public static DynamoMetadataType TryGetTable(Type table)
+        {
+            var metadata = Types.FirstOrDefault(x => x.Type == table);
+            if (metadata == null || !metadata.IsTable)
+                return null;
+            return metadata;
+        }
+
         public static List<DynamoMetadataType> GetTables()
         {
             return Types == null 

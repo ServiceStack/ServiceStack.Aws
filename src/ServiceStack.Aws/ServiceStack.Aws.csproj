@@ -86,6 +86,7 @@
     <Compile Include="DynamoDb\PocoDynamoFactory.cs" />
     <Compile Include="DynamoDb\DynamoDbSequenceGenerator.cs" />
     <Compile Include="DynamoDb\PocoDynamo.cs" />
+    <Compile Include="PocoDynamoExpression.cs" />
     <Compile Include="Services\AwsConnectionFactory.cs" />
     <Compile Include="Sqs\IMqWorker.cs" />
     <Compile Include="Sqs\ISqsMqBufferFactory.cs" />

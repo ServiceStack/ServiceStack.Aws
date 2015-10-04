@@ -134,9 +134,21 @@ namespace ServiceStack.Aws.DynamoDb
             return db.Scan<T>(filterExpression, args.ToObjectDictionary());
         }
 
+        public static IEnumerable<T> Scan<T>(this IPocoDynamo db, Expression<Func<T, bool>> predicate)
+        {
+            var q = PocoDynamoExpression.FactoryFn(typeof(T), predicate);
+            return db.Scan<T>(q.FilterExpression, q.Params);
+        }
+
         public static List<T> Scan<T>(this IPocoDynamo db, string filterExpression, object args, int limit)
         {
-            return db.Scan<T>(filterExpression, args.ToObjectDictionary(), limit:limit);
+            return db.Scan<T>(filterExpression, args.ToObjectDictionary(), limit: limit);
+        }
+
+        public static List<T> Scan<T>(this IPocoDynamo db, Expression<Func<T, bool>> predicate, int limit)
+        {
+            var q = PocoDynamoExpression.FactoryFn(typeof(T), predicate);
+            return db.Scan<T>(q.FilterExpression, q.Params, limit:limit);
         }
     }
 }
