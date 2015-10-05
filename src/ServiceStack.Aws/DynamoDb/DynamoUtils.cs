@@ -94,9 +94,13 @@ namespace ServiceStack.Aws.DynamoDb
             if (metadata != null)
                 return metadata;
 
+            if (type.IsValueType)
+                return null;
+
             RegisterTypes(type);
 
-            return Types.First(x => x.Type == type);
+            var metaType = Types.FirstOrDefault(x => x.Type == type);
+            return metaType;
         }
 
         public static void RegisterTables(IEnumerable<Type> tables)

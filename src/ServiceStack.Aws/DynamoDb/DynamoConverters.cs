@@ -245,7 +245,7 @@ namespace ServiceStack.Aws.DynamoDb
                 case DynamoType.NumberSet:
                     return new AttributeValue { NS = value.ConvertTo<List<string>>() };
                 case DynamoType.StringSet:
-                    return new AttributeValue { NS = value.ConvertTo<List<string>>() };
+                    return new AttributeValue { SS = value.ConvertTo<List<string>>() };
                 case DynamoType.List:
                     return ToListAttributeValue(db, value);
                 case DynamoType.Map:
@@ -405,11 +405,11 @@ namespace ServiceStack.Aws.DynamoDb
                 return attr.L;
             if (attr.IsMSet)
                 return attr.M;
-            if (attr.SS != null)
+            if (attr.SS.Count > 0)
                 return attr.SS;
-            if (attr.NS != null)
+            if (attr.NS.Count > 0)
                 return attr.NS;
-            if (attr.BS != null)
+            if (attr.BS.Count > 0)
                 return attr.BS;
 
             return null;
