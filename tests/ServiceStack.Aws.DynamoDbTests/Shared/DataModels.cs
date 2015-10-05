@@ -235,4 +235,67 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             }
         }
     }
+
+    public class Collection
+    {
+        public int Id { get; set; }
+
+        public string[] ArrayStrings { get; set; } 
+        public HashSet<string> SetStrings { get; set; } 
+        public List<string> ListStrings { get; set; }
+
+        public int[] ArrayInts { get; set; }
+        public HashSet<int> SetInts { get; set; }
+        public List<int> ListInts { get; set; }
+
+        public Collection InitStrings(params string[] strings)
+        {
+            ArrayStrings = strings;
+            SetStrings = new HashSet<string>(strings);
+            ListStrings = new List<string>(strings);
+            return this;
+        }
+
+        public Collection InitInts(params int[] ints)
+        {
+            ArrayInts = ints;
+            SetInts = new HashSet<int>(ints);
+            ListInts = new List<int>(ints);
+            return this;
+        }
+
+        protected bool Equals(Collection other)
+        {
+            return Id == other.Id 
+                && ArrayStrings.EquivalentTo(other.ArrayStrings)
+                && SetStrings.EquivalentTo(other.SetStrings) 
+                && ListStrings.EquivalentTo(other.ListStrings) 
+                && ArrayInts.EquivalentTo(other.ArrayInts) 
+                && SetInts.EquivalentTo(other.SetInts) 
+                && ListInts.EquivalentTo(other.ListInts);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Collection) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Id;
+                hashCode = (hashCode*397) ^ (ArrayStrings != null ? ArrayStrings.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (SetStrings != null ? SetStrings.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (ListStrings != null ? ListStrings.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (ArrayInts != null ? ArrayInts.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (SetInts != null ? SetInts.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (ListInts != null ? ListInts.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+    }
 }

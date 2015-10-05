@@ -280,6 +280,29 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
+        public void Can_put_and_get_Collection()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Collection>();
+            db.InitSchema();
+
+            var row = new Collection
+            {
+                Id = 1,
+            }
+            .InitStrings(10.Times(i => ((char)('A' + i)).ToString()).ToArray())
+            .InitInts(10.Times(i => i).ToArray());
+
+            db.PutItem(row);
+
+            var dbRow = db.GetItemById<Collection>(1);
+
+            dbRow.PrintDump();
+
+            Assert.That(dbRow, Is.EqualTo(row));
+        }
+
+        [Test]
         public void Can_GetAll()
         {
             var db = CreatePocoDynamo();
@@ -375,10 +398,10 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Can_Scan_with_Begins_with()
+        public void Can_Scan_with_begins_with()
         {
             var db = CreatePocoDynamo();
-            var items = PutPocoItems(db, count:20);
+            var items = PutPocoItems(db, count: 20);
 
             var expected = items.Where(x => x.Title.StartsWith("Name 1")).ToList();
 
