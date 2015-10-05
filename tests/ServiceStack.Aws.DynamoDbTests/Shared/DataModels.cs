@@ -212,11 +212,11 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
     {
         public int Id { get; set; }
 
-        public string Name { get; set; }
+        public string Title { get; set; }
 
         protected bool Equals(Poco other)
         {
-            return Id == other.Id && string.Equals(Name, other.Name);
+            return Id == other.Id && string.Equals(Title, other.Title);
         }
 
         public override bool Equals(object obj)
@@ -231,7 +231,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         {
             unchecked
             {
-                return (Id*397) ^ (Name != null ? Name.GetHashCode() : 0);
+                return (Id*397) ^ (Title != null ? Title.GetHashCode() : 0);
             }
         }
     }

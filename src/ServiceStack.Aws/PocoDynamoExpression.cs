@@ -287,9 +287,8 @@ namespace ServiceStack.Aws
                     statement = string.Format("lower({0})", quotedColName);
                     break;
                 case "StartsWith":
-                    statement = string.Format("upper({0}) like {1}{2}",
-                        quotedColName, GetQuotedValue(
-                            wildcardArg.ToUpper() + "%"), escapeSuffix);
+                    statement = string.Format("begins_with({0}, {1})",
+                        quotedColName, GetValueAsParam(wildcardArg));
                     break;
                 case "EndsWith":
                     statement = string.Format("upper({0}) like {1}{2}",
@@ -584,6 +583,13 @@ namespace ServiceStack.Aws
         {
             var exprs = VisitExpressionList(na.Expressions);
             return exprs;
+        }
+
+        public string GetValueAsParam(object value)
+        {
+            var paramName = ":p" + Params.Count;
+            Params[paramName] = value;
+            return paramName;
         }
 
         public virtual object GetValue(object value, Type type)

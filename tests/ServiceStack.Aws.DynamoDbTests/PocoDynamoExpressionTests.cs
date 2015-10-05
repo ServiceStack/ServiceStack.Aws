@@ -9,12 +9,23 @@ namespace ServiceStack.Aws.DynamoDbTests
     [TestFixture]
     public class PocoDynamoExpressionTests : DynamoTestBase
     {
-        [Test]
-        public void Does_serialize_expression()
+        public PocoDynamoExpression Parse<T>(Expression<Func<T, bool>> predicate)
+        {
+            return PocoDynamoExpression.FactoryFn(typeof(T), predicate);
+        }
+
+        private static IPocoDynamo InitPoco()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Poco>();
             db.InitSchema();
+            return db;
+        }
+
+        [Test]
+        public void Does_serialize_expression()
+        {
+            InitPoco();
 
             var q = Parse<Poco>(x => x.Id < 5);
 
@@ -23,9 +34,16 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(q.Params[":p0"], Is.EqualTo(5));
         }
 
-        public PocoDynamoExpression Parse<T>(Expression<Func<T, bool>> predicate)
+        [Test]
+        public void Does_serialize_begins_with()
         {
-            return PocoDynamoExpression.FactoryFn(typeof (T), predicate);
+            InitPoco();
+
+            var q = Parse<Poco>(x => x.Title.StartsWith("Name 1"));
+
+            Assert.That(q.FilterExpression, Is.EqualTo("begins_with(Title, :p0)"));
+            Assert.That(q.Params.Count, Is.EqualTo(1));
+            Assert.That(q.Params[":p0"], Is.EqualTo("Name 1"));
         }
     }
 }

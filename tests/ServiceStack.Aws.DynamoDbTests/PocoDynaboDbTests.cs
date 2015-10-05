@@ -283,28 +283,29 @@ namespace ServiceStack.Aws.DynamoDbTests
         public void Can_GetAll()
         {
             var db = CreatePocoDynamo();
-            db.RegisterTable<Poco>();
-            db.InitSchema();
-
-            var items = 10.Times(i => new Poco { Id = i, Name = "Name " + i });
-
-            items.Each(x => db.PutItem(x));
+            var items = PutPocoItems(db);
 
             var results = db.GetAll<Poco>();
 
             Assert.That(results, Is.EquivalentTo(items));
         }
 
+        private static List<Poco> PutPocoItems(IPocoDynamo db, int count = 10)
+        {
+            db.RegisterTable<Poco>();
+            db.InitSchema();
+
+            var items = count.Times(i => new Poco { Id = i, Title = "Name " + i });
+
+            db.PutItems(items);
+            return items;
+        }
+
         [Test]
         public void Can_Batch_PutItems_and_GetItems()
         {
             var db = CreatePocoDynamo();
-            db.RegisterTable<Poco>();
-            db.InitSchema();
-
-            var items = 10.Times(i => new Poco { Id = i, Name = "Name " + i });
-
-            db.PutItems(items);
+            var items = PutPocoItems(db);
 
             var results = db.GetItemsByIds<Poco>(items.Map(x => x.Id));
 
@@ -315,12 +316,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         public void Batch_PutItems_and_GetItems_handles_multiple_batches()
         {
             var db = CreatePocoDynamo();
-            db.RegisterTable<Poco>();
-            db.InitSchema();
-
-            var items = 110.Times(i => new Poco { Id = i, Name = "Name " + i });
-
-            db.PutItems(items);
+            var items = PutPocoItems(db, count: 110);
 
             var results = db.GetItemsByIds<Poco>(items.Map(x => x.Id));
 
@@ -331,12 +327,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         public void Can_Scan_by_FilterExpression()
         {
             var db = CreatePocoDynamo();
-            db.RegisterTable<Poco>();
-            db.InitSchema();
-
-            var items = 10.Times(i => new Poco { Id = i, Name = "Name " + i });
-
-            db.PutItems(items);
+            var items = PutPocoItems(db);
 
             var low5 = db.Scan<Poco>("Id < :Count",
                 new Dictionary<string, object> { { "Count", 5 } })
@@ -359,15 +350,10 @@ namespace ServiceStack.Aws.DynamoDbTests
         public void Can_Scan_by_FilterExpression_with_Limit()
         {
             var db = CreatePocoDynamo();
-            db.RegisterTable<Poco>();
-            db.InitSchema();
-
-            var items = 10.Times(i => new Poco { Id = i, Name = "Name " + i });
-
-            db.PutItems(items);
+            var items = PutPocoItems(db);
 
             var low5 = db.Scan<Poco>("Id < :Count",
-                new Dictionary<string, object> { { "Count", 5 } }, limit:5);
+                new Dictionary<string, object> { { "Count", 5 } }, limit: 5);
 
             low5.PrintDump();
 
@@ -386,6 +372,21 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             low3 = db.Scan<Poco>(x => x.Id < 5, limit: 3);
             Assert.That(low3.Count, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Can_Scan_with_Begins_with()
+        {
+            var db = CreatePocoDynamo();
+            var items = PutPocoItems(db, count:20);
+
+            var expected = items.Where(x => x.Title.StartsWith("Name 1")).ToList();
+
+            var results = db.Scan<Poco>("begins_with(Title, :s)", new { s = "Name 1" });
+            Assert.That(results, Is.EquivalentTo(expected));
+
+            results = db.Scan<Poco>(x => x.Title.StartsWith("Name 1"));
+            Assert.That(results, Is.EquivalentTo(expected));
         }
     }
 }
