@@ -6,9 +6,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using ServiceStack.Aws.DynamoDb;
 
-namespace ServiceStack.Aws
+namespace ServiceStack.Aws.DynamoDb
 {
     public class PocoDynamoExpression
     {
@@ -106,8 +105,8 @@ namespace ServiceStack.Aws
 
         protected virtual object VisitMethodCall(MethodCallExpression m)
         {
-            //if (m.Method.DeclaringType == typeof(Sql))
-            //    return VisitSqlMethodCall(m);
+            if (m.Method.DeclaringType == typeof(Dynamo))
+                return VisitSqlMethodCall(m);
 
             if (IsStaticArrayMethod(m))
                 return VisitStaticArrayMethodCall(m);
@@ -120,6 +119,70 @@ namespace ServiceStack.Aws
 
             return Expression.Lambda(m).Compile().DynamicInvoke();
         }
+
+        protected virtual object VisitSqlMethodCall(MethodCallExpression m)
+        {
+            List<object> args = this.VisitExpressionList(m.Arguments);
+            object quotedColName = args[0];
+            args.RemoveAt(0);
+
+            string statement;
+
+            switch (m.Method.Name)
+            {
+                default:
+                    var dynamoName = m.Method.Name.ToLowercaseUnderscore();
+                    statement = string.Format("{0}({1}{2})",
+                        dynamoName,
+                        quotedColName,
+                        args.Count == 1 ? string.Format(", {0}", GetValueAsParam(args[0])) : "");
+                    break;
+            }
+
+            return new PartialString(statement);
+        }
+
+        protected virtual List<object> VisitExpressionList(ReadOnlyCollection<Expression> original)
+        {
+            var list = new List<object>();
+            for (int i = 0, n = original.Count; i < n; i++)
+            {
+                var e = original[i];
+                if (e.NodeType == ExpressionType.NewArrayInit ||
+                    e.NodeType == ExpressionType.NewArrayBounds)
+                {
+                    list.AddRange(VisitNewArrayFromExpressionList(e as NewArrayExpression));
+                }
+                else
+                {
+                    list.Add(Visit(e));
+                }
+            }
+            return list;
+        }
+
+        //protected virtual List<object> VisitInSqlExpressionList(ReadOnlyCollection<Expression> original)
+        //{
+        //    var list = new List<object>();
+        //    for (int i = 0, n = original.Count; i < n; i++)
+        //    {
+        //        var e = original[i];
+        //        if (e.NodeType == ExpressionType.NewArrayInit ||
+        //            e.NodeType == ExpressionType.NewArrayBounds)
+        //        {
+        //            list.AddRange(VisitNewArrayFromExpressionList(e as NewArrayExpression));
+        //        }
+        //        else if (e.NodeType == ExpressionType.MemberAccess)
+        //        {
+        //            list.Add(GetMemberExpression(e as MemberExpression));
+        //        }
+        //        else
+        //        {
+        //            list.Add(Visit(e));
+        //        }
+        //    }
+        //    return list;
+        //}
 
         private bool IsStaticArrayMethod(MethodCallExpression m)
         {
@@ -344,6 +407,11 @@ namespace ServiceStack.Aws
 
         protected virtual object VisitMemberAccess(MemberExpression m)
         {
+            if (m.Member.Name == "Length" || m.Member.Name == "Count")
+            {
+                return new PartialString("size({0})".Fmt(((MemberExpression)m.Expression).Member.Name));
+            }
+
             if (m.Expression != null &&
                  (m.Expression.NodeType == ExpressionType.Parameter ||
                   m.Expression.NodeType == ExpressionType.Convert))
@@ -534,25 +602,6 @@ namespace ServiceStack.Aws
             right = paramName;
         }
 
-        protected virtual List<object> VisitExpressionList(ReadOnlyCollection<Expression> original)
-        {
-            var list = new List<object>();
-            for (int i = 0, n = original.Count; i < n; i++)
-            {
-                var e = original[i];
-                if (e.NodeType == ExpressionType.NewArrayInit ||
-                    e.NodeType == ExpressionType.NewArrayBounds)
-                {
-                    list.AddRange(VisitNewArrayFromExpressionList(e as NewArrayExpression));
-                }
-                else
-                {
-                    list.Add(Visit(e));
-                }
-            }
-            return list;
-        }
-
         protected virtual List<object> VisitNewArrayFromExpressionList(NewArrayExpression na)
         {
             var exprs = VisitExpressionList(na.Expressions);
@@ -633,15 +682,19 @@ namespace ServiceStack.Aws
 
         protected virtual object VisitUnary(UnaryExpression u)
         {
+            object o;
             switch (u.NodeType)
             {
                 case ExpressionType.Not:
-                    var o = Visit(u.Operand);
-                    return "not " + o;
+                    o = Visit(u.Operand);
+                    return new PartialString("not " + o);
                 case ExpressionType.Convert:
                     if (u.Method != null)
                         return Expression.Lambda(u).Compile().DynamicInvoke();
                     break;
+                case ExpressionType.ArrayLength:
+                    o = Visit(u.Operand);
+                    return new PartialString("size({0})".Fmt(o));
             }
             return Visit(u.Operand);
         }
@@ -684,5 +737,38 @@ namespace ServiceStack.Aws
         }
 
         public Type EnumType { get; private set; }
+    }
+
+    public static class Dynamo
+    {
+        public static bool AttributeExists(object property)
+        {
+            return true;
+        }
+
+        public static bool AttributeNotExists(object property)
+        {
+            return true;
+        }
+
+        public static bool AttributeType(object property, string dynamoType)
+        {
+            return true;
+        }
+
+        public static bool BeginsWith(object property, string needle)
+        {
+            return true;
+        }
+
+        public static bool Contains(object property, object needle)
+        {
+            return true;
+        }
+
+        public static long Size(object property)
+        {
+            return default(long);
+        }
     }
 }

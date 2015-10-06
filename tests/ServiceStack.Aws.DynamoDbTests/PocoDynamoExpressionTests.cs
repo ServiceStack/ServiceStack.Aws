@@ -45,6 +45,10 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(q.FilterExpression, Is.EqualTo("begins_with(Title, :p0)"));
             Assert.That(q.Params.Count, Is.EqualTo(1));
             Assert.That(q.Params[":p0"], Is.EqualTo("Name 1"));
+
+            q = Parse<Poco>(x => Dynamo.BeginsWith(x.Title, "Name 1"));
+            Assert.That(q.FilterExpression, Is.EqualTo("begins_with(Title, :p0)"));
+            Assert.That(q.Params[":p0"], Is.EqualTo("Name 1"));
         }
 
         [Test]
@@ -57,6 +61,10 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(q.FilterExpression, Is.EqualTo("contains(SetStrings, :p0)"));
             Assert.That(q.Params.Count, Is.EqualTo(1));
             Assert.That(q.Params[":p0"], Is.EqualTo("A"));
+
+            q = Parse<Collection>(x => Dynamo.Contains(x.ListInts, 1));
+            Assert.That(q.FilterExpression, Is.EqualTo("contains(ListInts, :p0)"));
+            Assert.That(q.Params[":p0"], Is.EqualTo(1));
         }
 
         [Test]
@@ -69,6 +77,84 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(q.FilterExpression, Is.EqualTo("not contains(SetStrings, :p0)"));
             Assert.That(q.Params.Count, Is.EqualTo(1));
             Assert.That(q.Params[":p0"], Is.EqualTo("A"));
+
+            q = Parse<Collection>(x => !Dynamo.Contains(x.ListInts, 1));
+            Assert.That(q.FilterExpression, Is.EqualTo("not contains(ListInts, :p0)"));
+            Assert.That(q.Params[":p0"], Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Does_serialize_attribute_type()
+        {
+            InitTypes();
+
+            var q = Parse<Collection>(x => Dynamo.AttributeType(x.Title, DynamoType.String));
+
+            Assert.That(q.FilterExpression, Is.EqualTo("attribute_type(Title, :p0)"));
+            Assert.That(q.Params.Count, Is.EqualTo(1));
+            Assert.That(q.Params[":p0"], Is.EqualTo("S"));
+        }
+
+        [Test]
+        public void Does_serialize_attribute_exists()
+        {
+            InitTypes();
+
+            var q = Parse<Collection>(x => Dynamo.AttributeExists(x.Title));
+
+            Assert.That(q.FilterExpression, Is.EqualTo("attribute_exists(Title)"));
+            Assert.That(q.Params.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Does_serialize_attribute_not_exists()
+        {
+            InitTypes();
+
+            var q = Parse<Collection>(x => Dynamo.AttributeNotExists(x.Title));
+
+            Assert.That(q.FilterExpression, Is.EqualTo("attribute_not_exists(Title)"));
+            Assert.That(q.Params.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Does_serialize_Size()
+        {
+            InitTypes();
+
+            var q = Parse<Collection>(x => Dynamo.Size(x.Title) > 3);
+
+            Assert.That(q.FilterExpression, Is.EqualTo("(size(Title) > :p0)"));
+            Assert.That(q.Params.Count, Is.EqualTo(1));
+            Assert.That(q.Params[":p0"], Is.EqualTo(3));
+
+            q = Parse<Collection>(x => Dynamo.Size(x.SetInts) > 3);
+            Assert.That(q.FilterExpression, Is.EqualTo("(size(SetInts) > :p0)"));
+            Assert.That(q.Params[":p0"], Is.EqualTo(3));
+
+            q = Parse<Collection>(x => Dynamo.Size(x.ListStrings) > 3);
+            Assert.That(q.FilterExpression, Is.EqualTo("(size(ListStrings) > :p0)"));
+            Assert.That(q.Params[":p0"], Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Does_serialize_Length()
+        {
+            InitTypes();
+
+            var q = Parse<Collection>(x => x.Title.Length > 3);
+
+            Assert.That(q.FilterExpression, Is.EqualTo("(size(Title) > :p0)"));
+            Assert.That(q.Params.Count, Is.EqualTo(1));
+            Assert.That(q.Params[":p0"], Is.EqualTo(3));
+
+            q = Parse<Collection>(x => x.SetInts.Count > 3);
+            Assert.That(q.FilterExpression, Is.EqualTo("(size(SetInts) > :p0)"));
+            Assert.That(q.Params[":p0"], Is.EqualTo(3));
+
+            q = Parse<Collection>(x => x.ArrayInts.Length > 3);
+            Assert.That(q.FilterExpression, Is.EqualTo("(size(ArrayInts) > :p0)"));
+            Assert.That(q.Params[":p0"], Is.EqualTo(3));
         }
     }
 }

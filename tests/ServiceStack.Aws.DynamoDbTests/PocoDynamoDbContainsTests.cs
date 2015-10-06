@@ -124,5 +124,20 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(results[0], Is.EqualTo(row));
         }
 
+        [Test]
+        public void Can_Scan_with_attribute_type()
+        {
+            var db = CreatePocoDynamo();
+            var row = PutCollection(db);
+
+            var results = db.Scan<Collection>("attribute_type(Title, :s)", new { s = "S" }).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>(x => Dynamo.AttributeType(x.Title, DynamoType.String)).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>("attribute_type(Title, :s)", new { s = "N" }).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+        }
     }
 }
