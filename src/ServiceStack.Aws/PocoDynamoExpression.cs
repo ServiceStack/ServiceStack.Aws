@@ -135,13 +135,13 @@ namespace ServiceStack.Aws
             {
                 case "Contains":
                     List<object> args = this.VisitExpressionList(m.Arguments);
-                    object quotedColName = args[1];
+                    object arg = args[1];
 
-                    Expression memberExpr = m.Arguments[0];
-                    if (memberExpr.NodeType == ExpressionType.MemberAccess)
-                        memberExpr = (m.Arguments[0] as MemberExpression);
-
-                    return ToInPartialString(memberExpr, quotedColName);
+                    var memberExpr = (MemberExpression)m.Arguments[0];
+                    var memberName = memberExpr.Member.Name;
+                    var expr = "contains({0}, {1})".Fmt(
+                        memberName, GetValueAsParam(arg));
+                    return expr;
 
                 default:
                     throw new NotSupportedException();
@@ -176,34 +176,6 @@ namespace ServiceStack.Aws
                 default:
                     throw new NotSupportedException();
             }
-        }
-
-        private object ToInPartialString(Expression memberExpr, object quotedColName)
-        {
-            var member = Expression.Convert(memberExpr, typeof(object));
-            var lambda = Expression.Lambda<Func<object>>(member);
-            var getter = lambda.Compile();
-
-            var inArgs = Flatten(getter() as IEnumerable);
-
-            var sIn = new StringBuilder();
-            if (inArgs.Count > 0)
-            {
-                foreach (object e in inArgs)
-                {
-                    if (sIn.Length > 0)
-                        sIn.Append(",");
-
-                    sIn.Append(GetQuotedValue(e, e.GetType()));
-                }
-            }
-            else
-            {
-                sIn.Append("NULL");
-            }
-
-            var statement = string.Format("{0} {1} ({2})", quotedColName, "In", sIn);
-            return new PartialString(statement);
         }
 
         public static List<object> Flatten(IEnumerable list)

@@ -427,20 +427,27 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(results, Is.EquivalentTo(expected));
         }
 
-        [Test]
-        public void Can_Scan_with_contains_sets()
+        private static Collection PutCollection(IPocoDynamo db)
         {
-            var db = CreatePocoDynamo();
             db.RegisterTable<Collection>();
             db.InitSchema();
 
-            var row = new Collection {
+            var row = new Collection
+            {
                 Id = 1,
             }
             .InitStrings(10.Times(i => ((char)('A' + i)).ToString()).ToArray())
             .InitInts(10.Times(i => i).ToArray());
 
             db.PutItem(row);
+            return row;
+        }
+
+        [Test]
+        public void Can_Scan_with_contains_sets()
+        {
+            var db = CreatePocoDynamo();
+            var row = PutCollection(db);
 
             var results = db.Scan<Collection>("contains(SetStrings, :s)", new { s = "A" }).ToList();
             Assert.That(results[0], Is.EqualTo(row));
@@ -466,6 +473,44 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             results = db.Scan<Collection>(x => x.SetInts.Contains(10)).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Can_Scan_with_contains_on_Lists()
+        {
+            var db = CreatePocoDynamo();
+            var row = PutCollection(db);
+
+            var results = db.Scan<Collection>("contains(ListStrings, :s)", new { s = "A" }).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>("contains(ListInts, :i)", new { i = 1 }).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>(x => x.ListStrings.Contains("A")).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>(x => x.ListInts.Contains(1)).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+        }
+
+        [Test]
+        public void Can_Scan_with_contains_on_Arrays()
+        {
+            var db = CreatePocoDynamo();
+            var row = PutCollection(db);
+
+            var results = db.Scan<Collection>("contains(ArrayStrings, :s)", new { s = "A" }).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>("contains(ArrayInts, :i)", new { i = 1 }).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>(x => x.ArrayStrings.Contains("A")).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>(x => x.ArrayInts.Contains(1)).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
         }
     }
 }
