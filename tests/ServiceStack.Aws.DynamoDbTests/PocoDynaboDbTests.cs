@@ -313,19 +313,8 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(results, Is.EquivalentTo(items));
         }
 
-        private static List<Poco> PutPocoItems(IPocoDynamo db, int count = 10)
-        {
-            db.RegisterTable<Poco>();
-            db.InitSchema();
-
-            var items = count.Times(i => new Poco { Id = i, Title = "Name " + i });
-
-            db.PutItems(items);
-            return items;
-        }
-
         [Test]
-        public void Can_Batch_PutItems_and_GetItems()
+        public void Does_Batch_PutItems_and_GetItems()
         {
             var db = CreatePocoDynamo();
             var items = PutPocoItems(db);
@@ -336,7 +325,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Batch_PutItems_and_GetItems_handles_multiple_batches()
+        public void Does_Batch_PutItems_and_GetItems_handles_multiple_batches()
         {
             var db = CreatePocoDynamo();
             var items = PutPocoItems(db, count: 110);
@@ -344,173 +333,6 @@ namespace ServiceStack.Aws.DynamoDbTests
             var results = db.GetItemsByIds<Poco>(items.Map(x => x.Id));
 
             Assert.That(results, Is.EquivalentTo(items));
-        }
-
-        [Test]
-        public void Can_Scan_by_FilterExpression()
-        {
-            var db = CreatePocoDynamo();
-            var items = PutPocoItems(db);
-
-            var low5 = db.Scan<Poco>("Id < :Count",
-                new Dictionary<string, object> { { "Count", 5 } })
-                .ToList();
-
-            low5.PrintDump();
-
-            var expected = items.Where(x => x.Id < 5).ToList();
-            Assert.That(low5.Count, Is.EqualTo(5));
-            Assert.That(low5, Is.EquivalentTo(expected));
-
-            low5 = db.Scan<Poco>("Id < :Count", new { Count = 5 }).ToList();
-            Assert.That(low5, Is.EquivalentTo(expected));
-
-            low5 = db.Scan<Poco>(x => x.Id < 5).ToList();
-            Assert.That(low5, Is.EquivalentTo(expected));
-        }
-
-        [Test]
-        public void Can_Scan_by_FilterExpression_with_Limit()
-        {
-            var db = CreatePocoDynamo();
-            var items = PutPocoItems(db);
-
-            var low5 = db.Scan<Poco>("Id < :Count",
-                new Dictionary<string, object> { { "Count", 5 } }, limit: 5);
-
-            low5.PrintDump();
-
-            var expected = items.Where(x => x.Id < 5).ToList();
-            Assert.That(low5.Count, Is.EqualTo(5));
-            Assert.That(low5, Is.EquivalentTo(expected));
-
-            low5 = db.Scan<Poco>("Id < :Count", new { Count = 5 }, limit: 5);
-            Assert.That(low5, Is.EquivalentTo(expected));
-
-            low5 = db.Scan<Poco>(x => x.Id < 5, limit: 5);
-            Assert.That(low5, Is.EquivalentTo(expected));
-
-            var low3 = db.Scan<Poco>("Id < :Count", new { Count = 5 }, limit: 3);
-            Assert.That(low3.Count, Is.EqualTo(3));
-
-            low3 = db.Scan<Poco>(x => x.Id < 5, limit: 3);
-            Assert.That(low3.Count, Is.EqualTo(3));
-        }
-
-        [Test]
-        public void Can_Scan_with_begins_with()
-        {
-            var db = CreatePocoDynamo();
-            var items = PutPocoItems(db, count: 20);
-
-            var expected = items.Where(x => x.Title.StartsWith("Name 1")).ToList();
-
-            var results = db.Scan<Poco>("begins_with(Title, :s)", new { s = "Name 1" });
-            Assert.That(results, Is.EquivalentTo(expected));
-
-            results = db.Scan<Poco>(x => x.Title.StartsWith("Name 1"));
-            Assert.That(results, Is.EquivalentTo(expected));
-        }
-
-        [Test]
-        public void Can_Scan_with_contains_string()
-        {
-            var db = CreatePocoDynamo();
-            var items = PutPocoItems(db, count: 20);
-
-            var expected = items.Where(x => x.Title.Contains("ame 1")).ToList();
-
-            var results = db.Scan<Poco>("contains(Title, :s)", new { s = "ame 1" });
-            Assert.That(results, Is.EquivalentTo(expected));
-
-            results = db.Scan<Poco>(x => x.Title.Contains("ame 1"));
-            Assert.That(results, Is.EquivalentTo(expected));
-        }
-
-        private static Collection PutCollection(IPocoDynamo db)
-        {
-            db.RegisterTable<Collection>();
-            db.InitSchema();
-
-            var row = new Collection
-            {
-                Id = 1,
-            }
-            .InitStrings(10.Times(i => ((char)('A' + i)).ToString()).ToArray())
-            .InitInts(10.Times(i => i).ToArray());
-
-            db.PutItem(row);
-            return row;
-        }
-
-        [Test]
-        public void Can_Scan_with_contains_sets()
-        {
-            var db = CreatePocoDynamo();
-            var row = PutCollection(db);
-
-            var results = db.Scan<Collection>("contains(SetStrings, :s)", new { s = "A" }).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            results = db.Scan<Collection>("contains(SetInts, :i)", new { i = 1 }).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            results = db.Scan<Collection>(x => x.SetStrings.Contains("A")).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            results = db.Scan<Collection>(x => x.SetInts.Contains(1)).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            //Does not match
-            results = db.Scan<Collection>("contains(SetStrings, :s)", new { s = "K" }).ToList();
-            Assert.That(results.Count, Is.EqualTo(0));
-
-            results = db.Scan<Collection>("contains(SetStrings, :i)", new { i = 10 }).ToList();
-            Assert.That(results.Count, Is.EqualTo(0));
-
-            results = db.Scan<Collection>(x => x.SetStrings.Contains("K")).ToList();
-            Assert.That(results.Count, Is.EqualTo(0));
-
-            results = db.Scan<Collection>(x => x.SetInts.Contains(10)).ToList();
-            Assert.That(results.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void Can_Scan_with_contains_on_Lists()
-        {
-            var db = CreatePocoDynamo();
-            var row = PutCollection(db);
-
-            var results = db.Scan<Collection>("contains(ListStrings, :s)", new { s = "A" }).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            results = db.Scan<Collection>("contains(ListInts, :i)", new { i = 1 }).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            results = db.Scan<Collection>(x => x.ListStrings.Contains("A")).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            results = db.Scan<Collection>(x => x.ListInts.Contains(1)).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-        }
-
-        [Test]
-        public void Can_Scan_with_contains_on_Arrays()
-        {
-            var db = CreatePocoDynamo();
-            var row = PutCollection(db);
-
-            var results = db.Scan<Collection>("contains(ArrayStrings, :s)", new { s = "A" }).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            results = db.Scan<Collection>("contains(ArrayInts, :i)", new { i = 1 }).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            results = db.Scan<Collection>(x => x.ArrayStrings.Contains("A")).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
-
-            results = db.Scan<Collection>(x => x.ArrayInts.Contains(1)).ToList();
-            Assert.That(results[0], Is.EqualTo(row));
         }
     }
 }

@@ -76,6 +76,8 @@
     <Compile Include="DynamoTestBase.cs" />
     <Compile Include="Issues\LocalDynamoDbHangsWhenPuttingNullValue.cs" />
     <Compile Include="PocoDynaboDbTests.cs" />
+    <Compile Include="PocoDynamoDbContainsTests.cs" />
+    <Compile Include="PocoDynamoDbFilterExpressionTests.cs" />
     <Compile Include="PocoDynamoExpressionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RangeKeyTests.cs" />

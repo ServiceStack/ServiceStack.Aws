@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using Amazon;
 using Amazon.DynamoDBv2;
 using ServiceStack.Aws.DynamoDb;
+using ServiceStack.Aws.DynamoDbTests.Shared;
 using ServiceStack.Caching;
 using ServiceStack.Configuration;
 
@@ -41,6 +43,17 @@ namespace ServiceStack.Aws.DynamoDbTests
                 })
                 : new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.USEast1);
             return dynamoClient;
+        }
+
+        public static List<Poco> PutPocoItems(IPocoDynamo db, int count = 10)
+        {
+            db.RegisterTable<Poco>();
+            db.InitSchema();
+
+            var items = count.Times(i => new Poco { Id = i, Title = "Name " + i });
+
+            db.PutItems(items);
+            return items;
         }
     }
 }
