@@ -161,29 +161,6 @@ namespace ServiceStack.Aws.DynamoDb
             return list;
         }
 
-        //protected virtual List<object> VisitInSqlExpressionList(ReadOnlyCollection<Expression> original)
-        //{
-        //    var list = new List<object>();
-        //    for (int i = 0, n = original.Count; i < n; i++)
-        //    {
-        //        var e = original[i];
-        //        if (e.NodeType == ExpressionType.NewArrayInit ||
-        //            e.NodeType == ExpressionType.NewArrayBounds)
-        //        {
-        //            list.AddRange(VisitNewArrayFromExpressionList(e as NewArrayExpression));
-        //        }
-        //        else if (e.NodeType == ExpressionType.MemberAccess)
-        //        {
-        //            list.Add(GetMemberExpression(e as MemberExpression));
-        //        }
-        //        else
-        //        {
-        //            list.Add(Visit(e));
-        //        }
-        //    }
-        //    return list;
-        //}
-
         private bool IsStaticArrayMethod(MethodCallExpression m)
         {
             if (m.Object == null && m.Method.Name == "Contains")
