@@ -167,8 +167,11 @@ namespace ServiceStack.Aws
             {
                 case "Contains":
                     List<object> args = this.VisitExpressionList(m.Arguments);
-                    object quotedColName = args[0];
-                    return ToInPartialString(m.Object, quotedColName);
+                    object arg = args[0];
+                    var memberName = ((MemberExpression) m.Object).Member.Name;
+                    var expr = "contains({0}, {1})".Fmt(
+                        memberName, GetValueAsParam(arg));
+                    return expr;
 
                 default:
                     throw new NotSupportedException();
@@ -296,9 +299,8 @@ namespace ServiceStack.Aws
                         wildcardArg.ToUpper()), escapeSuffix);
                     break;
                 case "Contains":
-                    statement = string.Format("upper({0}) like {1}{2}",
-                        quotedColName, GetQuotedValue("%" +
-                            wildcardArg.ToUpper() + "%"), escapeSuffix);
+                    statement = string.Format("contains({0}, {1})",
+                        quotedColName, GetValueAsParam(wildcardArg));
                     break;
                 case "Substring":
                     var startIndex = int.Parse(args[0].ToString()) + 1;

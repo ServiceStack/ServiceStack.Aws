@@ -411,5 +411,61 @@ namespace ServiceStack.Aws.DynamoDbTests
             results = db.Scan<Poco>(x => x.Title.StartsWith("Name 1"));
             Assert.That(results, Is.EquivalentTo(expected));
         }
+
+        [Test]
+        public void Can_Scan_with_contains_string()
+        {
+            var db = CreatePocoDynamo();
+            var items = PutPocoItems(db, count: 20);
+
+            var expected = items.Where(x => x.Title.Contains("ame 1")).ToList();
+
+            var results = db.Scan<Poco>("contains(Title, :s)", new { s = "ame 1" });
+            Assert.That(results, Is.EquivalentTo(expected));
+
+            results = db.Scan<Poco>(x => x.Title.Contains("ame 1"));
+            Assert.That(results, Is.EquivalentTo(expected));
+        }
+
+        [Test]
+        public void Can_Scan_with_contains_sets()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Collection>();
+            db.InitSchema();
+
+            var row = new Collection {
+                Id = 1,
+            }
+            .InitStrings(10.Times(i => ((char)('A' + i)).ToString()).ToArray())
+            .InitInts(10.Times(i => i).ToArray());
+
+            db.PutItem(row);
+
+            var results = db.Scan<Collection>("contains(SetStrings, :s)", new { s = "A" }).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>("contains(SetInts, :i)", new { i = 1 }).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>(x => x.SetStrings.Contains("A")).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>(x => x.SetInts.Contains(1)).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            //Does not match
+            results = db.Scan<Collection>("contains(SetStrings, :s)", new { s = "K" }).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+
+            results = db.Scan<Collection>("contains(SetStrings, :i)", new { i = 10 }).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+
+            results = db.Scan<Collection>(x => x.SetStrings.Contains("K")).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+
+            results = db.Scan<Collection>(x => x.SetInts.Contains(10)).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+        }
     }
 }

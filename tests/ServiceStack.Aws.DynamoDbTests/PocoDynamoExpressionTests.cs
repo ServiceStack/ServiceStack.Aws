@@ -14,10 +14,11 @@ namespace ServiceStack.Aws.DynamoDbTests
             return PocoDynamoExpression.FactoryFn(typeof(T), predicate);
         }
 
-        private static IPocoDynamo InitPoco()
+        private static IPocoDynamo InitTypes()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Poco>();
+            db.RegisterTable<Collection>();
             db.InitSchema();
             return db;
         }
@@ -25,7 +26,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         [Test]
         public void Does_serialize_expression()
         {
-            InitPoco();
+            InitTypes();
 
             var q = Parse<Poco>(x => x.Id < 5);
 
@@ -37,13 +38,25 @@ namespace ServiceStack.Aws.DynamoDbTests
         [Test]
         public void Does_serialize_begins_with()
         {
-            InitPoco();
+            InitTypes();
 
             var q = Parse<Poco>(x => x.Title.StartsWith("Name 1"));
 
             Assert.That(q.FilterExpression, Is.EqualTo("begins_with(Title, :p0)"));
             Assert.That(q.Params.Count, Is.EqualTo(1));
             Assert.That(q.Params[":p0"], Is.EqualTo("Name 1"));
+        }
+
+        [Test]
+        public void Does_serialize_contains_set()
+        {
+            InitTypes();
+
+            var q = Parse<Collection>(x => x.SetStrings.Contains("A"));
+
+            Assert.That(q.FilterExpression, Is.EqualTo("contains(SetStrings, :p0)"));
+            Assert.That(q.Params.Count, Is.EqualTo(1));
+            Assert.That(q.Params[":p0"], Is.EqualTo("A"));
         }
     }
 }
