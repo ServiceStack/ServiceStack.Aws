@@ -58,5 +58,17 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(q.Params.Count, Is.EqualTo(1));
             Assert.That(q.Params[":p0"], Is.EqualTo("A"));
         }
+
+        [Test]
+        public void Does_serialize_not_contains_set()
+        {
+            InitTypes();
+
+            var q = Parse<Collection>(x => !x.SetStrings.Contains("A"));
+
+            Assert.That(q.FilterExpression, Is.EqualTo("not contains(SetStrings, :p0)"));
+            Assert.That(q.Params.Count, Is.EqualTo(1));
+            Assert.That(q.Params[":p0"], Is.EqualTo("A"));
+        }
     }
 }

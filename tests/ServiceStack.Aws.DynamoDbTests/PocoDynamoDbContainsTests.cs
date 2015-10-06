@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDbTests
 {
@@ -15,6 +16,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             var row = new Collection
             {
                 Id = 1,
+                Title = "Title 1"
             }
             .InitStrings(10.Times(i => ((char)('A' + i)).ToString()).ToArray())
             .InitInts(10.Times(i => i).ToArray());
@@ -56,6 +58,35 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
+        public void Can_Scan_with_not_contains_sets()
+        {
+            var db = CreatePocoDynamo();
+            var row = PutCollection(db);
+
+            var results = db.Scan<Collection>("not contains(SetStrings, :s)", new { s = "A" }).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+
+            results = db.Scan<Collection>(x => !x.SetStrings.Contains("A")).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+
+            results = db.Scan<Collection>(x => !x.ListStrings.Contains("A")).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+
+            results = db.Scan<Collection>(x => !x.SetInts.Contains(1)).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+
+            results = db.Scan<Collection>(x => !x.ListInts.Contains(1)).ToList();
+            Assert.That(results.Count, Is.EqualTo(0));
+
+            /* does not match */
+            results = db.Scan<Collection>(x => !x.SetStrings.Contains("K")).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+
+            results = db.Scan<Collection>(x => !x.ListInts.Contains(10)).ToList();
+            Assert.That(results[0], Is.EqualTo(row));
+        }
+
+        [Test]
         public void Can_Scan_with_contains_on_Lists()
         {
             var db = CreatePocoDynamo();
@@ -92,5 +123,6 @@ namespace ServiceStack.Aws.DynamoDbTests
             results = db.Scan<Collection>(x => x.ArrayInts.Contains(1)).ToList();
             Assert.That(results[0], Is.EqualTo(row));
         }
+
     }
 }

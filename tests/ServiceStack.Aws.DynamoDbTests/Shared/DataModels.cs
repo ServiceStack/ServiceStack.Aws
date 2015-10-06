@@ -239,6 +239,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
     public class Collection
     {
         public int Id { get; set; }
+        public string Title { get; set; }
 
         public string[] ArrayStrings { get; set; } 
         public HashSet<string> SetStrings { get; set; } 

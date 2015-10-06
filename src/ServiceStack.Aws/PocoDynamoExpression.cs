@@ -637,14 +637,7 @@ namespace ServiceStack.Aws
             {
                 case ExpressionType.Not:
                     var o = Visit(u.Operand);
-
-                    if (o as PartialString == null)
-                        return !((bool)o);
-
-                    if (IsFieldName(o))
-                        return new PartialString(o + "=" + GetQuotedFalseValue());
-
-                    return new PartialString("NOT (" + o + ")");
+                    return "not " + o;
                 case ExpressionType.Convert:
                     if (u.Method != null)
                         return Expression.Lambda(u).Compile().DynamicInvoke();
