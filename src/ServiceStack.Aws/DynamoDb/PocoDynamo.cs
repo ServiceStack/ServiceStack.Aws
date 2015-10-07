@@ -117,7 +117,19 @@ namespace ServiceStack.Aws.DynamoDb
 
         public List<string> GetTableNames()
         {
-            return Exec(() => DynamoDb.ListTables().TableNames);
+            var to = new List<string>();
+
+            ListTablesResponse response = null;
+            do
+            {
+                response = response == null 
+                    ? Exec(() => DynamoDb.ListTables())
+                    : Exec(() => DynamoDb.ListTables(response.LastEvaluatedTableName));
+
+                to.AddRange(response.TableNames);
+            } while (response.LastEvaluatedTableName != null);
+
+            return to;
         }
 
         readonly Type[] throwNotFoundExceptions = {
