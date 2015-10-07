@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
-using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDbTests
 {
@@ -23,6 +22,21 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(row);
             return row;
+        }
+
+        [Test]
+        public void Can_Scan_complex_expression()
+        {
+            var db = CreatePocoDynamo();
+            var row = PutCollection(db);
+
+            var results = db.Scan<Collection>(x => 
+                x.SetStrings.Contains("A")
+                && x.Title.StartsWith("T")
+                && x.Title.Contains("itl")
+                && x.ArrayInts.Length == 10).ToList();
+
+            Assert.That(results[0], Is.EqualTo(row));
         }
 
         [Test]

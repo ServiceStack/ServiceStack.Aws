@@ -24,6 +24,26 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
+        public void Does_Parse_complex_expression()
+        {
+            InitTypes();
+
+            var q = Parse<Collection>(x =>
+                x.SetStrings.Contains("A")
+                && x.Title.StartsWith("N")
+                && x.Title.Contains("ame")
+                && x.ArrayInts.Length == 10);
+
+            Assert.That(q.FilterExpression, Is.EqualTo(
+                "(((contains(SetStrings, :p0) AND begins_with(Title, :p1)) AND contains(Title, :p2)) AND (size(ArrayInts) = :p3))"));
+            Assert.That(q.Params.Count, Is.EqualTo(4));
+            Assert.That(q.Params[":p0"], Is.EqualTo("A"));
+            Assert.That(q.Params[":p1"], Is.EqualTo("N"));
+            Assert.That(q.Params[":p2"], Is.EqualTo("ame"));
+            Assert.That(q.Params[":p3"], Is.EqualTo(10));
+        }
+
+        [Test]
         public void Does_serialize_expression()
         {
             InitTypes();
