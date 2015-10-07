@@ -126,20 +126,11 @@ namespace ServiceStack.Aws.DynamoDb
             object quotedColName = args[0];
             args.RemoveAt(0);
 
-            string statement;
-
-            switch (m.Method.Name)
-            {
-                default:
-                    var dynamoName = m.Method.Name.ToLowercaseUnderscore();
-                    statement = string.Format("{0}({1}{2})",
-                        dynamoName,
-                        quotedColName,
-                        args.Count == 1 ? string.Format(", {0}", GetValueAsParam(args[0])) : "");
-                    break;
-            }
-
-            return new PartialString(statement);
+            var dynamoName = m.Method.Name.ToLowercaseUnderscore();
+            return new PartialString("{0}({1}{2})".Fmt(
+                dynamoName,
+                quotedColName,
+                args.Count == 1 ? ", {0}".Fmt(GetValueAsParam(args[0])) : ""));
         }
 
         protected virtual List<object> VisitExpressionList(ReadOnlyCollection<Expression> original)
@@ -209,9 +200,8 @@ namespace ServiceStack.Aws.DynamoDb
                     List<object> args = this.VisitExpressionList(m.Arguments);
                     object arg = args[0];
                     var memberName = ((MemberExpression) m.Object).Member.Name;
-                    var expr = "contains({0}, {1})".Fmt(
-                        memberName, GetValueAsParam(arg));
-                    return expr;
+                    var expr = "contains({0}, {1})".Fmt(memberName, GetValueAsParam(arg));
+                    return new PartialString(expr);
 
                 default:
                     throw new NotSupportedException();
@@ -283,60 +273,20 @@ namespace ServiceStack.Aws.DynamoDb
             var statement = "";
 
             var wildcardArg = args.Count > 0 ? EscapeWildcards(args[0].ToString()) : "";
-            var escapeSuffix = wildcardArg.IndexOf('^') >= 0 ? " escape '^'" : "";
             switch (m.Method.Name)
             {
-                case "Trim":
-                    statement = string.Format("ltrim(rtrim({0}))", quotedColName);
-                    break;
-                case "LTrim":
-                    statement = string.Format("ltrim({0})", quotedColName);
-                    break;
-                case "RTrim":
-                    statement = string.Format("rtrim({0})", quotedColName);
-                    break;
-                case "ToUpper":
-                    statement = string.Format("upper({0})", quotedColName);
-                    break;
-                case "ToLower":
-                    statement = string.Format("lower({0})", quotedColName);
-                    break;
                 case "StartsWith":
                     statement = string.Format("begins_with({0}, {1})",
                         quotedColName, GetValueAsParam(wildcardArg));
-                    break;
-                case "EndsWith":
-                    statement = string.Format("upper({0}) like {1}{2}",
-                        quotedColName, GetQuotedValue("%" +
-                        wildcardArg.ToUpper()), escapeSuffix);
                     break;
                 case "Contains":
                     statement = string.Format("contains({0}, {1})",
                         quotedColName, GetValueAsParam(wildcardArg));
                     break;
-                case "Substring":
-                    var startIndex = int.Parse(args[0].ToString()) + 1;
-                    if (args.Count == 2)
-                    {
-                        var length = int.Parse(args[1].ToString());
-                        statement = GetSubstringSql(quotedColName, startIndex, length);
-                    }
-                    else
-                    {
-                        statement = GetSubstringSql(quotedColName, startIndex);
-                    }
-                    break;
                 default:
                     throw new NotSupportedException();
             }
             return new PartialString(statement);
-        }
-
-        public virtual string GetSubstringSql(object quotedColumn, int startIndex, int? length = null)
-        {
-            return length != null
-                ? string.Format("substring({0} from {1} for {2})", quotedColumn, startIndex, length.Value)
-                : string.Format("substring({0} from {1})", quotedColumn, startIndex);
         }
 
         public virtual string EscapeWildcards(string value)
@@ -451,14 +401,14 @@ namespace ServiceStack.Aws.DynamoDb
                 var m = b.Left as MemberExpression;
                 if (m != null && m.Expression != null
                     && m.Expression.NodeType == ExpressionType.Parameter)
-                    left = new PartialString(string.Format("{0}={1}", VisitMemberAccess(m), GetQuotedTrueValue()));
+                    left = new PartialString("{0}={1}".Fmt(VisitMemberAccess(m), GetQuotedTrueValue()));
                 else
                     left = Visit(b.Left);
 
                 m = b.Right as MemberExpression;
                 if (m != null && m.Expression != null
                     && m.Expression.NodeType == ExpressionType.Parameter)
-                    right = new PartialString(string.Format("{0}={1}", VisitMemberAccess(m), GetQuotedTrueValue()));
+                    right = new PartialString("{0}={1}".Fmt(VisitMemberAccess(m), GetQuotedTrueValue()));
                 else
                     right = Visit(b.Right);
 
@@ -472,15 +422,6 @@ namespace ServiceStack.Aws.DynamoDb
                     left = ((bool)left) ? GetTrueExpression() : GetFalseExpression();
                 if (right as PartialString == null)
                     right = ((bool)right) ? GetTrueExpression() : GetFalseExpression();
-            }
-            else if ((operand == "=" || operand == "<>") && b.Left is MethodCallExpression && ((MethodCallExpression)b.Left).Method.Name == "CompareString")
-            {
-                //Handle VB.NET converting (x => x.Name == "Foo") into (x => CompareString(x.Name, "Foo", False)
-                var methodExpr = (MethodCallExpression)b.Left;
-                var args = this.VisitExpressionList(methodExpr.Arguments);
-                object quotedColName = args[0];
-                object value = GetValue(args[1], typeof(string));
-                return new PartialString("({0} {1} {2})".Fmt(quotedColName, operand, value));
             }
             else
             {
