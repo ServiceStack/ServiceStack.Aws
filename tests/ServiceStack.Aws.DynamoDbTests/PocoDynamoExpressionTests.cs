@@ -105,7 +105,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Does_serialize_in()
+        public void Does_serialize_In()
         {
             InitTypes();
 
@@ -125,6 +125,18 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(q.Params[":p0"], Is.EqualTo("A"));
             Assert.That(q.Params[":p1"], Is.EqualTo("B"));
             Assert.That(q.Params[":p2"], Is.EqualTo("C"));
+        }
+
+        [Test]
+        public void Does_serialize_Between()
+        {
+            InitTypes();
+
+            var q = Parse<Collection>(x => Dynamo.Between(x.Title, "A", "Z"));
+            Assert.That(q.FilterExpression, Is.EqualTo("Title BETWEEN :p0 AND :p1"));
+            Assert.That(q.Params.Count, Is.EqualTo(2));
+            Assert.That(q.Params[":p0"], Is.EqualTo("A"));
+            Assert.That(q.Params[":p1"], Is.EqualTo("Z"));
         }
 
         [Test]

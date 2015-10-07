@@ -134,6 +134,12 @@ namespace ServiceStack.Aws.DynamoDb
                     quotedColName, string.Join(",", dbParams));
                 return new PartialString(expr);
             }
+            else if (m.Method.Name == "Between")
+            {
+                var expr = "{0} BETWEEN {1} AND {2}".Fmt(
+                    quotedColName, GetValueAsParam(args[0]), GetValueAsParam(args[1]));
+                return new PartialString(expr);
+            }
 
             var dynamoName = m.Method.Name.ToLowercaseUnderscore();
             return new PartialString("{0}({1}{2})".Fmt(
@@ -176,14 +182,24 @@ namespace ServiceStack.Aws.DynamoDb
                 case "Contains":
                     List<object> args = this.VisitExpressionList(m.Arguments);
                     object arg = args[1];
-                    var items = Flatten(args[0] as IEnumerable);
-                    var dbParams = items.Map(GetValueAsParam);
 
-                    var expr = "{0} IN ({1})".Fmt(
-                        arg, string.Join(",", dbParams));
+                    var memberExpr = m.Arguments[0] as MemberExpression;
+                    if (memberExpr != null && memberExpr.Expression.NodeType == ExpressionType.Parameter)
+                    {
+                        var memberName = memberExpr.Member.Name;
+                        var expr = "contains({0}, {1})".Fmt(
+                            memberName, GetValueAsParam(arg));
+                        return new PartialString(expr);
+                    }
+                    else
+                    {
+                        var items = Flatten(args[0] as IEnumerable);
+                        var dbParams = items.Map(GetValueAsParam);
+                        var expr = "{0} IN ({1})".Fmt(
+                            arg, string.Join(",", dbParams));
 
-                    return new PartialString(expr);
-
+                        return new PartialString(expr);
+                    }
                 default:
                     throw new NotSupportedException();
             }
@@ -700,6 +716,11 @@ namespace ServiceStack.Aws.DynamoDb
         }
 
         public static bool In(object property, IEnumerable items)
+        {
+            return true;
+        }
+
+        public static bool Between(object property, object from, object to)
         {
             return true;
         }
