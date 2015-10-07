@@ -106,7 +106,7 @@ namespace ServiceStack.Aws.DynamoDb
         protected virtual object VisitMethodCall(MethodCallExpression m)
         {
             if (m.Method.DeclaringType == typeof(Dynamo))
-                return VisitSqlMethodCall(m);
+                return VisitDynamoMethodCall(m);
 
             if (IsStaticArrayMethod(m))
                 return VisitStaticArrayMethodCall(m);
@@ -120,11 +120,20 @@ namespace ServiceStack.Aws.DynamoDb
             return Expression.Lambda(m).Compile().DynamicInvoke();
         }
 
-        protected virtual object VisitSqlMethodCall(MethodCallExpression m)
+        protected virtual object VisitDynamoMethodCall(MethodCallExpression m)
         {
             List<object> args = this.VisitExpressionList(m.Arguments);
             object quotedColName = args[0];
             args.RemoveAt(0);
+
+            if (m.Method.Name == "In")
+            {
+                var items = Flatten(args[0] as IEnumerable);
+                var dbParams = items.Map(GetValueAsParam);
+                var expr = "{0} IN ({1})".Fmt(
+                    quotedColName, string.Join(",", dbParams));
+                return new PartialString(expr);
+            }
 
             var dynamoName = m.Method.Name.ToLowercaseUnderscore();
             return new PartialString("{0}({1}{2})".Fmt(
@@ -167,12 +176,13 @@ namespace ServiceStack.Aws.DynamoDb
                 case "Contains":
                     List<object> args = this.VisitExpressionList(m.Arguments);
                     object arg = args[1];
+                    var items = Flatten(args[0] as IEnumerable);
+                    var dbParams = items.Map(GetValueAsParam);
 
-                    var memberExpr = (MemberExpression)m.Arguments[0];
-                    var memberName = memberExpr.Member.Name;
-                    var expr = "contains({0}, {1})".Fmt(
-                        memberName, GetValueAsParam(arg));
-                    return expr;
+                    var expr = "{0} IN ({1})".Fmt(
+                        arg, string.Join(",", dbParams));
+
+                    return new PartialString(expr);
 
                 default:
                     throw new NotSupportedException();
@@ -687,6 +697,11 @@ namespace ServiceStack.Aws.DynamoDb
         public static long Size(object property)
         {
             return default(long);
+        }
+
+        public static bool In(object property, IEnumerable items)
+        {
+            return true;
         }
     }
 }

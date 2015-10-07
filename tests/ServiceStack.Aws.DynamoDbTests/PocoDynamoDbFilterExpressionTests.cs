@@ -97,5 +97,19 @@ namespace ServiceStack.Aws.DynamoDbTests
             results = db.Scan<Poco>(x => x.Title.Contains("ame 1"));
             Assert.That(results, Is.EquivalentTo(expected));
         }
+
+        [Test]
+        public void Can_Scan_with_in()
+        {
+            var db = CreatePocoDynamo();
+            var items = PutPocoItems(db);
+
+            var names = new[] { "Name 1", "Name 2" };
+
+            var expected = items.Where(x => names.Contains(x.Title)).ToList();
+
+            var results = db.Scan<Poco>(x => names.Contains(x.Title));
+            Assert.That(results, Is.EquivalentTo(expected));
+        }
     }
 }

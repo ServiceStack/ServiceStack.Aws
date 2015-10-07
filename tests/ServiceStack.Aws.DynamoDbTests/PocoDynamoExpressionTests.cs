@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
@@ -101,6 +102,29 @@ namespace ServiceStack.Aws.DynamoDbTests
             q = Parse<Collection>(x => !Dynamo.Contains(x.ListInts, 1));
             Assert.That(q.FilterExpression, Is.EqualTo("not contains(ListInts, :p0)"));
             Assert.That(q.Params[":p0"], Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Does_serialize_in()
+        {
+            InitTypes();
+
+            var letters = new[] { "A", "B", "C" };
+
+            var q = Parse<Collection>(x => letters.Contains(x.Title));
+
+            Assert.That(q.FilterExpression, Is.EqualTo("Title IN (:p0,:p1,:p2)"));
+            Assert.That(q.Params.Count, Is.EqualTo(3));
+            Assert.That(q.Params[":p0"], Is.EqualTo("A"));
+            Assert.That(q.Params[":p1"], Is.EqualTo("B"));
+            Assert.That(q.Params[":p2"], Is.EqualTo("C"));
+
+            q = Parse<Collection>(x => Dynamo.In(x.Title, letters));
+            Assert.That(q.FilterExpression, Is.EqualTo("Title IN (:p0,:p1,:p2)"));
+            Assert.That(q.Params.Count, Is.EqualTo(3));
+            Assert.That(q.Params[":p0"], Is.EqualTo("A"));
+            Assert.That(q.Params[":p1"], Is.EqualTo("B"));
+            Assert.That(q.Params[":p2"], Is.EqualTo("C"));
         }
 
         [Test]
