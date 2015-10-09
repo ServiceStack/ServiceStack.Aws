@@ -10,10 +10,8 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public int Id { get; set; }
         public string Name { get; set; }
 
-        [Reference]
         public CustomerAddress PrimaryAddress { get; set; }
 
-        [Reference]
         public List<Order> Orders { get; set; }
 
         protected bool Equals(Customer other)
@@ -95,7 +93,10 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
     {
         [AutoIncrement]
         public int Id { get; set; }
+
+        [References(typeof(Customer))]
         public int CustomerId { get; set; }
+
         public string LineItem { get; set; }
         public int Qty { get; set; }
         public decimal Cost { get; set; }

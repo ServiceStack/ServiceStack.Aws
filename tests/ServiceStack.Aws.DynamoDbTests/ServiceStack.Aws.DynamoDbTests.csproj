@@ -79,6 +79,7 @@
     <Compile Include="PocoDynamoDbContainsTests.cs" />
     <Compile Include="PocoDynamoDbFilterExpressionTests.cs" />
     <Compile Include="PocoDynamoExpressionTests.cs" />
+    <Compile Include="PocoDynamoRelatedTables.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RangeKeyTests.cs" />
     <Compile Include="SequenceGeneratorTests.cs" />

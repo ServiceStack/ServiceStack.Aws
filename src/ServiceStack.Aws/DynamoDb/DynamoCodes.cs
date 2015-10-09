@@ -104,4 +104,10 @@
         public const string Hash = "HASH";
         public const string Range = "RANGE";
     }
+
+    public static class DynamoProperty
+    {
+        public const string HashKey = "HashKey";
+        public const string RangeKey = "RangeKey";
+    }
 }

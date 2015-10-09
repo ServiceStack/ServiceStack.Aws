@@ -103,50 +103,39 @@ namespace ServiceStack.Aws.DynamoDb
             if (props.Length == 0)
                 return;
 
-            var compositeAttrs = type.AllAttributes<CompositeIndexAttribute>();
-            if (compositeAttrs.Length > 0)
-            {
-                var idAttr = compositeAttrs.FirstOrDefault(x => x.Name == DynamoKey.Hash);
-                if (idAttr != null)
-                {
-                    hash = props.FirstOrDefault(x => x.Name == idAttr.FieldNames[0]);
-                }
+            hash = GetHashKey(props);
+            range = props.FirstOrDefault(x => x.HasAttribute<DynamoDBRangeKeyAttribute>())
+                 ?? props.FirstOrDefault(x => x.Name == DynamoProperty.RangeKey);
 
-                var rangeAttr = compositeAttrs.FirstOrDefault(x => x.Name == DynamoKey.Range);
-                if (rangeAttr != null)
-                {
-                    range = props.FirstOrDefault(x => x.Name == rangeAttr.FieldNames[0]);
-                }
-
-                if (hash == null && range == null)
-                {
-                    var attr = compositeAttrs[0];
-                    if (attr.FieldNames.Count == 2)
-                    {
-                        hash = props.FirstOrDefault(x => x.Name == attr.FieldNames[0]);
-                    }
-                    else if (attr.FieldNames.Count == 2)
-                    {
-                        hash = props.FirstOrDefault(x => x.Name == attr.FieldNames[0]);
-                        range = props.FirstOrDefault(x => x.Name == attr.FieldNames[1]);
-                    }
-                }
-            }
-
-            if (hash == null)
+            //If there's only a single FK attribute that's not overridden by specific Hash or Range attrs
+            //Set the hash key as the FK to keep related records in the same hash and 
+            //Set the range key as the PK to uniquely defined the record
+            var referenceAttrProps = props.Where(x => x.HasAttribute<ReferencesAttribute>()).ToList();
+            if (hash == null && range == null && referenceAttrProps.Count == 1)
             {
-                hash = props.FirstOrDefault(x => x.HasAttribute<DynamoDBHashKeyAttribute>())
-                     ?? props.FirstOrDefault(x =>
-                         x.HasAttribute<PrimaryKeyAttribute>() ||
-                         x.HasAttribute<AutoIncrementAttribute>())
-                     ?? props.FirstOrDefault(x => x.Name.EqualsIgnoreCase(IdUtils.IdField))
-                     ?? props[0];
+                hash = referenceAttrProps[0];
+                range = GetPrimaryKey(props) ?? props[0];
             }
-            if (range == null)
+            else
             {
-                range = props.FirstOrDefault(x => x.HasAttribute<DynamoDBRangeKeyAttribute>())
-                     ?? props.FirstOrDefault(x => x.Name == "RangeKey");
+                //Otherwise set the Id as the hash key if hash key is not explicitly defined
+                if (hash == null)
+                    hash = GetPrimaryKey(props) ?? props[0];
             }
+        }
+
+        private static PropertyInfo GetHashKey(PropertyInfo[] props)
+        {
+            return props.FirstOrDefault(x => x.HasAttribute<DynamoDBHashKeyAttribute>())
+                   ?? props.FirstOrDefault(x => x.Name == DynamoProperty.HashKey);
+        }
+
+        private static PropertyInfo GetPrimaryKey(PropertyInfo[] props)
+        {
+            return props.FirstOrDefault(x =>
+                    x.HasAttribute<PrimaryKeyAttribute>() ||
+                    x.HasAttribute<AutoIncrementAttribute>())
+                ?? props.FirstOrDefault(x => x.Name.EqualsIgnoreCase(IdUtils.IdField));
         }
 
         public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(IPocoDynamo db, DynamoMetadataField field, object hash)

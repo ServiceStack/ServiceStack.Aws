@@ -109,6 +109,13 @@ namespace ServiceStack.Aws.DynamoDb
                 .ToList();
         }
 
+        public static List<T> ConvertAll<T>(this QueryResponse response)
+        {
+            return response.Items
+                .Select(values => DynamoMetadata.GetType<T>().ConvertTo<T>(values))
+                .ToList();
+        }
+
         public static List<T> GetAll<T>(this IPocoDynamo db)
         {
             return db.ScanAll<T>().ToList();
@@ -149,6 +156,16 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var q = PocoDynamoExpression.FactoryFn(typeof(T), predicate);
             return db.Scan<T>(q.FilterExpression, q.Params, limit:limit);
+        }
+
+        public static void PutRelated<T>(this IPocoDynamo db, object parent, IEnumerable<T> items)
+        {
+            db.PutRelatedByHash(parent.GetId(), items);
+        }
+
+        public static IEnumerable<T> GetRelated<T>(this IPocoDynamo db, object parent)
+        {
+            return db.GetRelatedByHash<T>(parent.GetId());
         }
     }
 }
