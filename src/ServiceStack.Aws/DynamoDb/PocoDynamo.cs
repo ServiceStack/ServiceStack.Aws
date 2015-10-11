@@ -243,8 +243,8 @@ namespace ServiceStack.Aws.DynamoDb
                 AttributeDefinitions = attrDefinitions,
                 ProvisionedThroughput = new ProvisionedThroughput
                 {
-                    ReadCapacityUnits = ReadCapacityUnits,
-                    WriteCapacityUnits = WriteCapacityUnits,
+                    ReadCapacityUnits = table.ReadCapacityUnits ?? ReadCapacityUnits,
+                    WriteCapacityUnits = table.WriteCapacityUnits ?? WriteCapacityUnits,
                 }
             };
 
@@ -253,24 +253,45 @@ namespace ServiceStack.Aws.DynamoDb
                 to.LocalSecondaryIndexes = table.LocalIndexes.Map(x => new LocalSecondaryIndex
                 {
                     IndexName = x.Name,
-                    KeySchema = x.KeyFields.Map(k =>
-                    {
-                        var field = table.GetField(k);
-                        if (field.IsHashKey)
-                            return new KeySchemaElement(k, DynamoKey.Hash);
-
-                        if (attrDefinitions.All(a => a.AttributeName != k))
-                            attrDefinitions.Add(new AttributeDefinition(field.Name, field.DbType));
-
-                        return new KeySchemaElement(k, DynamoKey.Range);
-                    }),
+                    KeySchema = x.ToKeySchemas(),
                     Projection = new Projection
                     {
                         ProjectionType = x.ProjectionType,
                         NonKeyAttributes = x.ProjectedFields.Safe().ToList(),
                     },
                 });
+
+                table.LocalIndexes.Each(x => {
+                    if (x.RangeKey != null && attrDefinitions.All(a => a.AttributeName != x.RangeKey.Name))
+                        attrDefinitions.Add(new AttributeDefinition(x.RangeKey.Name, x.RangeKey.DbType));
+                });
             }
+            if (!table.GlobalIndexes.IsEmpty())
+            {
+                to.GlobalSecondaryIndexes = table.GlobalIndexes.Map(x => new GlobalSecondaryIndex
+                {
+                    IndexName = x.Name,
+                    KeySchema = x.ToKeySchemas(),
+                    Projection = new Projection
+                    {
+                        ProjectionType = x.ProjectionType,
+                        NonKeyAttributes = x.ProjectedFields.Safe().ToList(),
+                    },
+                    ProvisionedThroughput = new ProvisionedThroughput
+                    {
+                        ReadCapacityUnits = x.ReadCapacityUnits ?? ReadCapacityUnits,
+                        WriteCapacityUnits = x.WriteCapacityUnits ?? WriteCapacityUnits,
+                    }
+                });
+
+                table.GlobalIndexes.Each(x => {
+                    if (x.HashKey != null && attrDefinitions.All(a => a.AttributeName != x.HashKey.Name))
+                        attrDefinitions.Add(new AttributeDefinition(x.HashKey.Name, x.HashKey.DbType));
+                    if (x.RangeKey != null && attrDefinitions.All(a => a.AttributeName != x.RangeKey.Name))
+                        attrDefinitions.Add(new AttributeDefinition(x.RangeKey.Name, x.RangeKey.DbType));
+                });
+            }
+
 
             return to;
         }
@@ -605,7 +626,7 @@ namespace ServiceStack.Aws.DynamoDb
                 TableName = tableName,
                 IndexName = indexName,
                 Limit = PagingLimit,
-                ConsistentRead = this.ConsistentRead,
+                ConsistentRead = !typeof(T).IsGlobalIndex() && this.ConsistentRead,
                 ScanIndexForward = this.ScanIndexForward,
                 ProjectionExpression = projectionExpression,
                 KeyConditionExpression = keyExpression,

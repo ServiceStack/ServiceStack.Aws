@@ -105,6 +105,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             hash = GetHashKey(props);
             range = props.FirstOrDefault(x => x.HasAttribute<DynamoDBRangeKeyAttribute>())
+                 ?? props.FirstOrDefault(x => x.HasAttribute<RangeKeyAttribute>())
                  ?? props.FirstOrDefault(x => x.Name == DynamoProperty.RangeKey);
 
             //If there's only a single FK attribute that's not overridden by specific Hash or Range attrs
@@ -116,17 +117,39 @@ namespace ServiceStack.Aws.DynamoDb
                 hash = referenceAttrProps[0];
                 range = GetPrimaryKey(props) ?? props[0];
             }
-            else
+            else if (hash == null)
             {
-                //Otherwise set the Id as the hash key if hash key is not explicitly defined
-                if (hash == null)
+                var compositeIndex = type.FirstAttribute<CompositeIndexAttribute>();
+                if (compositeIndex != null && compositeIndex.FieldNames.Count > 0)
+                {
+                    if (compositeIndex.FieldNames.Count > 2)
+                        throw new ArgumentException("Only max of 2 fields allowed in [CompositeIndex] for defining Hash and Range Key");
+
+                    var hashField = compositeIndex.FieldNames[0];
+                    hash = props.FirstOrDefault(x => x.Name == hashField);
+                    if (hash == null)
+                        throw new ArgumentException("Could not find Hash Key field '{0}' in CompositeIndex".Fmt(hashField));
+
+                    if (compositeIndex.FieldNames.Count == 2)
+                    {
+                        var rangeField = compositeIndex.FieldNames[1];
+                        range = props.FirstOrDefault(x => x.Name == rangeField);
+                        if (range == null)
+                            throw new ArgumentException("Could not find Range Key field '{0}' in CompositeIndex".Fmt(rangeField));
+                    }
+                }
+                else
+                {
+                    //Otherwise set the Id as the hash key if hash key is not explicitly defined
                     hash = GetPrimaryKey(props) ?? props[0];
+                }
             }
         }
 
         private static PropertyInfo GetHashKey(PropertyInfo[] props)
         {
             return props.FirstOrDefault(x => x.HasAttribute<DynamoDBHashKeyAttribute>())
+                   ?? props.FirstOrDefault(x => x.HasAttribute<HashKeyAttribute>())
                    ?? props.FirstOrDefault(x => x.Name == DynamoProperty.HashKey);
         }
 

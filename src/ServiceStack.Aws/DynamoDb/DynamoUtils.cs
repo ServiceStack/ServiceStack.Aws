@@ -190,11 +190,15 @@ namespace ServiceStack.Aws.DynamoDb
             PropertyInfo hash, range;
             Converters.GetHashAndRangeKeyFields(type, props, out hash, out range);
 
+            var provision = type.FirstAttribute<ProvisionedThroughputAttribute>();
+
             var metadata = new DynamoMetadataType
             {
                 Type = type,
                 IsTable = true,
                 Name = alias != null ? alias.Name : type.Name,
+                ReadCapacityUnits = provision != null ? provision.ReadCapacityUnits : (int?)null,
+                WriteCapacityUnits = provision != null ? provision.WriteCapacityUnits : (int?)null,
             };
             metadata.Fields = props.Map(p =>
                 new DynamoMetadataField
@@ -222,8 +226,8 @@ namespace ServiceStack.Aws.DynamoDb
                 new DynamoLocalIndex
                 {
                     Name = "{0}{1}Index".Fmt(metadata.Name, x.Name),
-                    IndexField = x.Name,
-                    KeyFields = new[] { hashField, x.Name },
+                    HashKey = metadata.HashKey,
+                    RangeKey = metadata.GetField(x.Name),
                     ProjectionType = DynamoProjectionType.Include,
                     ProjectedFields = new [] { x.Name },
                 });
@@ -235,28 +239,77 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 var localIndex = attr.Type.GetTypeWithGenericInterfaceOf(typeof(ILocalIndex<>));
                 if (localIndex != null)
-                {
-                    var indexProps = attr.Type.GetPublicProperties();
-                    var indexProp = indexProps.FirstOrDefault(x =>
-                        x.HasAttribute<IndexAttribute>() || x.HasAttribute<DynamoDBRangeKeyAttribute>());
+                    metadata.LocalIndexes.Add(CreateLocalIndex(type, metadata, hashField, attr.Type));
 
-                    if (indexProp == null)
-                        throw new ArgumentException("Missing [Index]. Could not infer Range Key in index '{0}'.".Fmt(attr.Type));
-
-                    var indexAlias = attr.Type.FirstAttribute<AliasAttribute>();
-
-                    metadata.LocalIndexes.Add(new DynamoLocalIndex {
-                        IndexType = attr.Type,
-                        Name = indexAlias != null ? indexAlias.Name : "{0}{1}Index".Fmt(metadata.Name, indexProp.Name),
-                        IndexField = indexProp.Name,
-                        KeyFields = new[] { hashField, indexProp.Name },
-                        ProjectionType = DynamoProjectionType.Include,
-                        ProjectedFields = indexProps.Where(x => x.Name != hashField).Select(x => x.Name).ToArray(),
-                    });
-                }
+                var globalIndex = attr.Type.GetTypeWithGenericInterfaceOf(typeof(IGlobalIndex<>));
+                if (globalIndex != null)
+                    metadata.GlobalIndexes.Add(CreateGlobalIndex(type, metadata, attr.Type));
             }
 
             return metadata;
+        }
+
+        private static DynamoLocalIndex CreateLocalIndex(Type type, DynamoMetadataType metadata, string hashField, Type indexType)
+        {
+            var indexProps = indexType.GetPublicProperties();
+            var indexProp = indexProps.FirstOrDefault(x =>
+                x.HasAttribute<IndexAttribute>() || x.HasAttribute<DynamoDBRangeKeyAttribute>());
+
+            if (indexProp == null)
+                throw new ArgumentException("Missing [Index]. Could not infer Range Key in index '{0}'.".Fmt(indexType));
+
+            var indexAlias = indexType.FirstAttribute<AliasAttribute>();
+            var rangeKey = metadata.GetField(indexProp.Name);
+            if (rangeKey == null)
+                throw new ArgumentException("Range Key '{0}' was not found on Table '{1}'".Fmt(indexProp.Name, type.Name));
+
+            return new DynamoLocalIndex
+            {
+                IndexType = indexType,
+                Name = indexAlias != null ? indexAlias.Name : indexType.Name,
+                HashKey = metadata.HashKey,
+                RangeKey = rangeKey,
+                ProjectionType = DynamoProjectionType.Include,
+                ProjectedFields = indexProps.Where(x => x.Name != hashField).Select(x => x.Name).ToArray(),
+            };
+        }
+
+        private static DynamoGlobalIndex CreateGlobalIndex(Type type, DynamoMetadataType metadata, Type indexType)
+        {
+            var indexProps = indexType.GetPublicProperties();
+
+            PropertyInfo indexHash, indexRange;
+            Converters.GetHashAndRangeKeyFields(indexType, indexProps, out indexHash, out indexRange);
+
+            var hashKey = metadata.GetField(indexHash.Name);
+            if (hashKey == null)
+                throw new ArgumentException("Hash Key '{0}' was not found on Table '{1}'".Fmt(indexHash.Name, type.Name));
+
+            if (indexRange == null)
+                indexRange = indexProps.FirstOrDefault(x => x.HasAttribute<IndexAttribute>());
+
+            if (indexRange == null)
+                throw new ArgumentException("Could not infer Range Key in index '{0}'.".Fmt(indexType));
+
+            var rangeKey = metadata.GetField(indexRange.Name);
+            if (rangeKey == null)
+                throw new ArgumentException("Range Key '{0}' was not found on Table '{1}'".Fmt(indexRange.Name, type.Name));
+
+            var indexAlias = indexType.FirstAttribute<AliasAttribute>();
+
+            var indexProvision = indexType.FirstAttribute<ProvisionedThroughputAttribute>();
+
+            return new DynamoGlobalIndex
+            {
+                IndexType = indexType,
+                Name = indexAlias != null ? indexAlias.Name : indexType.Name,
+                HashKey = hashKey,
+                RangeKey = rangeKey,
+                ProjectionType = DynamoProjectionType.Include,
+                ProjectedFields = indexProps.Where(x => x.Name != indexHash.Name).Select(x => x.Name).ToArray(),
+                ReadCapacityUnits = indexProvision != null ? indexProvision.ReadCapacityUnits : metadata.ReadCapacityUnits,
+                WriteCapacityUnits = indexProvision != null ? indexProvision.WriteCapacityUnits : metadata.WriteCapacityUnits,
+            };
         }
     }
 
@@ -277,6 +330,10 @@ namespace ServiceStack.Aws.DynamoDb
         public List<DynamoLocalIndex> LocalIndexes { get; set; }
 
         public List<DynamoGlobalIndex> GlobalIndexes { get; set; }
+
+        public int? ReadCapacityUnits { get; set; }
+
+        public int? WriteCapacityUnits { get; set; }
 
         public DynamoMetadataField GetField(string fieldName)
         {
@@ -345,8 +402,8 @@ namespace ServiceStack.Aws.DynamoDb
     {
         public Type IndexType { get; set; }
         public string Name { get; set; }
-        public string IndexField { get; set; }
-        public string[] KeyFields { get; set; }
+        public DynamoMetadataField HashKey { get; set; }
+        public DynamoMetadataField RangeKey { get; set; }
         public string ProjectionType { get; set; }
         public string[] ProjectedFields { get; set; }
     }
@@ -357,7 +414,7 @@ namespace ServiceStack.Aws.DynamoDb
 
     public class DynamoGlobalIndex : DynamoIndex
     {
-        public long ReadCapacityUnits { get; set; }
-        public long WriteCapacityUnits { get; set; }
+        public long? ReadCapacityUnits { get; set; }
+        public long? WriteCapacityUnits { get; set; }
     }
 }
