@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using ServiceStack.Aws.Support;
 using ServiceStack.DataAnnotations;
@@ -212,17 +213,48 @@ namespace ServiceStack.Aws.DynamoDb
             metadata.HashKey = metadata.Fields.FirstOrDefault(x => x.IsHashKey);
             metadata.RangeKey = metadata.Fields.FirstOrDefault(x => x.IsRangeKey);
 
+            if (metadata.HashKey == null)
+                throw new ArgumentException("Could not infer Hash Key in Table '{0}'".Fmt(type.Name));
+
+            var hashField = metadata.HashKey.Name;
+
             metadata.LocalIndexes = props.Where(x => x.HasAttribute<IndexAttribute>()).Map(x =>
                 new DynamoLocalIndex
                 {
                     Name = "{0}{1}Index".Fmt(metadata.Name, x.Name),
                     IndexField = x.Name,
-                    KeyFields = new[] { metadata.HashKey.Name, x.Name },
+                    KeyFields = new[] { hashField, x.Name },
                     ProjectionType = DynamoProjectionType.Include,
                     ProjectedFields = new [] { x.Name },
                 });
 
             metadata.GlobalIndexes = new List<DynamoGlobalIndex>();
+
+            var references = type.AllAttributes<ReferencesAttribute>();
+            foreach (var attr in references)
+            {
+                var localIndex = attr.Type.GetTypeWithGenericInterfaceOf(typeof(ILocalIndex<>));
+                if (localIndex != null)
+                {
+                    var indexProps = attr.Type.GetPublicProperties();
+                    var indexProp = indexProps.FirstOrDefault(x =>
+                        x.HasAttribute<IndexAttribute>() || x.HasAttribute<DynamoDBRangeKeyAttribute>());
+
+                    if (indexProp == null)
+                        throw new ArgumentException("Missing [Index]. Could not infer Range Key in index '{0}'.".Fmt(attr.Type));
+
+                    var indexAlias = attr.Type.FirstAttribute<AliasAttribute>();
+
+                    metadata.LocalIndexes.Add(new DynamoLocalIndex {
+                        IndexType = attr.Type,
+                        Name = indexAlias != null ? indexAlias.Name : "{0}{1}Index".Fmt(metadata.Name, indexProp.Name),
+                        IndexField = indexProp.Name,
+                        KeyFields = new[] { hashField, indexProp.Name },
+                        ProjectionType = DynamoProjectionType.Include,
+                        ProjectedFields = indexProps.Where(x => x.Name != hashField).Select(x => x.Name).ToArray(),
+                    });
+                }
+            }
 
             return metadata;
         }
@@ -254,6 +286,12 @@ namespace ServiceStack.Aws.DynamoDb
         public DynamoMetadataField GetField(Type type)
         {
             return Fields.FirstOrDefault(x => x.Type == type);
+        }
+
+        public DynamoIndex GetIndex(Type indexType)
+        {
+            return (DynamoIndex)this.LocalIndexes.FirstOrDefault(x => x.IndexType == indexType)
+                ?? this.GlobalIndexes.FirstOrDefault(x => x.IndexType == indexType);
         }
     }
 
@@ -305,6 +343,7 @@ namespace ServiceStack.Aws.DynamoDb
 
     public class DynamoIndex
     {
+        public Type IndexType { get; set; }
         public string Name { get; set; }
         public string IndexField { get; set; }
         public string[] KeyFields { get; set; }

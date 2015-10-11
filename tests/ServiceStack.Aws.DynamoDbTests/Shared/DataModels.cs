@@ -141,6 +141,19 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public override decimal Cost { get; set; }
     }
 
+    [Alias("CustomCostIndex")]
+    public class OrderCostIndex : ILocalIndex<OrderLocalIndex>
+    {
+        public int CustomerId { get; set; }
+        [Index]
+        public decimal Cost { get; set; }
+        public int Id { get; set; }
+        public int Qty { get; set; }
+    }
+
+    [References(typeof(OrderCostIndex))]
+    public class OrderLocalIndex : Order { }
+
     public class Country
     {
         [AutoIncrement]

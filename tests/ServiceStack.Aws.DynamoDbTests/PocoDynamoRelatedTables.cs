@@ -105,11 +105,37 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(expensiveOrders.All(x => x.Qty > 0));
 
             expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer.Id, x => x.Cost > 10, typeof(OrderFieldIndex).AllFields()).ToList();
-            Assert.That(expensiveOrders.All(x => x.Id > 0 && x.CustomerId > 0 && x.Qty > 0 && x.Cost > 0 && x.LineItem != null));
+            Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.CustomerId > 0 && x.Qty > 0 && x.LineItem != null));
 
             expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer.Id, x => x.Cost > 10, x => new { x.Id, x.Cost }).ToList();
             Assert.That(expensiveOrders.All(x => x.CustomerId == 0));
-            Assert.That(expensiveOrders.All(x => x.Id > 0 && x.Cost > 0));
+            Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0));
+        }
+
+        [Test]
+        public void Can_Create_Typed_LocalIndex()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<OrderLocalIndex>();
+
+            var customer = CreateCustomer(db);
+
+            var orders = 10.Times(i => new OrderLocalIndex
+            {
+                LineItem = "Item " + (i + 1),
+                Qty = i + 2,
+                Cost = (i + 2) * 2
+            });
+
+            db.PutRelated(customer.Id, orders);
+
+            var expensiveOrders = db.QueryIndex<OrderCostIndex>(x => x.CustomerId == customer.Id && x.Cost > 10).ToList();
+
+            expensiveOrders.PrintDump();
+
+            Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.CustomerId == customer.Id && x.Cost > 10)));
+            Assert.That(expensiveOrders.All(x => x.CustomerId == customer.Id));
+            Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
         }
 
         private static Customer CreateCustomer(IPocoDynamo db)

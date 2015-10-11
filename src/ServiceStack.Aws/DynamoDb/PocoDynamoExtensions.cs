@@ -167,7 +167,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var q = PocoDynamoExpression.FactoryFn(typeof(T), predicate);
 
-            var keyExpression = "{0} = :k1".Fmt(q.Table.HashKey.Name);
+            var keyExpression = "{0} = :k1".Fmt(q.Table.HashKey.Name) + " AND " + q.FilterExpression;
             q.Params[":k1"] = hash;
 
             var indexField = q.ReferencedFields.FirstOrDefault(x =>
@@ -182,7 +182,29 @@ namespace ServiceStack.Aws.DynamoDb
                 ? null
                 : string.Join(", ", fields);
 
-            return db.QueryIndex<T>(index.Name, keyExpression, q.FilterExpression, q.Params, projectionExpr);
+            return db.QueryIndex<T>(q.Table.Name, index.Name, keyExpression, q.Params, projectionExpr);
         }
+
+        public static DynamoMetadataType GetTable(this Type indexType)
+        {
+            var genericIndex = indexType.GetTypeWithGenericInterfaceOf(typeof(IDynamoIndex<>));
+            if (genericIndex == null)
+                return null;
+
+            var tableType = genericIndex.GetGenericArguments().FirstOrDefault();
+            return tableType != null
+                ? DynamoMetadata.GetTable(tableType)
+                : null;
+        }
+
+        public static IEnumerable<T> QueryIndex<T>(this IPocoDynamo db, Expression<Func<T, bool>> keyExpression) 
+        {
+            var table = typeof(T).GetTable();
+            var index = table.GetIndex(typeof(T));
+            var q = PocoDynamoExpression.FactoryFn(typeof(T), keyExpression);
+
+            return db.QueryIndex<T>(table.Name, index.Name, q.FilterExpression, q.Params);
+        }
+
     }
 }

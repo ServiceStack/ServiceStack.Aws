@@ -41,7 +41,7 @@ namespace ServiceStack.Aws.DynamoDb
         IEnumerable<T> GetRelated<T>(object hash);
 
         IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter);
-        IEnumerable<T> QueryIndex<T>(string indexName, string keyExpression, string filterExpression, Dictionary<string, object> args, string projectionExpression = null);
+        IEnumerable<T> QueryIndex<T>(string tableName, string indexName, string keyExpression, Dictionary<string, object> args, string projectionExpression = null);
 
         IPocoDynamo ClientWith(
             bool? consistentRead = null,
@@ -598,20 +598,17 @@ namespace ServiceStack.Aws.DynamoDb
             } while (!response.LastEvaluatedKey.IsEmpty());
         }
 
-        public IEnumerable<T> QueryIndex<T>(string indexName, string keyExpression, string filterExpression, Dictionary<string, object> args, string projectionExpression = null)
+        public IEnumerable<T> QueryIndex<T>(string tableName, string indexName, string keyExpression, Dictionary<string, object> args, string projectionExpression = null)
         {
-            var table = DynamoMetadata.GetTable<T>();
-
             var request = new QueryRequest
             {
-                TableName = table.Name,
+                TableName = tableName,
                 IndexName = indexName,
                 Limit = PagingLimit,
                 ConsistentRead = this.ConsistentRead,
                 ScanIndexForward = this.ScanIndexForward,
                 ProjectionExpression = projectionExpression,
                 KeyConditionExpression = keyExpression,
-                FilterExpression = filterExpression,
                 ExpressionAttributeValues = ToExpressionAttributeValues(args),                
             };
 

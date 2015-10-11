@@ -112,20 +112,11 @@ namespace ServiceStack.Aws.DynamoDb
         public const string HashKey = "HashKey";
         public const string RangeKey = "RangeKey";
     }
+    
+    public interface IDynamoIndex { }
+    public interface IDynamoIndex<T> : IDynamoIndex { }
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class LocalIndexAttribute : AttributeBase
-    {
-        public Type Type { get; set; }
+    public interface ILocalIndex<T> : IDynamoIndex<T> { }
 
-        public string Name { get; set; }
-    }
-
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class GlobalIndexAttribute : AttributeBase
-    {
-        public Type Type { get; set; }
-
-        public string Name { get; set; }
-    }
+    public interface IGlobalIndex<T> : IDynamoIndex<T> { }
 }
