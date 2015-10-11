@@ -158,32 +158,12 @@ namespace ServiceStack.Aws.DynamoDb
             return db.Scan<T>(q.FilterExpression, q.Params, limit:limit);
         }
 
-        public static void PutRelated<T>(this IPocoDynamo db, object parent, IEnumerable<T> items)
+        public static IEnumerable<T> QueryRelated<T>(this IPocoDynamo db, object hash, Expression<Func<T, bool>> predicate, Func<T, object> fields)
         {
-            db.PutRelatedByHash(parent.GetId(), items);
+            return db.QueryRelated(hash, predicate, fields(typeof(T).CreateInstance<T>()).GetType().AllFields());
         }
 
-        public static IEnumerable<T> GetRelated<T>(this IPocoDynamo db, object parent)
-        {
-            return db.GetRelatedByHash<T>(parent.GetId());
-        }
-
-        public static IEnumerable<T> QueryRelated<T>(this IPocoDynamo db, object parent, Expression<Func<T, bool>> predicate, string[] fields = null)
-        {
-            return db.QueryRelatedByHash(parent.GetId(), predicate, fields);
-        }
-
-        public static IEnumerable<T> QueryRelated<T>(this IPocoDynamo db, object parent, Expression<Func<T, bool>> predicate, Func<T, object> fields)
-        {
-            return db.QueryRelatedByHash(parent.GetId(), predicate, fields(typeof(T).CreateInstance<T>()).GetType().AllFields());
-        }
-
-        public static IEnumerable<T> QueryRelatedByHash<T>(this IPocoDynamo db, object hash, Expression<Func<T, bool>> predicate, Func<T, object> fields)
-        {
-            return db.QueryRelatedByHash(hash, predicate, fields(typeof(T).CreateInstance<T>()).GetType().AllFields());
-        }
-
-        public static IEnumerable<T> QueryRelatedByHash<T>(this IPocoDynamo db, object hash, Expression<Func<T, bool>> predicate, string[] fields = null)
+        public static IEnumerable<T> QueryRelated<T>(this IPocoDynamo db, object hash, Expression<Func<T, bool>> predicate, string[] fields = null)
         {
             var q = PocoDynamoExpression.FactoryFn(typeof(T), predicate);
 

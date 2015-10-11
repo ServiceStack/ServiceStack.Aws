@@ -37,8 +37,8 @@ namespace ServiceStack.Aws.DynamoDb
         IEnumerable<T> Scan<T>(string filterExpression, Dictionary<string, object> args);
         List<T> Scan<T>(string filterExpression, Dictionary<string, object> args, int limit);
 
-        void PutRelatedByHash<T>(object hashId, IEnumerable<T> items);
-        IEnumerable<T> GetRelatedByHash<T>(object hashId);
+        void PutRelated<T>(object hash, IEnumerable<T> items);
+        IEnumerable<T> GetRelated<T>(object hash);
 
         IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter);
         IEnumerable<T> QueryIndex<T>(string indexName, string keyExpression, string filterExpression, Dictionary<string, object> args, string projectionExpression = null);
@@ -375,11 +375,11 @@ namespace ServiceStack.Aws.DynamoDb
             return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
         }
 
-        public IEnumerable<T> GetRelatedByHash<T>(object hashId)
+        public IEnumerable<T> GetRelated<T>(object hash)
         {
             var table = DynamoMetadata.GetTable<T>();
 
-            var argType = hashId.GetType();
+            var argType = hash.GetType();
             var dbType = Converters.GetFieldType(argType);
             var request = new QueryRequest(table.Name)
             {
@@ -387,7 +387,7 @@ namespace ServiceStack.Aws.DynamoDb
                 KeyConditionExpression = "{0} = :k1".Fmt(table.HashKey.Name),
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":k1", Converters.ToAttributeValue(this, argType, dbType, hashId) }
+                    {":k1", Converters.ToAttributeValue(this, argType, dbType, hash) }
                 }
             };
 
@@ -412,7 +412,7 @@ namespace ServiceStack.Aws.DynamoDb
             return Converters.FromAttributeValues<T>(table, response.Attributes);
         }
 
-        public void PutRelatedByHash<T>(object hashId, IEnumerable<T> items)
+        public void PutRelated<T>(object hash, IEnumerable<T> items)
         {
             var table = DynamoMetadata.GetTable<T>();
 
@@ -420,7 +420,7 @@ namespace ServiceStack.Aws.DynamoDb
                 throw new ArgumentException("Related table '{0}' needs both a HashKey and RangeKey".Fmt(typeof(T).Name));
 
             var related = items.ToList();
-            related.Each(x => table.HashKey.SetValue(x, hashId));
+            related.Each(x => table.HashKey.SetValue(x, hash));
 
             PutItems(related);
         }

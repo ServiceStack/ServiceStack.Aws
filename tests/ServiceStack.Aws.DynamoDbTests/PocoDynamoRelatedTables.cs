@@ -63,7 +63,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 },
             };
 
-            db.PutRelated(customer, orders);
+            db.PutRelated(customer.Id, orders);
 
             Assert.That(customer.Id, Is.GreaterThan(0));
             Assert.That(customer.PrimaryAddress.Id, Is.GreaterThan(0));
@@ -73,7 +73,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(orders[1].Id, Is.GreaterThan(0));
             Assert.That(orders[1].CustomerId, Is.EqualTo(customer.Id));
 
-            var dbOrders = db.GetRelated<Order>(customer).ToList();
+            var dbOrders = db.GetRelated<Order>(customer.Id).ToList();
 
             Assert.That(dbOrders, Is.EquivalentTo(orders));
         }
@@ -93,25 +93,21 @@ namespace ServiceStack.Aws.DynamoDbTests
                 Cost = (i + 2) * 2
             });
 
-            db.PutRelated(customer, orders);
+            db.PutRelated(customer.Id, orders);
 
-            var expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer, x => x.Cost > 10).ToList();
+            var expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer.Id, x => x.Cost > 10).ToList();
 
             Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.Cost > 10)));
             Assert.That(expensiveOrders.All(x => x.Qty == 0));  //non-projected field
 
-            expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer, x => x.Cost > 10, new [] { "Qty" }).ToList();
+            expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer.Id, x => x.Cost > 10, new [] { "Qty" }).ToList();
             Assert.That(expensiveOrders.All(x => x.Id == 0));
             Assert.That(expensiveOrders.All(x => x.Qty > 0));
 
-            expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer, x => x.Cost > 10, typeof(OrderFieldIndex).AllFields()).ToList();
+            expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer.Id, x => x.Cost > 10, typeof(OrderFieldIndex).AllFields()).ToList();
             Assert.That(expensiveOrders.All(x => x.Id > 0 && x.CustomerId > 0 && x.Qty > 0 && x.Cost > 0 && x.LineItem != null));
 
-            expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer, x => x.Cost > 10, x => new { x.Id, x.Cost }).ToList();
-            Assert.That(expensiveOrders.All(x => x.CustomerId == 0));
-            Assert.That(expensiveOrders.All(x => x.Id > 0 && x.Cost > 0));
-
-            expensiveOrders = db.QueryRelatedByHash<OrderFieldIndex>(customer.Id, x => x.Cost > 10, x => new { x.Id, x.Cost }).ToList();
+            expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer.Id, x => x.Cost > 10, x => new { x.Id, x.Cost }).ToList();
             Assert.That(expensiveOrders.All(x => x.CustomerId == 0));
             Assert.That(expensiveOrders.All(x => x.Id > 0 && x.Cost > 0));
         }
