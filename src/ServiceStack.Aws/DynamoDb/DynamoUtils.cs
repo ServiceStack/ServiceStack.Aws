@@ -124,14 +124,12 @@ namespace ServiceStack.Aws.DynamoDb
                 Types = new HashSet<DynamoMetadataType>();
 
             var table = Types.FirstOrDefault(x => x.Type == type);
-            if (table != null)
-            {
-                table.IsTable = true;
+            if (table != null && table.IsTable)
                 return table;
-            }
+
+            Types.RemoveWhere(x => x.Type == type);
 
             table = ToMetadataTable(type);
-            table.IsTable = true;
             Types.Add(table);
 
             LicenseUtils.AssertValidUsage(LicenseFeature.Aws, QuotaType.Tables, Types.Count);
@@ -143,7 +141,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static void RegisterTypes(params Type[] refTypes)
         {
-            var metadatas = refTypes.Where(x => !x.IsValueType).Map(ToMetadataType);
+            var metadatas = refTypes.Where(x => !x.IsValueType && !x.IsSystemType()).Map(ToMetadataType);
 
             // Make thread-safe to allow usage at runtime
             HashSet<DynamoMetadataType> snapshot, newCache;
@@ -163,8 +161,6 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var alias = type.FirstAttribute<AliasAttribute>();
             var props = type.GetSerializableProperties();
-            PropertyInfo hash, range;
-            Converters.GetHashAndRangeKeyFields(type, props, out hash, out range);
 
             var metadata = new DynamoMetadataType
             {
@@ -178,15 +174,10 @@ namespace ServiceStack.Aws.DynamoDb
                     Type = p.PropertyType,
                     Name = Converters.GetFieldName(p),
                     DbType = Converters.GetFieldType(p.PropertyType),
-                    IsHashKey = p == hash,
-                    IsRangeKey = p == range,
                     IsAutoIncrement = p.HasAttribute<AutoIncrementAttribute>(),
                     SetValueFn = p.GetPropertySetterFn(),
                     GetValueFn = p.GetPropertyGetterFn(),
                 }).ToArray();
-
-            metadata.HashKey = metadata.Fields.FirstOrDefault(x => x.IsHashKey);
-            metadata.RangeKey = metadata.Fields.FirstOrDefault(x => x.IsRangeKey);
 
             return metadata;
         }
@@ -201,6 +192,7 @@ namespace ServiceStack.Aws.DynamoDb
             var metadata = new DynamoMetadataType
             {
                 Type = type,
+                IsTable = true,
                 Name = alias != null ? alias.Name : type.Name,
             };
             metadata.Fields = props.Map(p =>
