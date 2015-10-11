@@ -33,7 +33,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 Data = "Data",
             });
 
-            var dto = db.GetItemByHashAndRange<RangeTest>("test", createdDate);
+            var dto = db.GetItem<RangeTest>("test", createdDate);
 
             dto.PrintDump();
 

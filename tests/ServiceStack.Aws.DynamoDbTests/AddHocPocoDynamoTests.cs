@@ -16,7 +16,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.RegisterTable<Customer>();
             db.InitSchema();
 
-            var dbCustomer = db.GetItemById<Customer>(1);
+            var dbCustomer = db.GetItem<Customer>(1);
 
             dbCustomer.PrintDump();
         }
@@ -43,7 +43,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(nodes);
 
-            var dbNodes = db.GetItemById<Node>(1);
+            var dbNodes = db.GetItem<Node>(1);
 
             dbNodes.PrintDump();
 

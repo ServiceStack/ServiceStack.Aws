@@ -43,7 +43,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         private T GetValue<T>(string key)
         {
-            var entry = db.GetItemById<CacheEntry>(key);
+            var entry = db.GetItem<CacheEntry>(key);
             if (entry == null)
                 return default(T);
 
@@ -113,7 +113,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         private int UpdateCounterBy(string key, int amount)
         {
-            return (int) db.IncrementById<CacheEntry>(key, DataField, amount);
+            return (int) db.Increment<CacheEntry>(key, DataField, amount);
         }
 
         public bool Add<T>(string key, T value, TimeSpan expiresIn)
@@ -169,7 +169,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public bool Remove(string key)
         {
-            var existingItem = db.DeleteItemById<CacheEntry>(key, ReturnItem.Old);
+            var existingItem = db.DeleteItem<CacheEntry>(key, ReturnItem.Old);
             return existingItem != null;
         }
 
@@ -228,7 +228,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public TimeSpan? GetTimeToLive(string key)
         {
-            var entry = db.GetItemById<CacheEntry>(key);
+            var entry = db.GetItem<CacheEntry>(key);
             if (entry == null)
                 return null;
 

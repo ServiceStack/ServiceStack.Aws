@@ -15,19 +15,19 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var key = Guid.NewGuid().ToString();
 
-            var nextId = db.IncrementById<Seq>(key, "Counter");
+            var nextId = db.Increment<Seq>(key, "Counter");
             Assert.That(nextId, Is.EqualTo(1));
 
-            nextId = db.IncrementById<Seq>(key, "Counter");
+            nextId = db.Increment<Seq>(key, "Counter");
             Assert.That(nextId, Is.EqualTo(2));
 
-            nextId = db.IncrementById<Seq>(key, "Counter", 10);
+            nextId = db.Increment<Seq>(key, "Counter", 10);
             Assert.That(nextId, Is.EqualTo(12));
 
-            nextId = db.IncrementById<Seq>(key, "Counter", 10);
+            nextId = db.Increment<Seq>(key, "Counter", 10);
             Assert.That(nextId, Is.EqualTo(22));
 
-            nextId = db.IncrementById<Seq>(key, "Counter", 0);
+            nextId = db.Increment<Seq>(key, "Counter", 0);
             Assert.That(nextId, Is.EqualTo(22));
         }
 

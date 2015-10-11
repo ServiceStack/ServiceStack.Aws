@@ -90,7 +90,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(country);
 
-            var dbCountry = db.GetItemById<Country>(2);
+            var dbCountry = db.GetItem<Country>(2);
 
             dbCountry.PrintDump();
 
@@ -176,13 +176,13 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(customer);
 
-            var dbCustomer = db.GetItemById<Customer>(11);
+            var dbCustomer = db.GetItem<Customer>(11);
 
             Assert.That(dbCustomer.Equals(customer));
 
-            db.DeleteItemById<Customer>(11);
+            db.DeleteItem<Customer>(11);
 
-            dbCustomer = db.GetItemById<Customer>(11);
+            dbCustomer = db.GetItem<Customer>(11);
 
             Assert.That(dbCustomer, Is.Null);
         }
@@ -211,7 +211,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(db.Sequences.Current<Order>(), Is.EqualTo(20));
             Assert.That(db.Sequences.Current<CustomerAddress>(), Is.EqualTo(30));
 
-            var dbCustomer = db.GetItemById<Customer>(11);
+            var dbCustomer = db.GetItem<Customer>(11);
             Assert.That(dbCustomer.Id, Is.EqualTo(11));
 
             customer = new Customer
@@ -272,7 +272,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(nodes);
 
-            var dbNodes = db.GetItemById<Node>(1);
+            var dbNodes = db.GetItem<Node>(1);
 
             dbNodes.PrintDump();
 
@@ -295,7 +295,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(row);
 
-            var dbRow = db.GetItemById<Collection>(1);
+            var dbRow = db.GetItem<Collection>(1);
 
             dbRow.PrintDump();
 

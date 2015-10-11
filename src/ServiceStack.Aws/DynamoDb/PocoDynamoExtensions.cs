@@ -60,17 +60,17 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static long DecrementById<T>(this IPocoDynamo db, object id, string fieldName, long amount = 1)
         {
-            return db.IncrementById<T>(id, fieldName, amount * -1);
+            return db.Increment<T>(id, fieldName, amount * -1);
         }
 
         public static long IncrementById<T>(this IPocoDynamo db, object id, Expression<Func<T, object>> fieldExpr, long amount = 1)
         {
-            return db.IncrementById<T>(id, AwsClientUtils.GetMemberName(fieldExpr), amount);
+            return db.Increment<T>(id, AwsClientUtils.GetMemberName(fieldExpr), amount);
         }
 
         public static long DecrementById<T>(this IPocoDynamo db, object id, Expression<Func<T, object>> fieldExpr, long amount = 1)
         {
-            return db.IncrementById<T>(id, AwsClientUtils.GetMemberName(fieldExpr), amount * -1);
+            return db.Increment<T>(id, AwsClientUtils.GetMemberName(fieldExpr), amount * -1);
         }
 
         public static ReturnValue ToReturnValue(this ReturnItem returnItem)
@@ -123,17 +123,17 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static List<T> GetItemsByIds<T>(this IPocoDynamo db, IEnumerable<int> ids)
         {
-            return db.GetItemsByIds<T>(ids.Map(x => (object)x));
+            return db.GetItems<T>(ids.Map(x => (object)x));
         }
 
         public static List<T> GetItemsByIds<T>(this IPocoDynamo db, IEnumerable<long> ids)
         {
-            return db.GetItemsByIds<T>(ids.Map(x => (object)x));
+            return db.GetItems<T>(ids.Map(x => (object)x));
         }
 
         public static List<T> GetItemsByIds<T>(this IPocoDynamo db, IEnumerable<string> ids)
         {
-            return db.GetItemsByIds<T>(ids.Map(x => (object)x));
+            return db.GetItems<T>(ids.Map(x => (object)x));
         }
 
         public static IEnumerable<T> Scan<T>(this IPocoDynamo db, string filterExpression, object args)

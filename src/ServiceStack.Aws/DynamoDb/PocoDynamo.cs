@@ -22,13 +22,13 @@ namespace ServiceStack.Aws.DynamoDb
         bool CreateMissingTables(IEnumerable<DynamoMetadataType> tables, TimeSpan? timeout = null);
         bool DeleteAllTables(TimeSpan? timeout = null);
         bool DeleteTables(IEnumerable<string> tableNames, TimeSpan? timeout = null);
-        T GetItemById<T>(object id);
-        List<T> GetItemsByIds<T>(IEnumerable<object> ids);
-        T GetItemByHashAndRange<T>(object hash, object range);
+        T GetItem<T>(object hash);
+        T GetItem<T>(object hash, object range);
+        List<T> GetItems<T>(IEnumerable<object> hashes);
         T PutItem<T>(T value, bool returnOld = false);
         void PutItems<T>(IEnumerable<T> items);
-        T DeleteItemById<T>(object hash, ReturnItem returnItem = ReturnItem.None);
-        long IncrementById<T>(object id, string fieldName, long amount = 1);
+        T DeleteItem<T>(object hash, ReturnItem returnItem = ReturnItem.None);
+        long Increment<T>(object hash, string fieldName, long amount = 1);
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
 
@@ -290,13 +290,13 @@ namespace ServiceStack.Aws.DynamoDb
             return WaitForTablesToBeDeleted(tableNames);
         }
 
-        public T GetItemById<T>(object id)
+        public T GetItem<T>(object hash)
         {
             var table = DynamoMetadata.GetTable<T>();
             var request = new GetItemRequest
             {
                 TableName = table.Name,
-                Key = Converters.ToAttributeKeyValue(this, table.HashKey, id),
+                Key = Converters.ToAttributeKeyValue(this, table.HashKey, hash),
                 ConsistentRead = ConsistentRead,
             };
 
@@ -309,14 +309,14 @@ namespace ServiceStack.Aws.DynamoDb
             return Converters.FromAttributeValues<T>(table, attributeValues);
         }
 
-        public List<T> GetItemsByIds<T>(IEnumerable<object> ids)
+        public List<T> GetItems<T>(IEnumerable<object> hashes)
         {
             const int MaxBatchSize = 100;
 
             var to = new List<T>();
 
             var table = DynamoMetadata.GetTable<T>();
-            var remainingIds = ids.ToList();
+            var remainingIds = hashes.ToList();
 
             while (remainingIds.Count > 0)
             {
@@ -356,7 +356,7 @@ namespace ServiceStack.Aws.DynamoDb
             return to;
         }
 
-        public T GetItemByHashAndRange<T>(object hash, object range)
+        public T GetItem<T>(object hash, object range)
         {
             var table = DynamoMetadata.GetTable<T>();
             var request = new GetItemRequest
@@ -458,7 +458,7 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
-        public T DeleteItemById<T>(object hash, ReturnItem returnItem = ReturnItem.None)
+        public T DeleteItem<T>(object hash, ReturnItem returnItem = ReturnItem.None)
         {
             var table = DynamoMetadata.GetTable<T>();
             var request = new DeleteItemRequest
@@ -476,13 +476,13 @@ namespace ServiceStack.Aws.DynamoDb
             return Converters.FromAttributeValues<T>(table, response.Attributes);
         }
 
-        public long IncrementById<T>(object id, string fieldName, long amount = 1)
+        public long Increment<T>(object hash, string fieldName, long amount = 1)
         {
             var type = DynamoMetadata.GetType<T>();
             var request = new UpdateItemRequest
             {
                 TableName = type.Name,
-                Key = Converters.ToAttributeKeyValue(this, type.HashKey, id),
+                Key = Converters.ToAttributeKeyValue(this, type.HashKey, hash),
                 AttributeUpdates = new Dictionary<string, AttributeValueUpdate> {
                     {
                         fieldName,

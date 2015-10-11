@@ -20,7 +20,7 @@ namespace Host.Console
         public object Get(Todo todo)
         {
             if (todo.Id != default(long))
-                return Dynamo.GetItemById<Todo>(todo.Id);
+                return Dynamo.GetItem<Todo>(todo.Id);
 
             return Dynamo.GetAll<Todo>();
         }
@@ -42,7 +42,7 @@ namespace Host.Console
 
         public void Delete(Todo todo)
         {
-            Dynamo.DeleteItemById<Todo>(todo.Id);
+            Dynamo.DeleteItem<Todo>(todo.Id);
         }
     }
 }
