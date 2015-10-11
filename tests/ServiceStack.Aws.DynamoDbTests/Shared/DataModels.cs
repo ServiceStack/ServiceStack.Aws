@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Amazon.DynamoDBv2.DataModel;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.DataAnnotations;
 
@@ -135,14 +136,14 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         }
     }
 
-    public class OrderFieldIndex : Order
+    public class OrderWithFieldIndex : Order
     {
         [Index]
         public override decimal Cost { get; set; }
     }
 
     [Alias("CustomCostIndex")]
-    public class OrderCostIndex : ILocalIndex<OrderLocalIndex>
+    public class OrderCostIndex : ILocalIndex<OrderWithLocalTypedIndex>
     {
         public int CustomerId { get; set; }
         [Index]
@@ -152,7 +153,22 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
     }
 
     [References(typeof(OrderCostIndex))]
-    public class OrderLocalIndex : Order { }
+    public class OrderWithLocalTypedIndex : Order { }
+
+    [CompositeIndex("ProductId", "Cost")]
+    public class OrderGlobalCostIndex : IGlobalIndex<OrderWithGlobalTypedIndex>
+    {
+        public int ProductId { get; set; }
+        public decimal Cost { get; set; }
+        public int Qty { get; set; }
+        public int Id { get; set; }
+    }
+
+    [References(typeof (OrderGlobalCostIndex))]
+    public class OrderWithGlobalTypedIndex : Order
+    {
+        public int ProductId { get; set; }
+    }
 
     public class Country
     {
@@ -321,5 +337,88 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
                 return hashCode;
             }
         }
+    }
+
+    public class TableWithDynamoAttributes
+    {
+        public string A { get; set; }
+        public string B { get; set; }
+
+        [DynamoDBRangeKey]
+        public string C { get; set; }
+
+        [DynamoDBHashKey]
+        public string D { get; set; }
+
+        public string E { get; set; }
+    }
+
+    [CompositeIndex("D","C")]
+    public class TableWithCompositeIndex
+    {
+        public string A { get; set; }
+        public string B { get; set; }
+        public string C { get; set; }
+        public string D { get; set; }
+        public string E { get; set; }
+    }
+
+    public class GlobalIndexWithInterfaceAttrs : IGlobalIndex<TableWithTypedGlobalIndex>
+    {
+        public string A { get; set; }
+        [PrimaryKey]
+        public string B { get; set; }
+        public string C { get; set; }
+        [RangeKey]
+        public string D { get; set; }
+    }
+
+    [References(typeof(GlobalIndexWithInterfaceAttrs))]
+    public class TableWithTypedGlobalIndex
+    {
+        public string A { get; set; }
+        public string B { get; set; }
+        [RangeKey]
+        public string C { get; set; }
+        [HashKey]
+        public string D { get; set; }
+        public string E { get; set; }
+    }
+
+    public class TableWithConventionNames
+    {
+        public string A { get; set; }
+        public string HashKey { get; set; }
+        public string RangeKey { get; set; }
+    }
+
+    public class TableWithIdConvention
+    {
+        public string A { get; set; }
+        public string Id { get; set; }
+        public string RangeKey { get; set; }
+    }
+
+    [ProvisionedThroughput(ReadCapacityUnits = 100, WriteCapacityUnits = 50)]
+    public class TableWithProvision
+    {
+        public string Id { get; set; }
+        public string A { get; set; }
+    }
+
+    [ProvisionedThroughput(ReadCapacityUnits = 100, WriteCapacityUnits = 50)]
+    public class GlobalIndexProvision : IGlobalIndex<TableWithGlobalIndexProvision>
+    {
+        [PrimaryKey]
+        public string A { get; set; }
+        [Index]
+        public string Id { get; set; }
+    }
+
+    [References(typeof(GlobalIndexProvision))]
+    public class TableWithGlobalIndexProvision
+    {
+        public string Id { get; set; }
+        public string A { get; set; }
     }
 }

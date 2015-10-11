@@ -119,4 +119,12 @@ namespace ServiceStack.Aws.DynamoDb
     public interface ILocalIndex<T> : IDynamoIndex<T> { }
 
     public interface IGlobalIndex<T> : IDynamoIndex<T> { }
+
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    public class ProvisionedThroughputAttribute : AttributeBase
+    {
+        public int ReadCapacityUnits { get; set; }
+        public int WriteCapacityUnits { get; set; }
+    }
 }
