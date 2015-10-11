@@ -167,5 +167,42 @@ namespace ServiceStack.Aws.DynamoDb
         {
             return db.GetRelatedByHash<T>(parent.GetId());
         }
+
+        public static IEnumerable<T> QueryRelated<T>(this IPocoDynamo db, object parent, Expression<Func<T, bool>> predicate, string[] fields = null)
+        {
+            return db.QueryRelatedByHash(parent.GetId(), predicate, fields);
+        }
+
+        public static IEnumerable<T> QueryRelated<T>(this IPocoDynamo db, object parent, Expression<Func<T, bool>> predicate, Func<T, object> fields)
+        {
+            return db.QueryRelatedByHash(parent.GetId(), predicate, fields(typeof(T).CreateInstance<T>()).GetType().AllFields());
+        }
+
+        public static IEnumerable<T> QueryRelatedByHash<T>(this IPocoDynamo db, object hash, Expression<Func<T, bool>> predicate, Func<T, object> fields)
+        {
+            return db.QueryRelatedByHash(hash, predicate, fields(typeof(T).CreateInstance<T>()).GetType().AllFields());
+        }
+
+        public static IEnumerable<T> QueryRelatedByHash<T>(this IPocoDynamo db, object hash, Expression<Func<T, bool>> predicate, string[] fields = null)
+        {
+            var q = PocoDynamoExpression.FactoryFn(typeof(T), predicate);
+
+            var keyExpression = "{0} = :k1".Fmt(q.Table.HashKey.Name);
+            q.Params[":k1"] = hash;
+
+            var indexField = q.ReferencedFields.FirstOrDefault(x =>
+                x != q.Table.HashKey.Name || x != q.Table.RangeKey.Name);
+
+            var index = q.Table.LocalIndexes.FirstOrDefault(x => x.IndexField == indexField);
+
+            if (index == null)
+                throw new ArgumentException("Could not find index for field '{0}'".Fmt(indexField));
+
+            var projectionExpr = fields.IsEmpty()
+                ? null
+                : string.Join(", ", fields);
+
+            return db.QueryIndex<T>(index.Name, keyExpression, q.FilterExpression, q.Params, projectionExpr);
+        }
     }
 }

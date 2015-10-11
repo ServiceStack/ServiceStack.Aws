@@ -43,31 +43,9 @@ namespace ServiceStack.Aws.DynamoDbTests
         public void Can_Get_from_Related_Order_Table_from_Customer()
         {
             var db = CreatePocoDynamo();
-            var types = new List<Type>()
-                .Add<Customer>()
-                .Add<Order>();
+            var customer = CreateCustomer(db);
 
-            db.RegisterTables(types);
-            db.InitSchema();
-
-            var customer = new Customer
-            {
-                Name = "Customer #1",
-                PrimaryAddress = new CustomerAddress
-                {
-                    AddressLine1 = "Line 1",
-                    City = "Darwin",
-                    State = "NT",
-                    Country = "AU",
-                }
-            };
-
-            db.PutItem(customer);
-
-            Assert.That(customer.Id, Is.GreaterThan(0));
-            Assert.That(customer.PrimaryAddress.Id, Is.GreaterThan(0));
-
-            var orders = new []
+            var orders = new[]
             {
                 new Order
                 {
@@ -87,6 +65,9 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutRelated(customer, orders);
 
+            Assert.That(customer.Id, Is.GreaterThan(0));
+            Assert.That(customer.PrimaryAddress.Id, Is.GreaterThan(0));
+
             Assert.That(orders[0].Id, Is.GreaterThan(0));
             Assert.That(orders[0].CustomerId, Is.EqualTo(customer.Id));
             Assert.That(orders[1].Id, Is.GreaterThan(0));
@@ -96,5 +77,70 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             Assert.That(dbOrders, Is.EquivalentTo(orders));
         }
+
+        [Test]
+        public void Can_Create_LocalIndex()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<OrderFieldIndex>();
+
+            var customer = CreateCustomer(db);
+
+            var orders = 10.Times(i => new OrderFieldIndex
+            {
+                LineItem = "Item " + (i + 1),
+                Qty = i + 2,
+                Cost = (i + 2) * 2
+            });
+
+            db.PutRelated(customer, orders);
+
+            var expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer, x => x.Cost > 10).ToList();
+
+            Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.Cost > 10)));
+            Assert.That(expensiveOrders.All(x => x.Qty == 0));  //non-projected field
+
+            expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer, x => x.Cost > 10, new [] { "Qty" }).ToList();
+            Assert.That(expensiveOrders.All(x => x.Id == 0));
+            Assert.That(expensiveOrders.All(x => x.Qty > 0));
+
+            expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer, x => x.Cost > 10, typeof(OrderFieldIndex).AllFields()).ToList();
+            Assert.That(expensiveOrders.All(x => x.Id > 0 && x.CustomerId > 0 && x.Qty > 0 && x.Cost > 0 && x.LineItem != null));
+
+            expensiveOrders = db.QueryRelated<OrderFieldIndex>(customer, x => x.Cost > 10, x => new { x.Id, x.Cost }).ToList();
+            Assert.That(expensiveOrders.All(x => x.CustomerId == 0));
+            Assert.That(expensiveOrders.All(x => x.Id > 0 && x.Cost > 0));
+
+            expensiveOrders = db.QueryRelatedByHash<OrderFieldIndex>(customer.Id, x => x.Cost > 10, x => new { x.Id, x.Cost }).ToList();
+            Assert.That(expensiveOrders.All(x => x.CustomerId == 0));
+            Assert.That(expensiveOrders.All(x => x.Id > 0 && x.Cost > 0));
+        }
+
+        private static Customer CreateCustomer(IPocoDynamo db)
+        {
+            var types = new List<Type>()
+                .Add<Customer>()
+                .Add<Order>();
+
+            db.RegisterTables(types);
+
+            db.InitSchema();
+
+            var customer = new Customer
+            {
+                Name = "Customer #1",
+                PrimaryAddress = new CustomerAddress
+                {
+                    AddressLine1 = "Line 1",
+                    City = "Darwin",
+                    State = "NT",
+                    Country = "AU",
+                }
+            };
+
+            db.PutItem(customer);
+            return customer;
+        }
     }
+
 }

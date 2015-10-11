@@ -31,7 +31,6 @@ namespace ServiceStack.Aws.DynamoDb
         long IncrementById<T>(object id, string fieldName, long amount = 1);
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
-        IPocoDynamo Clone();
 
         IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter);
         IEnumerable<T> ScanAll<T>();
@@ -39,7 +38,19 @@ namespace ServiceStack.Aws.DynamoDb
         List<T> Scan<T>(string filterExpression, Dictionary<string, object> args, int limit);
 
         void PutRelatedByHash<T>(object hashId, IEnumerable<T> items);
-        IEnumerable<T> GetRelatedByHash<T>(object hashId); 
+        IEnumerable<T> GetRelatedByHash<T>(object hashId);
+
+        IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter);
+        IEnumerable<T> QueryIndex<T>(string indexName, string keyExpression, string filterExpression, Dictionary<string, object> args, string projectionExpression = null);
+
+        IPocoDynamo ClientWith(
+            bool? consistentRead = null,
+            long? readCapacityUnits = null,
+            long? writeCapacityUnits = null,
+            TimeSpan? pollTableStatus = null,
+            TimeSpan? maxRetryOnExceptionTimeout = null,
+            int? limit = null,
+            bool? scanIndexForward = null);
 
         void Close();
     }
@@ -55,6 +66,8 @@ namespace ServiceStack.Aws.DynamoDb
         public DynamoConverters Converters { get; set; }
 
         public bool ConsistentRead { get; set; }
+
+        public bool ScanIndexForward { get; set; }
 
         /// <summary>
         /// If the client needs to delete/re-create the DynamoDB table, this is the Read Capacity to use
@@ -74,7 +87,6 @@ namespace ServiceStack.Aws.DynamoDb
 
         public TimeSpan MaxRetryOnExceptionTimeout { get; set; }
 
-
         public PocoDynamo(IAmazonDynamoDB dynamoDb)
         {
             this.DynamoDb = dynamoDb;
@@ -85,6 +97,7 @@ namespace ServiceStack.Aws.DynamoDb
             ReadCapacityUnits = 10;
             WriteCapacityUnits = 5;
             ConsistentRead = true;
+            ScanIndexForward = true;
             PagingLimit = 1000;
             RetryOnErrorCodes = new HashSet<string> {
                 "ThrottlingException",
@@ -100,16 +113,27 @@ namespace ServiceStack.Aws.DynamoDb
             Sequences.InitSchema();
         }
 
-        public IPocoDynamo Clone()
+        public IPocoDynamo ClientWith(
+            bool? consistentRead = null,
+            long? readCapacityUnits = null,
+            long? writeCapacityUnits = null,
+            TimeSpan? pollTableStatus = null,
+            TimeSpan? maxRetryOnExceptionTimeout = null,
+            int? limit = null,
+            bool? scanIndexForward = null)
         {
             return new PocoDynamo(DynamoDb)
             {
-                ConsistentRead = ConsistentRead,
-                ReadCapacityUnits = ReadCapacityUnits,
-                WriteCapacityUnits = WriteCapacityUnits,
+                ConsistentRead = consistentRead ?? ConsistentRead,
+                ReadCapacityUnits = readCapacityUnits ?? ReadCapacityUnits,
+                WriteCapacityUnits = writeCapacityUnits ?? WriteCapacityUnits,
+                PollTableStatus = pollTableStatus ?? PollTableStatus,
+                MaxRetryOnExceptionTimeout = maxRetryOnExceptionTimeout ?? MaxRetryOnExceptionTimeout,
+                PagingLimit = limit ?? PagingLimit,
+                ScanIndexForward = scanIndexForward ?? ScanIndexForward,
+                Converters = Converters,
+                Sequences = Sequences,
                 RetryOnErrorCodes = new HashSet<string>(RetryOnErrorCodes),
-                PollTableStatus = PollTableStatus,
-                MaxRetryOnExceptionTimeout = MaxRetryOnExceptionTimeout,
             };
         }
 
@@ -223,6 +247,30 @@ namespace ServiceStack.Aws.DynamoDb
                     WriteCapacityUnits = WriteCapacityUnits,
                 }
             };
+
+            if (!table.LocalIndexes.IsEmpty())
+            {
+                to.LocalSecondaryIndexes = table.LocalIndexes.Map(x => new LocalSecondaryIndex
+                {
+                    IndexName = x.Name,
+                    KeySchema = x.KeyFields.Map(k =>
+                    {
+                        var field = table.GetField(k);
+                        if (field.IsHashKey)
+                            return new KeySchemaElement(k, DynamoKey.Hash);
+
+                        if (attrDefinitions.All(a => a.AttributeName != k))
+                            attrDefinitions.Add(new AttributeDefinition(field.Name, field.DbType));
+
+                        return new KeySchemaElement(k, DynamoKey.Range);
+                    }),
+                    Projection = new Projection
+                    {
+                        ProjectionType = x.ProjectionType,
+                        NonKeyAttributes = x.ProjectedFields.Safe().ToList(),
+                    },
+                });
+            }
 
             return to;
         }
@@ -531,7 +579,7 @@ namespace ServiceStack.Aws.DynamoDb
             } while (!response.LastEvaluatedKey.IsEmpty());
         }
 
-        private IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter)
+        public IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter)
         {
             QueryResponse response = null;
             do
@@ -548,6 +596,26 @@ namespace ServiceStack.Aws.DynamoDb
                 }
 
             } while (!response.LastEvaluatedKey.IsEmpty());
+        }
+
+        public IEnumerable<T> QueryIndex<T>(string indexName, string keyExpression, string filterExpression, Dictionary<string, object> args, string projectionExpression = null)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+
+            var request = new QueryRequest
+            {
+                TableName = table.Name,
+                IndexName = indexName,
+                Limit = PagingLimit,
+                ConsistentRead = this.ConsistentRead,
+                ScanIndexForward = this.ScanIndexForward,
+                ProjectionExpression = projectionExpression,
+                KeyConditionExpression = keyExpression,
+                FilterExpression = filterExpression,
+                ExpressionAttributeValues = ToExpressionAttributeValues(args),                
+            };
+
+            return Query(request, r => r.ConvertAll<T>());
         }
 
         public void Close()

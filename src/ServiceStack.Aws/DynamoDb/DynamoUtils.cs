@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -21,6 +22,11 @@ namespace ServiceStack.Aws.DynamoDb
         {
             map[typeof(T)] = value;
             return map;
+        }
+
+        public static string[] AllFields(this Type type)
+        {
+            return type.GetPublicProperties().Select(x => x.Name).ToArray();
         }
     }
 
@@ -78,8 +84,8 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static List<DynamoMetadataType> GetTables()
         {
-            return Types == null 
-                ? new List<DynamoMetadataType>() 
+            return Types == null
+                ? new List<DynamoMetadataType>()
                 : Types.Where(x => x.IsTable).ToList();
         }
 
@@ -124,7 +130,7 @@ namespace ServiceStack.Aws.DynamoDb
                 return table;
             }
 
-            table = ToMetadataType(type);
+            table = ToMetadataTable(type);
             table.IsTable = true;
             Types.Add(table);
 
@@ -184,6 +190,50 @@ namespace ServiceStack.Aws.DynamoDb
 
             return metadata;
         }
+
+        private static DynamoMetadataType ToMetadataTable(Type type)
+        {
+            var alias = type.FirstAttribute<AliasAttribute>();
+            var props = type.GetSerializableProperties();
+            PropertyInfo hash, range;
+            Converters.GetHashAndRangeKeyFields(type, props, out hash, out range);
+
+            var metadata = new DynamoMetadataType
+            {
+                Type = type,
+                Name = alias != null ? alias.Name : type.Name,
+            };
+            metadata.Fields = props.Map(p =>
+                new DynamoMetadataField
+                {
+                    Parent = metadata,
+                    Type = p.PropertyType,
+                    Name = Converters.GetFieldName(p),
+                    DbType = Converters.GetFieldType(p.PropertyType),
+                    IsHashKey = p == hash,
+                    IsRangeKey = p == range,
+                    IsAutoIncrement = p.HasAttribute<AutoIncrementAttribute>(),
+                    SetValueFn = p.GetPropertySetterFn(),
+                    GetValueFn = p.GetPropertyGetterFn(),
+                }).ToArray();
+
+            metadata.HashKey = metadata.Fields.FirstOrDefault(x => x.IsHashKey);
+            metadata.RangeKey = metadata.Fields.FirstOrDefault(x => x.IsRangeKey);
+
+            metadata.LocalIndexes = props.Where(x => x.HasAttribute<IndexAttribute>()).Map(x =>
+                new DynamoLocalIndex
+                {
+                    Name = "{0}{1}Index".Fmt(metadata.Name, x.Name),
+                    IndexField = x.Name,
+                    KeyFields = new[] { metadata.HashKey.Name, x.Name },
+                    ProjectionType = DynamoProjectionType.Include,
+                    ProjectedFields = new [] { x.Name },
+                });
+
+            metadata.GlobalIndexes = new List<DynamoGlobalIndex>();
+
+            return metadata;
+        }
     }
 
     public class DynamoMetadataType
@@ -199,6 +249,10 @@ namespace ServiceStack.Aws.DynamoDb
         public DynamoMetadataField HashKey { get; set; }
 
         public DynamoMetadataField RangeKey { get; set; }
+
+        public List<DynamoLocalIndex> LocalIndexes { get; set; }
+
+        public List<DynamoGlobalIndex> GlobalIndexes { get; set; }
 
         public DynamoMetadataField GetField(string fieldName)
         {
@@ -248,5 +302,31 @@ namespace ServiceStack.Aws.DynamoDb
 
             return value;
         }
+    }
+
+    public static class DynamoProjectionType
+    {
+        public const string KeysOnly = "KEYS_ONLY";
+        public const string Include = "INCLUDE";
+        public const string All = "ALL";
+    }
+
+    public class DynamoIndex
+    {
+        public string Name { get; set; }
+        public string IndexField { get; set; }
+        public string[] KeyFields { get; set; }
+        public string ProjectionType { get; set; }
+        public string[] ProjectedFields { get; set; }
+    }
+
+    public class DynamoLocalIndex : DynamoIndex
+    {
+    }
+
+    public class DynamoGlobalIndex : DynamoIndex
+    {
+        public long ReadCapacityUnits { get; set; }
+        public long WriteCapacityUnits { get; set; }
     }
 }

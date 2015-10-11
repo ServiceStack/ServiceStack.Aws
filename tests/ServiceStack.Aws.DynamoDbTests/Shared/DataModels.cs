@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using ServiceStack.Aws.DynamoDb;
 using ServiceStack.DataAnnotations;
 
 namespace ServiceStack.Aws.DynamoDbTests.Shared
@@ -98,8 +99,10 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public int CustomerId { get; set; }
 
         public string LineItem { get; set; }
+
         public int Qty { get; set; }
-        public decimal Cost { get; set; }
+
+        public virtual decimal Cost { get; set; }
 
         protected bool Equals(Order other)
         {
@@ -130,6 +133,12 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
                 return hashCode;
             }
         }
+    }
+
+    public class OrderFieldIndex : Order
+    {
+        [Index]
+        public override decimal Cost { get; set; }
     }
 
     public class Country
