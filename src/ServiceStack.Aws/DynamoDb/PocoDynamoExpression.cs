@@ -17,17 +17,21 @@ namespace ServiceStack.Aws.DynamoDb
         private static string sep = " ";
 
         public Type Type { get; set; }
-        public DynamoMetadataType DbType { get; set; }
+
+        public DynamoMetadataType Table { get; set; }
 
         public string FilterExpression { get; set; }
+
+        public List<string> ReferencedFields { get; set; }
 
         public Dictionary<string, object> Params { get; set; }
 
         public PocoDynamoExpression(Type type)
         {
             Type = type;
-            DbType = DynamoMetadata.GetType(type);
+            Table = DynamoMetadata.GetType(type);
             Params = new Dictionary<string, object>();
+            ReferencedFields = new List<string>();
         }
 
         public PocoDynamoExpression Parse(Expression expr)
@@ -38,7 +42,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         protected internal virtual object Visit(Expression exp)
         {
-            VisitedExpressionIsTableColumn = false;
+            VisitedExpressionIsTable = false;
 
             if (exp == null) return string.Empty;
             switch (exp.NodeType)
@@ -394,6 +398,10 @@ namespace ServiceStack.Aws.DynamoDb
 
             OnVisitMemberType(modelType);
 
+            var field = this.Table.GetField(m.Member.Name);
+            if (field != null && !ReferencedFields.Contains(field.Name))
+                ReferencedFields.Add(field.Name);
+
             if (propertyInfo != null && propertyInfo.PropertyType.IsEnum)
                 return new EnumMemberAccess(m.Member.Name, propertyInfo.PropertyType);
 
@@ -506,7 +514,7 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
-        protected bool VisitedExpressionIsTableColumn = false;
+        protected bool VisitedExpressionIsTable = false;
         protected bool SkipParameterizationForThisExpression { get; set; }
 
         protected void VisitFilter(string operand, object originalLeft, object originalRight, ref object left, ref object right)
@@ -514,7 +522,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (SkipParameterizationForThisExpression)
                 return;
 
-            if (VisitedExpressionIsTableColumn || (originalRight is DateTimeOffset))
+            if (VisitedExpressionIsTable || (originalRight is DateTimeOffset))
                 return;
 
             var leftEnum = originalLeft as EnumMemberAccess;
@@ -533,7 +541,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var tableDef = DynamoMetadata.TryGetTable(modelType);
             if (tableDef != null)
-                VisitedExpressionIsTableColumn = true;
+                VisitedExpressionIsTable = true;
         }
 
         protected void ConvertToPlaceholderAndParameter(ref object right)
@@ -648,7 +656,7 @@ namespace ServiceStack.Aws.DynamoDb
             var fieldExpr = quotedExp.ToString();
             var unquotedExpr = fieldExpr.StripQuotes();
 
-            var isTableField = DbType.Fields
+            var isTableField = Table.Fields
                 .Any(x => x.Name == unquotedExpr);
             if (isTableField)
                 return true;

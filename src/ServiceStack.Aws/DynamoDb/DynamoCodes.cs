@@ -1,4 +1,6 @@
-﻿namespace ServiceStack.Aws.DynamoDb
+﻿using System;
+
+namespace ServiceStack.Aws.DynamoDb
 {
     //http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeValue.html
     public static class DynamoType
@@ -109,5 +111,21 @@
     {
         public const string HashKey = "HashKey";
         public const string RangeKey = "RangeKey";
+    }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class LocalIndexAttribute : AttributeBase
+    {
+        public Type Type { get; set; }
+
+        public string Name { get; set; }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class GlobalIndexAttribute : AttributeBase
+    {
+        public Type Type { get; set; }
+
+        public string Name { get; set; }
     }
 }

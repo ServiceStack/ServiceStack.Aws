@@ -67,7 +67,7 @@ namespace ServiceStack.Aws.DynamoDb
                             throw;
                     }
 
-                    AwsClientUtils.SleepBackOffMultiplier(i);
+                    i.SleepBackOffMultiplier();
                 }
             }
 
