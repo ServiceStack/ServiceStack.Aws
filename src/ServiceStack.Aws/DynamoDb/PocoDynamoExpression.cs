@@ -40,6 +40,11 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
+        public static PocoDynamoExpression Create<T>(Type type, Expression<Func<T, bool>> predicate)
+        {
+            return FactoryFn(typeof(T), predicate);
+        }
+
         protected internal virtual object Visit(Expression exp)
         {
             VisitedExpressionIsTable = false;

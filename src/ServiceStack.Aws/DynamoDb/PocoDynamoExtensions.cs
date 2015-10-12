@@ -100,7 +100,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static IEnumerable<T> Scan<T>(this IPocoDynamo db, Expression<Func<T, bool>> predicate)
         {
-            var q = PocoDynamoExpression.FactoryFn(typeof(T), predicate);
+            var q = PocoDynamoExpression.Create(typeof(T), predicate);
             return db.Scan<T>(q.FilterExpression, q.Params);
         }
 
@@ -111,7 +111,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static List<T> Scan<T>(this IPocoDynamo db, Expression<Func<T, bool>> predicate, int limit)
         {
-            var q = PocoDynamoExpression.FactoryFn(typeof(T), predicate);
+            var q = PocoDynamoExpression.Create(typeof(T), predicate);
             return db.Scan<T>(q.FilterExpression, q.Params, limit:limit);
         }
 
@@ -122,7 +122,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static IEnumerable<T> QueryRelated<T>(this IPocoDynamo db, Expression<Func<T, bool>> predicate, string[] fields = null)
         {
-            var q = PocoDynamoExpression.FactoryFn(typeof(T), predicate);
+            var q = PocoDynamoExpression.Create(typeof(T), predicate);
 
             var hashField = q.ReferencedFields.FirstOrDefault(x => x == q.Table.HashKey.Name);
             if (hashField == null)
