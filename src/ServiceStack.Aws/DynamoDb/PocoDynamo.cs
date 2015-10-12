@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -40,10 +41,14 @@ namespace ServiceStack.Aws.DynamoDb
         void PutRelated<T>(object hash, IEnumerable<T> items);
         IEnumerable<T> GetRelated<T>(object hash);
 
+        QueryExpression<T> FromQuery<T>(Expression<Func<T, bool>> keyExpression = null);
+        List<T> Query<T>(QueryExpression<T> request, int limit);
+        IEnumerable<T> Query<T>(QueryExpression<T> request);
+
+        QueryExpression<T> FromQueryIndex<T>(Expression<Func<T, bool>> keyExpression = null);
+
         List<T> Query<T>(QueryRequest request, int limit);
-        IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter);
-        IEnumerable<T> QueryIndex<T>(string tableName, string indexName, string keyExpression, Dictionary<string, object> args, string projectionExpression = null);
-        IEnumerable<T> Query<T>(QueryRequest request, string keyExpression, Dictionary<string, object> args);
+        IEnumerable<T> Query<T>(QueryRequest request);
 
         IPocoDynamo ClientWith(
             bool? consistentRead = null,
@@ -151,7 +156,7 @@ namespace ServiceStack.Aws.DynamoDb
             ListTablesResponse response = null;
             do
             {
-                response = response == null 
+                response = response == null
                     ? Exec(() => DynamoDb.ListTables())
                     : Exec(() => DynamoDb.ListTables(response.LastEvaluatedTableName));
 
@@ -263,7 +268,8 @@ namespace ServiceStack.Aws.DynamoDb
                     },
                 });
 
-                table.LocalIndexes.Each(x => {
+                table.LocalIndexes.Each(x =>
+                {
                     if (x.RangeKey != null && attrDefinitions.All(a => a.AttributeName != x.RangeKey.Name))
                         attrDefinitions.Add(new AttributeDefinition(x.RangeKey.Name, x.RangeKey.DbType));
                 });
@@ -286,7 +292,8 @@ namespace ServiceStack.Aws.DynamoDb
                     }
                 });
 
-                table.GlobalIndexes.Each(x => {
+                table.GlobalIndexes.Each(x =>
+                {
                     if (x.HashKey != null && attrDefinitions.All(a => a.AttributeName != x.HashKey.Name))
                         attrDefinitions.Add(new AttributeDefinition(x.HashKey.Name, x.HashKey.DbType));
                     if (x.RangeKey != null && attrDefinitions.All(a => a.AttributeName != x.RangeKey.Name))
@@ -350,8 +357,8 @@ namespace ServiceStack.Aws.DynamoDb
                 var getItems = new KeysAndAttributes
                 {
                     ConsistentRead = ConsistentRead,
-                };                    
-                nextBatch.Each(id => 
+                };
+                nextBatch.Each(id =>
                     getItems.Keys.Add(Converters.ToAttributeKeyValue(this, table.HashKey, id)));
 
                 var request = new BatchGetItemRequest(new Dictionary<string, KeysAndAttributes> {
@@ -537,23 +544,6 @@ namespace ServiceStack.Aws.DynamoDb
             return Scan(request, r => r.ConvertAll<T>());
         }
 
-        private Dictionary<string, AttributeValue> ToExpressionAttributeValues(Dictionary<string, object> args)
-        {
-            var attrValues = new Dictionary<string, AttributeValue>();
-            foreach (var arg in args)
-            {
-                var key = arg.Key.StartsWith(":")
-                    ? arg.Key
-                    : ":" + arg.Key;
-
-                var argType = arg.Value.GetType();
-                var dbType = Converters.GetFieldType(argType);
-
-                attrValues[key] = Converters.ToAttributeValue(this, argType, dbType, arg.Value);
-            }
-            return attrValues;
-        }
-
         public IEnumerable<T> Scan<T>(string filterExpression, Dictionary<string, object> args)
         {
             var type = DynamoMetadata.GetType<T>();
@@ -562,7 +552,7 @@ namespace ServiceStack.Aws.DynamoDb
                 TableName = type.Name,
                 Limit = PagingLimit,
                 FilterExpression = filterExpression,
-                ExpressionAttributeValues = ToExpressionAttributeValues(args),
+                ExpressionAttributeValues = this.ToExpressionAttributeValues(args),
             };
 
             return Scan(request, r => r.ConvertAll<T>());
@@ -576,7 +566,7 @@ namespace ServiceStack.Aws.DynamoDb
                 TableName = type.Name,
                 Limit = limit,
                 FilterExpression = filterExpression,
-                ExpressionAttributeValues = ToExpressionAttributeValues(args),
+                ExpressionAttributeValues = this.ToExpressionAttributeValues(args),
             };
 
             return Scan(request, r => r.ConvertAll<T>()).Take(limit).ToList();
@@ -602,23 +592,52 @@ namespace ServiceStack.Aws.DynamoDb
             } while (!response.LastEvaluatedKey.IsEmpty());
         }
 
-        public IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter)
+        public QueryExpression<T> FromQuery<T>(Expression<Func<T, bool>> keyExpression = null)
         {
-            QueryResponse response = null;
-            do
+            var q = new QueryExpression<T>(this)
             {
-                if (response != null)
-                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+                Limit = PagingLimit,
+                ConsistentRead = !typeof(T).IsGlobalIndex() && this.ConsistentRead,
+                ScanIndexForward = this.ScanIndexForward,
+            };
 
-                response = Exec(() => DynamoDb.Query(request));
-                var results = converter(response);
+            if (keyExpression != null)
+                q.KeyCondition(keyExpression);
 
-                foreach (var result in results)
-                {
-                    yield return result;
-                }
+            return q;
+        }
 
-            } while (!response.LastEvaluatedKey.IsEmpty());
+        public QueryExpression<T> FromQueryIndex<T>(Expression<Func<T, bool>> keyExpression = null)
+        {
+            var table = typeof(T).GetIndexTable();
+            var index = table.GetIndex(typeof(T));
+            var q = new QueryExpression<T>(this, table)
+            {
+                IndexName = index.Name,
+                Limit = PagingLimit,
+                ConsistentRead = !typeof(T).IsGlobalIndex() && this.ConsistentRead,
+                ScanIndexForward = this.ScanIndexForward,
+            };
+
+            if (keyExpression != null)
+                q.KeyCondition(keyExpression);
+
+            return q;
+        }
+
+        public IEnumerable<T> Query<T>(QueryExpression<T> request)
+        {
+            return Query(request, r => r.ConvertAll<T>());
+        }
+
+        public List<T> Query<T>(QueryExpression<T> request, int limit)
+        {
+            return Query<T>((QueryRequest)request, limit);
+        }
+
+        public IEnumerable<T> Query<T>(QueryRequest request)
+        {
+            return Query(request, r => r.ConvertAll<T>());
         }
 
         public List<T> Query<T>(QueryRequest request, int limit)
@@ -650,28 +669,23 @@ namespace ServiceStack.Aws.DynamoDb
             return to;
         }
 
-        public IEnumerable<T> Query<T>(QueryRequest request, string keyExpression, Dictionary<string, object> args)
+        public IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter)
         {
-            request.KeyConditionExpression = keyExpression;
-            request.ExpressionAttributeValues = ToExpressionAttributeValues(args);
-            return Query(request, r => r.ConvertAll<T>());
-        }
-
-        public IEnumerable<T> QueryIndex<T>(string tableName, string indexName, string keyExpression, Dictionary<string, object> args, string projectionExpression = null)
-        {
-            var request = new QueryRequest
+            QueryResponse response = null;
+            do
             {
-                TableName = tableName,
-                IndexName = indexName,
-                Limit = PagingLimit,
-                ConsistentRead = !typeof(T).IsGlobalIndex() && this.ConsistentRead,
-                ScanIndexForward = this.ScanIndexForward,
-                ProjectionExpression = projectionExpression,
-                KeyConditionExpression = keyExpression,
-                ExpressionAttributeValues = ToExpressionAttributeValues(args),                
-            };
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
 
-            return Query(request, r => r.ConvertAll<T>());
+                response = Exec(() => DynamoDb.Query(request));
+                var results = converter(response);
+
+                foreach (var result in results)
+                {
+                    yield return result;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty());
         }
 
         public void Close()

@@ -21,9 +21,9 @@ namespace ServiceStack.Aws.DynamoDb
             return map;
         }
 
-        public static string[] AllFields(this Type type)
+        public static List<string> AllFields(this Type type)
         {
-            return type.GetPublicProperties().Select(x => x.Name).ToArray();
+            return type.GetPublicProperties().Select(x => x.Name).ToList();
         }
 
         public static bool IsGlobalIndex(this Type indexType)

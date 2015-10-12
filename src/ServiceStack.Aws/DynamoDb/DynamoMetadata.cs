@@ -319,6 +319,11 @@ namespace ServiceStack.Aws.DynamoDb
             return Fields.FirstOrDefault(x => x.Name == fieldName);
         }
 
+        public bool HasField(string fieldName)
+        {
+            return GetField(fieldName) != null;
+        }
+
         public DynamoMetadataField GetField(Type type)
         {
             return Fields.FirstOrDefault(x => x.Type == type);
@@ -328,6 +333,12 @@ namespace ServiceStack.Aws.DynamoDb
         {
             return (DynamoIndex)this.LocalIndexes.FirstOrDefault(x => x.IndexType == indexType)
                 ?? this.GlobalIndexes.FirstOrDefault(x => x.IndexType == indexType);
+        }
+
+        public DynamoIndex GetIndexByField(string fieldName)
+        {
+            return (DynamoIndex)this.LocalIndexes.FirstOrDefault(x => x.RangeKey != null && x.RangeKey.Name == fieldName)
+                ?? this.GlobalIndexes.FirstOrDefault(x => x.RangeKey != null && x.RangeKey.Name == fieldName);
         }
     }
 

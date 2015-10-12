@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
@@ -11,6 +12,13 @@ namespace ServiceStack.Aws.DynamoDbTests
 {
     public class PocoDynamoRelatedTables : DynamoTestBase
     {
+        [TestFixtureSetUp]
+        public void TestFixtureSetUp()
+        {
+            var db = CreatePocoDynamo();
+            db.DeleteAllTables(TimeSpan.FromMinutes(1));
+        }
+
         [Test]
         public void Does_generate_correct_metadata_for_Related_Order_Table()
         {
@@ -68,7 +76,10 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(orders[1].CustomerId, Is.EqualTo(customer.Id));
 
             var dbOrders = db.GetRelated<Order>(customer.Id).ToList();
+            Assert.That(dbOrders, Is.EquivalentTo(orders));
 
+            dbOrders = db.Query(db.FromQuery<Order>()
+                .KeyCondition(x => x.CustomerId == customer.Id)).ToList();
             Assert.That(dbOrders, Is.EquivalentTo(orders));
         }
 
@@ -89,28 +100,28 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutRelated(customer.Id, orders);
 
-            var expensiveOrders = db.QueryRelated<OrderWithFieldIndex>(
-                x => x.CustomerId == customer.Id && x.Cost > 10).ToList();
+            var q = db.FromQuery<OrderWithFieldIndex>(x => x.CustomerId == customer.Id)
+                .IndexCondition(x => x.Cost > 10);
 
+            var expensiveOrders = db.Query(q).ToList();
             Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.Cost > 10)));
             Assert.That(expensiveOrders.All(x => x.Qty == 0));  //non-projected field
 
-            expensiveOrders = db.QueryRelated<OrderWithFieldIndex>(x => 
-                x.CustomerId == customer.Id && x.Cost > 10, new [] { "Qty" }).ToList();
-            Assert.That(expensiveOrders.All(x => x.Id == 0));
-            Assert.That(expensiveOrders.All(x => x.Qty > 0));
+            expensiveOrders = db.Query(q.Clone().Select(new[] { "Qty" })).ToList();
+            Assert.That(expensiveOrders.All(x => x.Id == 0 && x.Qty > 0));
 
-            expensiveOrders = db.QueryRelated<OrderWithFieldIndex>(x => 
-                x.CustomerId == customer.Id && x.Cost > 10, typeof(OrderWithFieldIndex).AllFields()).ToList();
+            expensiveOrders = db.Query(q.Clone().SelectAll()).ToList();
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.CustomerId > 0 && x.Qty > 0 && x.LineItem != null));
 
-            expensiveOrders = db.QueryRelated<OrderWithFieldIndex>(x => 
-                x.CustomerId == customer.Id && x.Cost > 10, x => new { x.Id, x.Cost }).ToList();
+            expensiveOrders = db.Query(q.Clone().Select<OrderWithFieldIndex>()).ToList();
+            Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.CustomerId > 0 && x.Qty > 0 && x.LineItem != null));
+
+            expensiveOrders = db.Query(q.Clone().Select(x => new { x.Id, x.Cost })).ToList();
             Assert.That(expensiveOrders.All(x => x.CustomerId == 0));
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0));
 
-            Assert.Throws<ArgumentException>(() =>
-                db.QueryRelated<OrderWithFieldIndex>(x => x.Cost > 10).ToList());
+            Assert.Throws<AmazonDynamoDBException>(() =>
+                db.Query(db.FromQuery<OrderWithFieldIndex>().IndexCondition(x => x.Cost > 10)).ToList());
         }
 
         [Test]
@@ -121,10 +132,6 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var customer = CreateCustomer(db);
 
-            var table = DynamoMetadata.GetTable<OrderWithLocalTypedIndex>();
-            Assert.That(table.LocalIndexes.Count, Is.EqualTo(1));
-            Assert.That(table.LocalIndexes[0].Name, Is.EqualTo("CustomCostIndex")); //Alias
-
             var orders = 10.Times(i => new OrderWithLocalTypedIndex
             {
                 LineItem = "Item " + (i + 1),
@@ -134,7 +141,8 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutRelated(customer.Id, orders);
 
-            var expensiveOrders = db.QueryIndex<OrderCostIndex>(x => x.CustomerId == customer.Id && x.Cost > 10).ToList();
+            var expensiveOrders = db.Query(
+                db.FromQueryIndex<OrderCostIndex>(x => x.CustomerId == customer.Id && x.Cost > 10)).ToList();
 
             expensiveOrders.PrintDump();
 
@@ -143,7 +151,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
 
             Assert.Throws<AmazonDynamoDBException>(() =>
-                db.QueryIndex<OrderCostIndex>(x => x.Cost > 10).ToList());
+                db.Query(db.FromQueryIndex<OrderCostIndex>(x => x.Cost > 10)).ToList());
         }
 
         [Test]
@@ -169,7 +177,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutRelated(customer.Id, orders);
 
-            var expensiveOrders = db.QueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10).ToList();
+            var expensiveOrders = db.Query(db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10)).ToList();
 
             expensiveOrders.PrintDump();
 

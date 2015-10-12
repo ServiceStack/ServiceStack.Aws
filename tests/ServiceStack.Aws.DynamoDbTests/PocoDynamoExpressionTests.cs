@@ -12,7 +12,7 @@ namespace ServiceStack.Aws.DynamoDbTests
     {
         public PocoDynamoExpression Parse<T>(Expression<Func<T, bool>> predicate)
         {
-            return PocoDynamoExpression.FactoryFn(typeof(T), predicate);
+            return PocoDynamoExpression.Create(typeof(T), predicate);
         }
 
         private static IPocoDynamo InitTypes()

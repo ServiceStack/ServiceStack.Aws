@@ -115,48 +115,21 @@ namespace ServiceStack.Aws.DynamoDb
             return db.Scan<T>(q.FilterExpression, q.Params, limit:limit);
         }
 
-        public static IEnumerable<T> QueryRelated<T>(this IPocoDynamo db, Expression<Func<T, bool>> predicate, Func<T, object> fields)
+        public static Dictionary<string, AttributeValue> ToExpressionAttributeValues(this IPocoDynamo db, Dictionary<string, object> args)
         {
-            return db.QueryRelated(predicate, fields(typeof(T).CreateInstance<T>()).GetType().AllFields());
-        }
+            var attrValues = new Dictionary<string, AttributeValue>();
+            foreach (var arg in args)
+            {
+                var key = arg.Key.StartsWith(":")
+                    ? arg.Key
+                    : ":" + arg.Key;
 
-        public static IEnumerable<T> QueryRelated<T>(this IPocoDynamo db, Expression<Func<T, bool>> predicate, string[] fields = null)
-        {
-            var q = PocoDynamoExpression.Create(typeof(T), predicate);
+                var argType = arg.Value.GetType();
+                var dbType = db.Converters.GetFieldType(argType);
 
-            var hashField = q.ReferencedFields.FirstOrDefault(x => x == q.Table.HashKey.Name);
-            if (hashField == null)
-                throw new ArgumentException("The Hash Key '{0}' was not referenced in Query on '{1}'"
-                    .Fmt(q.Table.HashKey.Name, q.Table.Name));
-
-            var indexField = q.ReferencedFields.FirstOrDefault(x =>
-                x != q.Table.HashKey.Name && x != q.Table.RangeKey.Name);
-
-            var index = q.Table.LocalIndexes.FirstOrDefault(x => x.RangeKey != null && x.RangeKey.Name == indexField);
-
-            if (index == null)
-                throw new ArgumentException("Could not find index for field '{0}'".Fmt(indexField));
-
-            var projectionExpr = fields == null
-                ? null
-                : string.Join(", ", fields);
-
-            return db.QueryIndex<T>(q.Table.Name, index.Name, q.FilterExpression, q.Params, projectionExpr);
-        }
-
-        public static IEnumerable<T> QueryIndex<T>(this IPocoDynamo db, Expression<Func<T, bool>> keyExpression) 
-        {
-            var table = typeof(T).GetIndexTable();
-            if (table == null)
-                throw new ArgumentException("'{0}' is not a valid Index Type".Fmt(typeof(T).Name));
-
-            var index = table.GetIndex(typeof(T));
-            if (index == null)
-                throw new ArgumentException("Could not find index '{0}' on Table '{1}'".Fmt(typeof(T).Name, table.Name));
-
-            var q = PocoDynamoExpression.FactoryFn(typeof(T), keyExpression);
-
-            return db.QueryIndex<T>(table.Name, index.Name, q.FilterExpression, q.Params);
+                attrValues[key] = db.Converters.ToAttributeValue(db, argType, dbType, arg.Value);
+            }
+            return attrValues;
         }
     }
 }

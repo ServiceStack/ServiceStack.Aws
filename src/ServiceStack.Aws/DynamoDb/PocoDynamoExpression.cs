@@ -11,8 +11,8 @@ namespace ServiceStack.Aws.DynamoDb
 {
     public class PocoDynamoExpression
     {
-        public static Func<Type, Expression, PocoDynamoExpression> FactoryFn =
-            (type, expr) => new PocoDynamoExpression(type).Parse(expr);
+        public static Func<Type, PocoDynamoExpression> FactoryFn =
+            type => new PocoDynamoExpression(type);
 
         private static string sep = " ";
 
@@ -26,10 +26,13 @@ namespace ServiceStack.Aws.DynamoDb
 
         public Dictionary<string, object> Params { get; set; }
 
+        public string ParamPrefix { get; set; }
+
         public PocoDynamoExpression(Type type)
         {
             Type = type;
             Table = DynamoMetadata.GetType(type);
+            ParamPrefix = "p";
             Params = new Dictionary<string, object>();
             ReferencedFields = new List<string>();
         }
@@ -40,9 +43,16 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
-        public static PocoDynamoExpression Create<T>(Type type, Expression<Func<T, bool>> predicate)
+        public static PocoDynamoExpression Create<T>(Type type, Expression<Func<T, bool>> predicate, string paramPrefix = null)
         {
-            return FactoryFn(typeof(T), predicate);
+            var q = FactoryFn(typeof(T));
+
+            if (paramPrefix != null)
+                q.ParamPrefix = paramPrefix;
+
+            q.Parse(predicate);
+
+            return q;
         }
 
         protected internal virtual object Visit(Expression exp)
@@ -551,7 +561,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         protected void ConvertToPlaceholderAndParameter(ref object right)
         {
-            var paramName = ":p" + Params.Count;
+            var paramName = ":" + ParamPrefix + Params.Count;
             var paramValue = right;
 
             Params[paramName] = paramValue;
@@ -567,7 +577,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public string GetValueAsParam(object value)
         {
-            var paramName = ":p" + Params.Count;
+            var paramName = ":" + ParamPrefix + Params.Count;
             Params[paramName] = value;
             return paramName;
         }
