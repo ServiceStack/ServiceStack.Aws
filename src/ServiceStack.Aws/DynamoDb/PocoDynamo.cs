@@ -40,8 +40,10 @@ namespace ServiceStack.Aws.DynamoDb
         void PutRelated<T>(object hash, IEnumerable<T> items);
         IEnumerable<T> GetRelated<T>(object hash);
 
+        List<T> Query<T>(QueryRequest request, int limit);
         IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter);
         IEnumerable<T> QueryIndex<T>(string tableName, string indexName, string keyExpression, Dictionary<string, object> args, string projectionExpression = null);
+        IEnumerable<T> Query<T>(QueryRequest request, string keyExpression, Dictionary<string, object> args);
 
         IPocoDynamo ClientWith(
             bool? consistentRead = null,
@@ -617,6 +619,42 @@ namespace ServiceStack.Aws.DynamoDb
                 }
 
             } while (!response.LastEvaluatedKey.IsEmpty());
+        }
+
+        public List<T> Query<T>(QueryRequest request, int limit)
+        {
+            var to = new List<T>();
+
+            if (request.Limit == default(int))
+                request.Limit = limit;
+
+            QueryResponse response = null;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = Exec(() => DynamoDb.Query(request));
+                var results = response.ConvertAll<T>();
+
+                foreach (var result in results)
+                {
+                    to.Add(result);
+
+                    if (to.Count >= limit)
+                        break;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty() && to.Count < limit);
+
+            return to;
+        }
+
+        public IEnumerable<T> Query<T>(QueryRequest request, string keyExpression, Dictionary<string, object> args)
+        {
+            request.KeyConditionExpression = keyExpression;
+            request.ExpressionAttributeValues = ToExpressionAttributeValues(args);
+            return Query(request, r => r.ConvertAll<T>());
         }
 
         public IEnumerable<T> QueryIndex<T>(string tableName, string indexName, string keyExpression, Dictionary<string, object> args, string projectionExpression = null)
