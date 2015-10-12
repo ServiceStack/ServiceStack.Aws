@@ -75,6 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DynamoDb\DynamoMetadata.cs" />
     <Compile Include="Interfaces\IFileStorageProvider.cs" />
     <Compile Include="Models\FileSystemObject.cs" />
     <Compile Include="DynamoDb\DynamoUtils.cs" />
