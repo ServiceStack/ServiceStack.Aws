@@ -73,49 +73,6 @@ namespace ServiceStack.Aws.DynamoDb
             return db.Increment<T>(id, AwsClientUtils.GetMemberName(fieldExpr), amount * -1);
         }
 
-        public static ReturnValue ToReturnValue(this ReturnItem returnItem)
-        {
-            return returnItem == ReturnItem.New
-                ? ReturnValue.ALL_NEW
-                : returnItem == ReturnItem.Old
-                    ? ReturnValue.ALL_OLD
-                    : ReturnValue.NONE;
-        }
-
-        public static HashSet<string> ToStrings(this ScanResponse response, string fieldName)
-        {
-            var to = new HashSet<string>();
-            foreach (Dictionary<string, AttributeValue> values in response.Items)
-            {
-                AttributeValue attrId;
-                values.TryGetValue(fieldName, out attrId);
-
-                if (attrId != null && attrId.S != null)
-                    to.Add(attrId.S);
-            }
-            return to;
-        }
-
-        public static T ConvertTo<T>(this DynamoMetadataType table,
-            Dictionary<string, AttributeValue> attributeValues)
-        {
-            return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
-        }
-
-        public static List<T> ConvertAll<T>(this ScanResponse response)
-        {
-            return response.Items
-                .Select(values => DynamoMetadata.GetType<T>().ConvertTo<T>(values))
-                .ToList();
-        }
-
-        public static List<T> ConvertAll<T>(this QueryResponse response)
-        {
-            return response.Items
-                .Select(values => DynamoMetadata.GetType<T>().ConvertTo<T>(values))
-                .ToList();
-        }
-
         public static List<T> GetAll<T>(this IPocoDynamo db)
         {
             return db.ScanAll<T>().ToList();
@@ -187,23 +144,6 @@ namespace ServiceStack.Aws.DynamoDb
             return db.QueryIndex<T>(q.Table.Name, index.Name, q.FilterExpression, q.Params, projectionExpr);
         }
 
-        public static bool IsGlobalIndex(this Type indexType)
-        {
-            return indexType.GetTypeWithGenericInterfaceOf(typeof (IGlobalIndex<>)) != null;
-        }
-
-        public static DynamoMetadataType GetIndexTable(this Type indexType)
-        {
-            var genericIndex = indexType.GetTypeWithGenericInterfaceOf(typeof(IDynamoIndex<>));
-            if (genericIndex == null)
-                return null;
-
-            var tableType = genericIndex.GetGenericArguments().FirstOrDefault();
-            return tableType != null
-                ? DynamoMetadata.GetTable(tableType)
-                : null;
-        }
-
         public static IEnumerable<T> QueryIndex<T>(this IPocoDynamo db, Expression<Func<T, bool>> keyExpression) 
         {
             var table = typeof(T).GetIndexTable();
@@ -218,18 +158,5 @@ namespace ServiceStack.Aws.DynamoDb
 
             return db.QueryIndex<T>(table.Name, index.Name, q.FilterExpression, q.Params);
         }
-
-        public static List<KeySchemaElement> ToKeySchemas(this DynamoIndex index)
-        {
-            var to = new List<KeySchemaElement> {
-                new KeySchemaElement(index.HashKey.Name, DynamoKey.Hash),
-            };
-
-            if (index.RangeKey != null)
-                to.Add(new KeySchemaElement(index.RangeKey.Name, DynamoKey.Range));
-
-            return to;
-        }
-
     }
 }
