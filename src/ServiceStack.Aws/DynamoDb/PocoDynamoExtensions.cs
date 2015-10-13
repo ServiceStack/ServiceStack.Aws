@@ -92,6 +92,26 @@ namespace ServiceStack.Aws.DynamoDb
             return db.GetItems<T>(ids.Map(x => (object)x));
         }
 
+        public static IEnumerable<T> Scan<T>(this IPocoDynamo db, Func<ScanExpression<T>, ScanExpression<T>> fn)
+        {
+            return db.Scan(fn(db.FromScan<T>()));
+        }
+
+        public static List<T> Scan<T>(this IPocoDynamo db, Func<ScanExpression<T>, ScanExpression<T>> fn, int limit)
+        {
+            return db.Scan(fn(db.FromScan<T>()), limit: limit);
+        }
+
+        public static IEnumerable<T> Query<T>(this IPocoDynamo db, Func<QueryExpression<T>, QueryExpression<T>> fn)
+        {
+            return db.Query(fn(db.FromQuery<T>()));
+        }
+
+        public static List<T> Query<T>(this IPocoDynamo db, Func<QueryExpression<T>, QueryExpression<T>> fn, int limit)
+        {
+            return db.Query(fn(db.FromQuery<T>()), limit: limit);
+        }
+
         public static Dictionary<string, AttributeValue> ToExpressionAttributeValues(this IPocoDynamo db, Dictionary<string, object> args)
         {
             var attrValues = new Dictionary<string, AttributeValue>();
