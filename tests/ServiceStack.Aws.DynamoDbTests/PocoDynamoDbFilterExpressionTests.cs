@@ -35,6 +35,9 @@ namespace ServiceStack.Aws.DynamoDbTests
             low5 = db.Scan<Poco>(q => q.Filter("Id < :Count", new { Count = 5 })).ToList();
             Assert.That(low5, Is.EquivalentTo(expected));
 
+            low5 = db.Scan<Poco>(q => q.Filter(x => x.Id < 5)).ToList();
+            Assert.That(low5, Is.EquivalentTo(expected));
+
             low5 = db.Scan(db.FromScan<Poco>(x => x.Id < 5)).ToList();
             Assert.That(low5, Is.EquivalentTo(expected));
         }

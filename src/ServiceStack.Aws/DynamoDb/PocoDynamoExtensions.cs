@@ -102,6 +102,16 @@ namespace ServiceStack.Aws.DynamoDb
             return db.Scan(fn(db.FromScan<T>()), limit: limit);
         }
 
+        public static IEnumerable<T> ScanInto<T>(this IPocoDynamo db, ScanExpression request)
+        {
+            return db.Scan<T>(request.SelectInto<T>());
+        }
+
+        public static List<T> ScanInto<T>(this IPocoDynamo db, ScanExpression request, int limit)
+        {
+            return db.Scan<T>(request.SelectInto<T>(), limit:limit);
+        }
+
         public static IEnumerable<T> Query<T>(this IPocoDynamo db, Func<QueryExpression<T>, QueryExpression<T>> fn)
         {
             return db.Query(fn(db.FromQuery<T>()));
@@ -110,6 +120,16 @@ namespace ServiceStack.Aws.DynamoDb
         public static List<T> Query<T>(this IPocoDynamo db, Func<QueryExpression<T>, QueryExpression<T>> fn, int limit)
         {
             return db.Query(fn(db.FromQuery<T>()), limit: limit);
+        }
+
+        public static IEnumerable<T> QueryInto<T>(this IPocoDynamo db, QueryExpression request)
+        {
+            return db.Query<T>(request.SelectInto<T>());
+        }
+
+        public static List<T> QueryInto<T>(this IPocoDynamo db, QueryExpression request, int limit)
+        {
+            return db.Query<T>(request.SelectInto<T>(), limit: limit);
         }
 
         public static Dictionary<string, AttributeValue> ToExpressionAttributeValues(this IPocoDynamo db, Dictionary<string, object> args)

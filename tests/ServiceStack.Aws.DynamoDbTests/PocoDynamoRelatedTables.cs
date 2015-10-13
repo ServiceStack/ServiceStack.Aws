@@ -172,17 +172,23 @@ namespace ServiceStack.Aws.DynamoDbTests
             {
                 ProductId = 1,
                 Qty = i + 2,
-                Cost = (i + 2) * 2
+                Cost = (i + 2) * 2,
+                LineItem = "Item " + (i + 1),
             });
 
             db.PutRelated(customer.Id, orders);
 
             var expensiveOrders = db.Query(db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10)).ToList();
 
-            expensiveOrders.PrintDump();
-
             Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.ProductId == 1 && x.Cost > 10)));
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
+
+            expensiveOrders = db.Scan(db.FromScanIndex<OrderGlobalCostIndex>(x => x.Cost > 10)).ToList();
+            Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
+
+            var indexOrders = db.ScanInto<OrderWithGlobalTypedIndex>(db.FromScanIndex<OrderGlobalCostIndex>(x => x.Cost > 10)).ToList();
+            Assert.That(indexOrders.Count, Is.GreaterThan(0));
+            Assert.That(indexOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0 && x.LineItem != null));
         }
 
         private static Customer CreateCustomer(IPocoDynamo db)

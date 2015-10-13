@@ -7,12 +7,29 @@ using Amazon.DynamoDBv2.Model;
 
 namespace ServiceStack.Aws.DynamoDb
 {
-    public class ScanExpression<T> : ScanRequest
+    public class ScanExpression : ScanRequest
     {
-        public IPocoDynamo Db { get; private set; }
+        protected IPocoDynamo Db { get; set; }
 
-        public DynamoMetadataType Table { get; private set; }
+        protected DynamoMetadataType Table { get;  set; }
 
+        protected void Project(IEnumerable<string> fields)
+        {
+            var fieldArray = fields.ToArray();
+            this.ProjectionExpression = fieldArray.Length > 0
+                ? string.Join(", ", fieldArray)
+                : null;
+        }
+
+        internal ScanExpression SelectInto<TModel>()
+        {
+            Project(typeof(TModel).AllFields().Where(Table.HasField));
+            return this;
+        }
+    }
+
+    public class ScanExpression<T> : ScanExpression
+    {
         public ScanExpression(IPocoDynamo db)
             : this(db, db.GetTableMetadata(typeof(T))) {}
 
@@ -131,10 +148,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public ScanExpression<T> Select(IEnumerable<string> fields)
         {
-            var fieldArray = fields.ToArray();
-            this.ProjectionExpression = fieldArray.Length > 0
-                ? string.Join(", ", fieldArray)
-                : null;
+            Project(fields);
             return this;
         }
 

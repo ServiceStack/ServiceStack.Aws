@@ -164,7 +164,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public int Id { get; set; }
     }
 
-    [References(typeof (OrderGlobalCostIndex))]
+    [References(typeof(OrderGlobalCostIndex))]
     public class OrderWithGlobalTypedIndex : Order
     {
         public int ProductId { get; set; }
@@ -210,7 +210,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public string Name { get; set; }
         public List<Node> Children { get; set; }
 
-        public Node() {}
+        public Node() { }
 
         public Node(int id, string name, IEnumerable<Node> children = null)
         {
@@ -263,14 +263,14 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((Poco) obj);
+            return Equals((Poco)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return (Id*397) ^ (Title != null ? Title.GetHashCode() : 0);
+                return (Id * 397) ^ (Title != null ? Title.GetHashCode() : 0);
             }
         }
     }
@@ -280,8 +280,8 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public int Id { get; set; }
         public string Title { get; set; }
 
-        public string[] ArrayStrings { get; set; } 
-        public HashSet<string> SetStrings { get; set; } 
+        public string[] ArrayStrings { get; set; }
+        public HashSet<string> SetStrings { get; set; }
         public List<string> ListStrings { get; set; }
 
         public int[] ArrayInts { get; set; }
@@ -306,12 +306,12 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
 
         protected bool Equals(Collection other)
         {
-            return Id == other.Id 
+            return Id == other.Id
                 && ArrayStrings.EquivalentTo(other.ArrayStrings)
-                && SetStrings.EquivalentTo(other.SetStrings) 
-                && ListStrings.EquivalentTo(other.ListStrings) 
-                && ArrayInts.EquivalentTo(other.ArrayInts) 
-                && SetInts.EquivalentTo(other.SetInts) 
+                && SetStrings.EquivalentTo(other.SetStrings)
+                && ListStrings.EquivalentTo(other.ListStrings)
+                && ArrayInts.EquivalentTo(other.ArrayInts)
+                && SetInts.EquivalentTo(other.SetInts)
                 && ListInts.EquivalentTo(other.ListInts);
         }
 
@@ -320,7 +320,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((Collection) obj);
+            return Equals((Collection)obj);
         }
 
         public override int GetHashCode()
@@ -328,12 +328,12 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             unchecked
             {
                 var hashCode = Id;
-                hashCode = (hashCode*397) ^ (ArrayStrings != null ? ArrayStrings.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (SetStrings != null ? SetStrings.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (ListStrings != null ? ListStrings.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (ArrayInts != null ? ArrayInts.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (SetInts != null ? SetInts.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (ListInts != null ? ListInts.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ArrayStrings != null ? ArrayStrings.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SetStrings != null ? SetStrings.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ListStrings != null ? ListStrings.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ArrayInts != null ? ArrayInts.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SetInts != null ? SetInts.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ListInts != null ? ListInts.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -353,7 +353,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public string E { get; set; }
     }
 
-    [CompositeIndex("D","C")]
+    [CompositeIndex("D", "C")]
     public class TableWithCompositeIndex
     {
         public string A { get; set; }
