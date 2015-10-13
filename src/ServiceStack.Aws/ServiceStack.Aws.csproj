@@ -75,6 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DynamoDb\ScanExpression.cs" />
     <Compile Include="DynamoDb\QueryExpression.cs" />
     <Compile Include="DynamoDb\DynamoMetadata.cs" />
     <Compile Include="Interfaces\IFileStorageProvider.cs" />

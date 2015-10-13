@@ -30,11 +30,11 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var row = PutCollection(db);
 
-            var results = db.Scan<Collection>(x => 
+            var results = db.Scan(db.FromScan<Collection>(x => 
                 x.SetStrings.Contains("A")
                 && x.Title.StartsWith("T")
                 && x.Title.Contains("itl")
-                && x.ArrayInts.Length == 10).ToList();
+                && x.ArrayInts.Length == 10)).ToList();
 
             Assert.That(results[0], Is.EqualTo(row));
         }
@@ -45,29 +45,29 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var row = PutCollection(db);
 
-            var results = db.Scan<Collection>("contains(SetStrings, :s)", new { s = "A" }).ToList();
+            var results = db.Scan(db.FromScan<Collection>().Filter("contains(SetStrings, :s)", new { s = "A" })).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>("contains(SetInts, :i)", new { i = 1 }).ToList();
+            results = db.Scan(db.FromScan<Collection>().Filter("contains(SetInts, :i)", new { i = 1 })).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>(x => x.SetStrings.Contains("A")).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => x.SetStrings.Contains("A"))).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>(x => x.SetInts.Contains(1)).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => x.SetInts.Contains(1))).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
             //Does not match
-            results = db.Scan<Collection>("contains(SetStrings, :s)", new { s = "K" }).ToList();
+            results = db.Scan(db.FromScan<Collection>().Filter("contains(SetStrings, :s)", new { s = "K" })).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
 
-            results = db.Scan<Collection>("contains(SetStrings, :i)", new { i = 10 }).ToList();
+            results = db.Scan(db.FromScan<Collection>().Filter("contains(SetStrings, :i)", new { i = 10 })).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
 
-            results = db.Scan<Collection>(x => x.SetStrings.Contains("K")).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => x.SetStrings.Contains("K"))).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
 
-            results = db.Scan<Collection>(x => x.SetInts.Contains(10)).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => x.SetInts.Contains(10))).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
         }
 
@@ -77,26 +77,26 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var row = PutCollection(db);
 
-            var results = db.Scan<Collection>("not contains(SetStrings, :s)", new { s = "A" }).ToList();
+            var results = db.Scan(db.FromScan<Collection>().Filter("not contains(SetStrings, :s)", new { s = "A" })).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
 
-            results = db.Scan<Collection>(x => !x.SetStrings.Contains("A")).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => !x.SetStrings.Contains("A"))).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
 
-            results = db.Scan<Collection>(x => !x.ListStrings.Contains("A")).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => !x.ListStrings.Contains("A"))).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
 
-            results = db.Scan<Collection>(x => !x.SetInts.Contains(1)).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => !x.SetInts.Contains(1))).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
 
-            results = db.Scan<Collection>(x => !x.ListInts.Contains(1)).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => !x.ListInts.Contains(1))).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
 
             /* does not match */
-            results = db.Scan<Collection>(x => !x.SetStrings.Contains("K")).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => !x.SetStrings.Contains("K"))).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>(x => !x.ListInts.Contains(10)).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => !x.ListInts.Contains(10))).ToList();
             Assert.That(results[0], Is.EqualTo(row));
         }
 
@@ -106,16 +106,16 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var row = PutCollection(db);
 
-            var results = db.Scan<Collection>("contains(ListStrings, :s)", new { s = "A" }).ToList();
+            var results = db.Scan(db.FromScan<Collection>().Filter("contains(ListStrings, :s)", new { s = "A" })).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>("contains(ListInts, :i)", new { i = 1 }).ToList();
+            results = db.Scan(db.FromScan<Collection>().Filter("contains(ListInts, :i)", new { i = 1 })).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>(x => x.ListStrings.Contains("A")).ToList();
+            results = db.Scan(db.FromScan<Collection>().Filter(x => x.ListStrings.Contains("A"))).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>(x => x.ListInts.Contains(1)).ToList();
+            results = db.Scan(db.FromScan<Collection>().Filter(x => x.ListInts.Contains(1))).ToList();
             Assert.That(results[0], Is.EqualTo(row));
         }
 
@@ -125,16 +125,16 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var row = PutCollection(db);
 
-            var results = db.Scan<Collection>("contains(ArrayStrings, :s)", new { s = "A" }).ToList();
+            var results = db.Scan(db.FromScan<Collection>().Filter("contains(ArrayStrings, :s)", new { s = "A" })).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>("contains(ArrayInts, :i)", new { i = 1 }).ToList();
+            results = db.Scan(db.FromScan<Collection>().Filter("contains(ArrayInts, :i)", new { i = 1 })).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>(x => x.ArrayStrings.Contains("A")).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => x.ArrayStrings.Contains("A"))).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>(x => x.ArrayInts.Contains(1)).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => x.ArrayInts.Contains(1))).ToList();
             Assert.That(results[0], Is.EqualTo(row));
         }
 
@@ -144,13 +144,13 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var row = PutCollection(db);
 
-            var results = db.Scan<Collection>("attribute_type(Title, :s)", new { s = "S" }).ToList();
+            var results = db.Scan(db.FromScan<Collection>().Filter("attribute_type(Title, :s)", new { s = "S" })).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>(x => Dynamo.AttributeType(x.Title, DynamoType.String)).ToList();
+            results = db.Scan(db.FromScan<Collection>(x => Dynamo.AttributeType(x.Title, DynamoType.String))).ToList();
             Assert.That(results[0], Is.EqualTo(row));
 
-            results = db.Scan<Collection>("attribute_type(Title, :s)", new { s = "N" }).ToList();
+            results = db.Scan(db.FromScan<Collection>().Filter("attribute_type(Title, :s)", new { s = "N" })).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
         }
     }

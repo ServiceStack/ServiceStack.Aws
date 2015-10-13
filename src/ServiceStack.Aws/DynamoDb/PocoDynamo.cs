@@ -33,13 +33,19 @@ namespace ServiceStack.Aws.DynamoDb
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
 
-        IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter);
-        IEnumerable<T> ScanAll<T>();
-        IEnumerable<T> Scan<T>(string filterExpression, Dictionary<string, object> args);
-        List<T> Scan<T>(string filterExpression, Dictionary<string, object> args, int limit);
-
         void PutRelated<T>(object hash, IEnumerable<T> items);
         IEnumerable<T> GetRelated<T>(object hash);
+
+        IEnumerable<T> ScanAll<T>();
+
+        ScanExpression<T> FromScan<T>(Expression<Func<T, bool>> filterExpression = null);
+        List<T> Scan<T>(ScanExpression<T> request, int limit);
+        IEnumerable<T> Scan<T>(ScanExpression<T> request);
+        ScanExpression<T> FromScanIndex<T>(Expression<Func<T, bool>> filterExpression = null);
+
+        List<T> Scan<T>(ScanRequest request, int limit);
+        IEnumerable<T> Scan<T>(ScanRequest request);
+        IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter);
 
         QueryExpression<T> FromQuery<T>(Expression<Func<T, bool>> keyExpression = null);
         List<T> Query<T>(QueryExpression<T> request, int limit);
@@ -48,6 +54,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         List<T> Query<T>(QueryRequest request, int limit);
         IEnumerable<T> Query<T>(QueryRequest request);
+        IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter);
 
         IPocoDynamo ClientWith(
             bool? consistentRead = null,
@@ -543,34 +550,6 @@ namespace ServiceStack.Aws.DynamoDb
             return Scan(request, r => r.ConvertAll<T>());
         }
 
-        public IEnumerable<T> Scan<T>(string filterExpression, Dictionary<string, object> args)
-        {
-            var type = DynamoMetadata.GetType<T>();
-            var request = new ScanRequest
-            {
-                TableName = type.Name,
-                Limit = PagingLimit,
-                FilterExpression = filterExpression,
-                ExpressionAttributeValues = this.ToExpressionAttributeValues(args),
-            };
-
-            return Scan(request, r => r.ConvertAll<T>());
-        }
-
-        public List<T> Scan<T>(string filterExpression, Dictionary<string, object> args, int limit)
-        {
-            var type = DynamoMetadata.GetType<T>();
-            var request = new ScanRequest
-            {
-                TableName = type.Name,
-                Limit = limit,
-                FilterExpression = filterExpression,
-                ExpressionAttributeValues = this.ToExpressionAttributeValues(args),
-            };
-
-            return Scan(request, r => r.ConvertAll<T>()).Take(limit).ToList();
-        }
-
         public IEnumerable<T> Scan<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter)
         {
             ScanResponse response = null;
@@ -589,6 +568,105 @@ namespace ServiceStack.Aws.DynamoDb
                 }
 
             } while (!response.LastEvaluatedKey.IsEmpty());
+        }
+
+        public ScanExpression<T> FromScan<T>(Expression<Func<T, bool>> filterExpression = null)
+        {
+            var q = new ScanExpression<T>(this)
+            {
+                Limit = PagingLimit,
+                ConsistentRead = !typeof(T).IsGlobalIndex() && this.ConsistentRead,
+            };
+
+            if (filterExpression != null)
+                q.Filter(filterExpression);
+
+            return q;
+        }
+
+        public ScanExpression<T> FromScanIndex<T>(Expression<Func<T, bool>> filterExpression = null)
+        {
+            var table = typeof(T).GetIndexTable();
+            var index = table.GetIndex(typeof(T));
+            var q = new ScanExpression<T>(this, table)
+            {
+                IndexName = index.Name,
+                Limit = PagingLimit,
+                ConsistentRead = !typeof(T).IsGlobalIndex() && this.ConsistentRead,
+            };
+
+            if (filterExpression != null)
+                q.Filter(filterExpression);
+
+            return q;
+        }
+
+        public List<T> Scan<T>(ScanExpression<T> request, int limit)
+        {
+            var to = new List<T>();
+
+            if (request.Limit == default(int))
+                request.Limit = limit;
+
+            ScanResponse response = null;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = Exec(() => DynamoDb.Scan(request));
+                var results = response.ConvertAll<T>();
+
+                foreach (var result in results)
+                {
+                    to.Add(result);
+
+                    if (to.Count >= limit)
+                        break;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty() && to.Count < limit);
+
+            return to;
+        }
+
+        public IEnumerable<T> Scan<T>(ScanExpression<T> request)
+        {
+            return Scan(request, r => r.ConvertAll<T>());
+        }
+
+        public List<T> Scan<T>(ScanRequest request, int limit)
+        {
+            var to = new List<T>();
+
+            if (request.Limit == default(int))
+                request.Limit = limit;
+
+            ScanResponse response = null;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = Exec(() => DynamoDb.Scan(request));
+                var results = response.ConvertAll<T>();
+
+                foreach (var result in results)
+                {
+                    to.Add(result);
+
+                    if (to.Count >= limit)
+                        break;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty() && to.Count < limit);
+
+            return to;
+        }
+
+        public IEnumerable<T> Scan<T>(ScanRequest request)
+        {
+            return Scan(request, r => r.ConvertAll<T>());
         }
 
         public QueryExpression<T> FromQuery<T>(Expression<Func<T, bool>> keyExpression = null)

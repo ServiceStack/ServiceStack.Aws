@@ -23,8 +23,8 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var items = PutPocoItems(db);
 
-            var low5 = db.Scan<Poco>("Id < :Count",
-                new Dictionary<string, object> { { "Count", 5 } })
+            var low5 = db.Scan(db.FromScan<Poco>()
+                .Filter("Id < :Count", new Dictionary<string, object> { { "Count", 5 } }))
                 .ToList();
 
             low5.PrintDump();
@@ -33,10 +33,12 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(low5.Count, Is.EqualTo(5));
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan<Poco>("Id < :Count", new { Count = 5 }).ToList();
+            low5 = db.Scan(db.FromScan<Poco>()
+                .Filter("Id < :Count", new { Count = 5 }))
+                .ToList();
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan<Poco>(x => x.Id < 5).ToList();
+            low5 = db.Scan(db.FromScan<Poco>(x => x.Id < 5)).ToList();
             Assert.That(low5, Is.EquivalentTo(expected));
         }
 
@@ -46,8 +48,8 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var items = PutPocoItems(db);
 
-            var low5 = db.Scan<Poco>("Id < :Count",
-                new Dictionary<string, object> { { "Count", 5 } }, limit: 5);
+            var low5 = db.Scan(db.FromScan<Poco>()
+                .Filter("Id < :Count", new Dictionary<string, object> { { "Count", 5 } }), limit: 5);
 
             low5.PrintDump();
 
@@ -55,16 +57,18 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(low5.Count, Is.EqualTo(5));
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan<Poco>("Id < :Count", new { Count = 5 }, limit: 5);
+            low5 = db.Scan(db.FromScan<Poco>()
+                .Filter("Id < :Count", new { Count = 5 }), limit:5);
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan<Poco>(x => x.Id < 5, limit: 5);
+            low5 = db.Scan(db.FromScan<Poco>(x => x.Id < 5), limit:5);
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            var low3 = db.Scan<Poco>("Id < :Count", new { Count = 5 }, limit: 3);
+            var low3 = db.Scan(db.FromScan<Poco>()
+                .Filter("Id < :Count", new { Count = 5 }), limit: 3);
             Assert.That(low3.Count, Is.EqualTo(3));
 
-            low3 = db.Scan<Poco>(x => x.Id < 5, limit: 3);
+            low3 = db.Scan(db.FromScan<Poco>(x => x.Id < 5), limit: 3);
             Assert.That(low3.Count, Is.EqualTo(3));
         }
 
@@ -76,10 +80,10 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var expected = items.Where(x => x.Title.StartsWith("Name 1")).ToList();
 
-            var results = db.Scan<Poco>("begins_with(Title, :s)", new { s = "Name 1" });
+            var results = db.Scan(db.FromScan<Poco>().Filter("begins_with(Title, :s)", new { s = "Name 1" }));
             Assert.That(results, Is.EquivalentTo(expected));
 
-            results = db.Scan<Poco>(x => x.Title.StartsWith("Name 1"));
+            results = db.Scan(db.FromScan<Poco>(x => x.Title.StartsWith("Name 1")));
             Assert.That(results, Is.EquivalentTo(expected));
         }
 
@@ -91,10 +95,10 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var expected = items.Where(x => x.Title.Contains("ame 1")).ToList();
 
-            var results = db.Scan<Poco>("contains(Title, :s)", new { s = "ame 1" });
+            var results = db.Scan(db.FromScan<Poco>().Filter("contains(Title, :s)", new { s = "ame 1" }));
             Assert.That(results, Is.EquivalentTo(expected));
 
-            results = db.Scan<Poco>(x => x.Title.Contains("ame 1"));
+            results = db.Scan(db.FromScan<Poco>(x => x.Title.Contains("ame 1")));
             Assert.That(results, Is.EquivalentTo(expected));
         }
 
@@ -108,7 +112,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var expected = items.Where(x => names.Contains(x.Title)).ToList();
 
-            var results = db.Scan<Poco>(x => names.Contains(x.Title));
+            var results = db.Scan(db.FromScan<Poco>(x => names.Contains(x.Title)));
             Assert.That(results, Is.EquivalentTo(expected));
         }
     }

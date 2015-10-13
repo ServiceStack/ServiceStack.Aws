@@ -92,28 +92,6 @@ namespace ServiceStack.Aws.DynamoDb
             return db.GetItems<T>(ids.Map(x => (object)x));
         }
 
-        public static IEnumerable<T> Scan<T>(this IPocoDynamo db, string filterExpression, object args)
-        {
-            return db.Scan<T>(filterExpression, args.ToObjectDictionary());
-        }
-
-        public static IEnumerable<T> Scan<T>(this IPocoDynamo db, Expression<Func<T, bool>> predicate)
-        {
-            var q = PocoDynamoExpression.Create(typeof(T), predicate);
-            return db.Scan<T>(q.FilterExpression, q.Params);
-        }
-
-        public static List<T> Scan<T>(this IPocoDynamo db, string filterExpression, object args, int limit)
-        {
-            return db.Scan<T>(filterExpression, args.ToObjectDictionary(), limit: limit);
-        }
-
-        public static List<T> Scan<T>(this IPocoDynamo db, Expression<Func<T, bool>> predicate, int limit)
-        {
-            var q = PocoDynamoExpression.Create(typeof(T), predicate);
-            return db.Scan<T>(q.FilterExpression, q.Params, limit:limit);
-        }
-
         public static Dictionary<string, AttributeValue> ToExpressionAttributeValues(this IPocoDynamo db, Dictionary<string, object> args)
         {
             var attrValues = new Dictionary<string, AttributeValue>();
