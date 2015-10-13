@@ -29,6 +29,7 @@ namespace ServiceStack.Aws.DynamoDb
         T PutItem<T>(T value, bool returnOld = false);
         void PutItems<T>(IEnumerable<T> items);
         T DeleteItem<T>(object hash, ReturnItem returnItem = ReturnItem.None);
+        void DeleteItems<T>(IEnumerable<object> hashes);
         long Increment<T>(object hash, string fieldName, long amount = 1);
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
@@ -345,10 +346,10 @@ namespace ServiceStack.Aws.DynamoDb
             return Converters.FromAttributeValues<T>(table, attributeValues);
         }
 
+        const int MaxReadBatchSize = 100;
+
         public List<T> GetItems<T>(IEnumerable<object> hashes)
         {
-            const int MaxBatchSize = 100;
-
             var to = new List<T>();
 
             var table = DynamoMetadata.GetTable<T>();
@@ -356,7 +357,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             while (remainingIds.Count > 0)
             {
-                var batchSize = Math.Min(remainingIds.Count, MaxBatchSize);
+                var batchSize = Math.Min(remainingIds.Count, MaxReadBatchSize);
                 var nextBatch = remainingIds.GetRange(0, batchSize);
                 remainingIds.RemoveRange(0, batchSize);
 
@@ -461,16 +462,16 @@ namespace ServiceStack.Aws.DynamoDb
             PutItems(related);
         }
 
+        const int MaxWriteBatchSize = 25;
+
         public void PutItems<T>(IEnumerable<T> items)
         {
-            const int MaxBatchSize = 25;
-
             var table = DynamoMetadata.GetTable<T>();
             var remaining = items.ToList();
 
             while (remaining.Count > 0)
             {
-                var batchSize = Math.Min(remaining.Count, MaxBatchSize);
+                var batchSize = Math.Min(remaining.Count, MaxWriteBatchSize);
                 var nextBatch = remaining.GetRange(0, batchSize);
                 remaining.RemoveRange(0, batchSize);
 
@@ -510,6 +511,37 @@ namespace ServiceStack.Aws.DynamoDb
                 return default(T);
 
             return Converters.FromAttributeValues<T>(table, response.Attributes);
+        }
+
+        public void DeleteItems<T>(IEnumerable<object> hashes)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var remainingIds = hashes.ToList();
+
+            while (remainingIds.Count > 0)
+            {
+                var batchSize = Math.Min(remainingIds.Count, MaxWriteBatchSize);
+                var nextBatch = remainingIds.GetRange(0, batchSize);
+                remainingIds.RemoveRange(0, batchSize);
+
+                var deleteItems = nextBatch.Map(id => new WriteRequest(
+                    new DeleteRequest(Converters.ToAttributeKeyValue(this, table.HashKey, id))));
+
+                var request = new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> {
+                    { table.Name, deleteItems }
+                });
+
+                var response = Exec(() => DynamoDb.BatchWriteItem(request));
+
+                var i = 0;
+                while (response.UnprocessedItems.Count > 0)
+                {
+                    response = Exec(() => DynamoDb.BatchWriteItem(response.UnprocessedItems));
+
+                    if (response.UnprocessedItems.Count > 0)
+                        i.SleepBackOffMultiplier();
+                }
+            }
         }
 
         public long Increment<T>(object hash, string fieldName, long amount = 1)

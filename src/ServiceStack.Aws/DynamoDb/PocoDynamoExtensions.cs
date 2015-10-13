@@ -77,19 +77,34 @@ namespace ServiceStack.Aws.DynamoDb
             return db.ScanAll<T>().ToList();
         }
 
-        public static List<T> GetItemsByIds<T>(this IPocoDynamo db, IEnumerable<int> ids)
+        public static List<T> GetItems<T>(this IPocoDynamo db, IEnumerable<int> ids)
         {
             return db.GetItems<T>(ids.Map(x => (object)x));
         }
 
-        public static List<T> GetItemsByIds<T>(this IPocoDynamo db, IEnumerable<long> ids)
+        public static List<T> GetItems<T>(this IPocoDynamo db, IEnumerable<long> ids)
         {
             return db.GetItems<T>(ids.Map(x => (object)x));
         }
 
-        public static List<T> GetItemsByIds<T>(this IPocoDynamo db, IEnumerable<string> ids)
+        public static List<T> GetItems<T>(this IPocoDynamo db, IEnumerable<string> ids)
         {
             return db.GetItems<T>(ids.Map(x => (object)x));
+        }
+
+        public static void DeleteItems<T>(this IPocoDynamo db, IEnumerable<int> ids)
+        {
+            db.DeleteItems<T>(ids.Map(x => (object)x));
+        }
+
+        public static void DeleteItems<T>(this IPocoDynamo db, IEnumerable<long> ids)
+        {
+            db.DeleteItems<T>(ids.Map(x => (object)x));
+        }
+
+        public static void DeleteItems<T>(this IPocoDynamo db, IEnumerable<string> ids)
+        {
+            db.DeleteItems<T>(ids.Map(x => (object)x));
         }
 
         public static IEnumerable<T> Scan<T>(this IPocoDynamo db, Func<ScanExpression<T>, ScanExpression<T>> fn)
