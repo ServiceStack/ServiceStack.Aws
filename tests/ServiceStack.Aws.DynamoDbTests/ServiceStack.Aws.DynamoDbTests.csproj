@@ -76,6 +76,7 @@
     <Compile Include="DynamoTestBase.cs" />
     <Compile Include="Issues\LocalDynamoDbHangsWhenPuttingNullValue.cs" />
     <Compile Include="PocoDynaboDbTests.cs" />
+    <Compile Include="PocoDynamoBatchTests.cs" />
     <Compile Include="PocoDynamoCreateTables.cs" />
     <Compile Include="PocoDynamoDbContainsTests.cs" />
     <Compile Include="PocoDynamoDbFilterExpressionTests.cs" />

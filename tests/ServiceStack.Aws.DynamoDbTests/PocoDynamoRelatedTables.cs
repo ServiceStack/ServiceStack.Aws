@@ -78,8 +78,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             var dbOrders = db.GetRelated<Order>(customer.Id).ToList();
             Assert.That(dbOrders, Is.EquivalentTo(orders));
 
-            dbOrders = db.Query(db.FromQuery<Order>()
-                .KeyCondition(x => x.CustomerId == customer.Id)).ToList();
+            dbOrders = db.Query(db.FromQuery<Order>(x => x.CustomerId == customer.Id)).ToList();
             Assert.That(dbOrders, Is.EquivalentTo(orders));
         }
 

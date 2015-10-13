@@ -301,38 +301,5 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             Assert.That(dbRow, Is.EqualTo(row));
         }
-
-        [Test]
-        public void Can_GetAll()
-        {
-            var db = CreatePocoDynamo();
-            var items = PutPocoItems(db);
-
-            var results = db.GetAll<Poco>();
-
-            Assert.That(results, Is.EquivalentTo(items));
-        }
-
-        [Test]
-        public void Does_Batch_PutItems_and_GetItems()
-        {
-            var db = CreatePocoDynamo();
-            var items = PutPocoItems(db);
-
-            var results = db.GetItemsByIds<Poco>(items.Map(x => x.Id));
-
-            Assert.That(results, Is.EquivalentTo(items));
-        }
-
-        [Test]
-        public void Does_Batch_PutItems_and_GetItems_handles_multiple_batches()
-        {
-            var db = CreatePocoDynamo();
-            var items = PutPocoItems(db, count: 110);
-
-            var results = db.GetItemsByIds<Poco>(items.Map(x => x.Id));
-
-            Assert.That(results, Is.EquivalentTo(items));
-        }
     }
 }
