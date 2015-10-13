@@ -70,16 +70,38 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
-        public QueryExpression<T> KeyCondition(Expression<Func<T, bool>> keyExpression)
+        public QueryExpression<T> AddFilterExpression(string filterExpression)
         {
-            var q = PocoDynamoExpression.Create(typeof(T), keyExpression, paramPrefix:"k");
-
-            AddKeyCondition(q.FilterExpression);
-
-            Db.ToExpressionAttributeValues(q.Params).Each(x =>
-                this.ExpressionAttributeValues[x.Key] = x.Value);
+            if (this.FilterExpression == null)
+                this.FilterExpression = filterExpression;
+            else
+                this.FilterExpression += " AND " + filterExpression;
 
             return this;
+        }
+
+        public QueryExpression<T> KeyCondition(string filterExpression, Dictionary<string, object> args = null)
+        {
+            AddKeyCondition(filterExpression);
+
+            if (args != null)
+            {
+                Db.ToExpressionAttributeValues(args).Each(x =>
+                    this.ExpressionAttributeValues[x.Key] = x.Value);
+            }
+
+            return this;
+        }
+
+        public QueryExpression<T> KeyCondition(string filterExpression, object args)
+        {
+            return KeyCondition(filterExpression, args.ToObjectDictionary());
+        }
+
+        public QueryExpression<T> KeyCondition(Expression<Func<T, bool>> filterExpression)
+        {
+            var q = PocoDynamoExpression.Create(typeof(T), filterExpression, paramPrefix: "k");
+            return KeyCondition(q.FilterExpression, q.Params);
         }
 
         public QueryExpression<T> IndexCondition(Expression<Func<T, bool>> keyExpression, string indexName = null)
@@ -112,16 +134,28 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
+        public QueryExpression<T> Filter(string filterExpression, Dictionary<string, object> args = null)
+        {
+            AddFilterExpression(filterExpression);
+
+            if (args != null)
+            {
+                Db.ToExpressionAttributeValues(args).Each(x =>
+                    this.ExpressionAttributeValues[x.Key] = x.Value);
+            }
+
+            return this;
+        }
+
+        public QueryExpression<T> Filter(string filterExpression, object args)
+        {
+            return Filter(filterExpression, args.ToObjectDictionary());
+        }
+
         public QueryExpression<T> Filter(Expression<Func<T, bool>> filterExpression)
         {
             var q = PocoDynamoExpression.Create(typeof(T), filterExpression, paramPrefix: "p");
-
-            base.FilterExpression = q.FilterExpression;
-
-            Db.ToExpressionAttributeValues(q.Params).Each(x =>
-                this.ExpressionAttributeValues[x.Key] = x.Value);
-
-            return this;
+            return Filter(q.FilterExpression, q.Params);
         }
 
         public QueryExpression<T> OrderByAscending()
@@ -136,7 +170,7 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
-        public QueryExpression<T> Take(int limit)
+        public QueryExpression<T> PagingLimit(int limit)
         {
             this.Limit = limit;
             return this;

@@ -44,7 +44,6 @@ namespace ServiceStack.Aws.DynamoDb
         QueryExpression<T> FromQuery<T>(Expression<Func<T, bool>> keyExpression = null);
         List<T> Query<T>(QueryExpression<T> request, int limit);
         IEnumerable<T> Query<T>(QueryExpression<T> request);
-
         QueryExpression<T> FromQueryIndex<T>(Expression<Func<T, bool>> keyExpression = null);
 
         List<T> Query<T>(QueryRequest request, int limit);
