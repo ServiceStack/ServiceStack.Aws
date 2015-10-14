@@ -286,8 +286,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.RegisterTable<Collection>();
             db.InitSchema();
 
-            var row = new Collection
-            {
+            var row = new Collection {
                 Id = 1,
             }
             .InitStrings(10.Times(i => ((char)('A' + i)).ToString()).ToArray())

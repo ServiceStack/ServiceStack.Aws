@@ -173,5 +173,14 @@ namespace ServiceStack.Aws.DynamoDb
                 .Where(Table.HasField));
         }
 
+        public IEnumerable<T> Scan()
+        {
+            return Db.Scan(this);
+        }
+
+        public List<T> Scan(int limit)
+        {
+            return Db.Scan(this, limit);
+        }
     }
 }
