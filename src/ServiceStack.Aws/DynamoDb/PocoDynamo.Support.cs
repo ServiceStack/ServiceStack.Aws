@@ -140,5 +140,63 @@ namespace ServiceStack.Aws.DynamoDb
 
             } while (true);
         }
+
+        private T ConvertGetItemResponse<T>(GetItemRequest request, DynamoMetadataType table)
+        {
+            var response = Exec(() => DynamoDb.GetItem(request), throwNotFoundExceptions);
+
+            if (!response.IsItemSet)
+                return default(T);
+            var attributeValues = response.Item;
+
+            return Converters.FromAttributeValues<T>(table, attributeValues);
+        }
+
+        private List<T> ConvertBatchGetItemResponse<T>(DynamoMetadataType table, KeysAndAttributes getItems)
+        {
+            var to = new List<T>();
+
+            var request = new BatchGetItemRequest(new Dictionary<string, KeysAndAttributes> {
+                {table.Name, getItems}
+            });
+
+            var response = Exec(() => DynamoDb.BatchGetItem(request));
+
+            List<Dictionary<string, AttributeValue>> results;
+            if (response.Responses.TryGetValue(table.Name, out results))
+                results.Each(x => to.Add(Converters.FromAttributeValues<T>(table, x)));
+
+            var i = 0;
+            while (response.UnprocessedKeys.Count > 0)
+            {
+                response = Exec(() => DynamoDb.BatchGetItem(response.UnprocessedKeys));
+                if (response.Responses.TryGetValue(table.Name, out results))
+                    results.Each(x => to.Add(Converters.FromAttributeValues<T>(table, x)));
+
+                if (response.UnprocessedKeys.Count > 0)
+                    i.SleepBackOffMultiplier();
+            }
+
+            return to;
+        }
+
+        private void ExecBatchWriteItemResponse<T>(DynamoMetadataType table, List<WriteRequest> deleteItems)
+        {
+            var request = new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>>
+            {
+                {table.Name, deleteItems}
+            });
+
+            var response = Exec(() => DynamoDb.BatchWriteItem(request));
+
+            var i = 0;
+            while (response.UnprocessedItems.Count > 0)
+            {
+                response = Exec(() => DynamoDb.BatchWriteItem(response.UnprocessedItems));
+
+                if (response.UnprocessedItems.Count > 0)
+                    i.SleepBackOffMultiplier();
+            }
+        }
     }
 }

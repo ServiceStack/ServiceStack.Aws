@@ -34,10 +34,6 @@ namespace ServiceStack.Aws.DynamoDb
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
 
-        void PutRelated<T>(object hash, T item);
-        void PutRelated<T>(object hash, IEnumerable<T> items);
-        IEnumerable<T> GetRelated<T>(object hash);
-        void DeleteRelated<T>(object hash, IEnumerable<object> ranges);
         void PutRelatedItem<T>(object hash, T item);
         void PutRelatedItems<T>(object hash, IEnumerable<T> items);
         IEnumerable<T> GetRelatedItems<T>(object hash);
@@ -343,13 +339,20 @@ namespace ServiceStack.Aws.DynamoDb
                 ConsistentRead = ConsistentRead,
             };
 
-            var response = Exec(() => DynamoDb.GetItem(request), throwNotFoundExceptions);
+            return ConvertGetItemResponse<T>(request, table);
+        }
 
-            if (!response.IsItemSet)
-                return default(T);
-            var attributeValues = response.Item;
+        public T GetItem<T>(object hash, object range)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new GetItemRequest
+            {
+                TableName = table.Name,
+                Key = Converters.ToAttributeKeyValue(this, table, hash, range),
+                ConsistentRead = ConsistentRead,
+            };
 
-            return Converters.FromAttributeValues<T>(table, attributeValues);
+            return ConvertGetItemResponse<T>(request, table);
         }
 
         const int MaxReadBatchSize = 100;
@@ -374,51 +377,13 @@ namespace ServiceStack.Aws.DynamoDb
                 nextBatch.Each(id =>
                     getItems.Keys.Add(Converters.ToAttributeKeyValue(this, table.HashKey, id)));
 
-                var request = new BatchGetItemRequest(new Dictionary<string, KeysAndAttributes> {
-                    { table.Name, getItems }
-                });
-
-                var response = Exec(() => DynamoDb.BatchGetItem(request));
-
-                List<Dictionary<string, AttributeValue>> results;
-                if (response.Responses.TryGetValue(table.Name, out results))
-                    results.Each(x => to.Add(Converters.FromAttributeValues<T>(table, x)));
-
-                var i = 0;
-                while (response.UnprocessedKeys.Count > 0)
-                {
-                    response = Exec(() => DynamoDb.BatchGetItem(response.UnprocessedKeys));
-                    if (response.Responses.TryGetValue(table.Name, out results))
-                        results.Each(x => to.Add(Converters.FromAttributeValues<T>(table, x)));
-
-                    if (response.UnprocessedKeys.Count > 0)
-                        i.SleepBackOffMultiplier();
-                }
+                to.AddRange(ConvertBatchGetItemResponse<T>(table, getItems));
             }
 
             return to;
         }
 
-        public T GetItem<T>(object hash, object range)
-        {
-            var table = DynamoMetadata.GetTable<T>();
-            var request = new GetItemRequest
-            {
-                TableName = table.Name,
-                Key = Converters.ToAttributeKeyValue(this, table, hash, range),
-                ConsistentRead = ConsistentRead,
-            };
-
-            var response = Exec(() => DynamoDb.GetItem(request), throwNotFoundExceptions);
-
-            if (!response.IsItemSet)
-                return default(T);
-            var attributeValues = response.Item;
-
-            return DynamoMetadata.Converters.FromAttributeValues<T>(table, attributeValues);
-        }
-
-        public IEnumerable<T> GetRelated<T>(object hash)
+        public IEnumerable<T> GetRelatedItems<T>(object hash)
         {
             var table = DynamoMetadata.GetTable<T>();
 
@@ -436,7 +401,6 @@ namespace ServiceStack.Aws.DynamoDb
             return Query(request, r => r.ConvertAll<T>());
         }
 
-        public void DeleteRelated<T>(object hash, IEnumerable<object> ranges)
         public void DeleteRelatedItems<T>(object hash, IEnumerable<object> ranges)
         {
             var table = DynamoMetadata.GetTable<T>();
@@ -466,7 +430,6 @@ namespace ServiceStack.Aws.DynamoDb
             return Converters.FromAttributeValues<T>(table, response.Attributes);
         }
 
-        public void PutRelated<T>(object hash, T item)
         public void PutRelatedItem<T>(object hash, T item)
         {
             var table = DynamoMetadata.GetTable<T>();
@@ -478,7 +441,6 @@ namespace ServiceStack.Aws.DynamoDb
             PutItem(item);
         }
 
-        public void PutRelated<T>(object hash, IEnumerable<T> items)
         public void PutRelatedItems<T>(object hash, IEnumerable<T> items)
         {
             var table = DynamoMetadata.GetTable<T>();
@@ -557,20 +519,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var deleteItems = nextBatch.Map(id => new WriteRequest(
                     new DeleteRequest(Converters.ToAttributeKeyValue(this, table.HashKey, id))));
 
-                var request = new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> {
-                    { table.Name, deleteItems }
-                });
-
-                var response = Exec(() => DynamoDb.BatchWriteItem(request));
-
-                var i = 0;
-                while (response.UnprocessedItems.Count > 0)
-                {
-                    response = Exec(() => DynamoDb.BatchWriteItem(response.UnprocessedItems));
-
-                    if (response.UnprocessedItems.Count > 0)
-                        i.SleepBackOffMultiplier();
-                }
+                ExecBatchWriteItemResponse<T>(table, deleteItems);
             }
         }
 
@@ -588,20 +537,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var deleteItems = nextBatch.Map(id => new WriteRequest(
                     new DeleteRequest(Converters.ToAttributeKeyValue(this, table, id))));
 
-                var request = new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> {
-                    { table.Name, deleteItems }
-                });
-
-                var response = Exec(() => DynamoDb.BatchWriteItem(request));
-
-                var i = 0;
-                while (response.UnprocessedItems.Count > 0)
-                {
-                    response = Exec(() => DynamoDb.BatchWriteItem(response.UnprocessedItems));
-
-                    if (response.UnprocessedItems.Count > 0)
-                        i.SleepBackOffMultiplier();
-                }
+                ExecBatchWriteItemResponse<T>(table, deleteItems);
             }
         }
 
