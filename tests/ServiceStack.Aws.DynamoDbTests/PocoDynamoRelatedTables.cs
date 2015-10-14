@@ -65,7 +65,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 },
             };
 
-            db.PutRelated(customer.Id, orders);
+            db.PutRelatedItems(customer.Id, orders);
 
             Assert.That(customer.Id, Is.GreaterThan(0));
             Assert.That(customer.PrimaryAddress.Id, Is.GreaterThan(0));
@@ -75,7 +75,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(orders[1].Id, Is.GreaterThan(0));
             Assert.That(orders[1].CustomerId, Is.EqualTo(customer.Id));
 
-            var dbOrders = db.GetRelated<Order>(customer.Id).ToList();
+            var dbOrders = db.GetRelatedItems<Order>(customer.Id).ToList();
             Assert.That(dbOrders, Is.EquivalentTo(orders));
 
             dbOrders = db.Query(db.FromQuery<Order>(x => x.CustomerId == customer.Id)).ToList();
@@ -97,7 +97,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 Cost = (i + 2) * 2
             });
 
-            db.PutRelated(customer.Id, orders);
+            db.PutRelatedItems(customer.Id, orders);
 
             var q = db.FromQuery<OrderWithFieldIndex>(x => x.CustomerId == customer.Id)
                 .IndexCondition(x => x.Cost > 10);
@@ -138,7 +138,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 Cost = (i + 2) * 2
             });
 
-            db.PutRelated(customer.Id, orders);
+            db.PutRelatedItems(customer.Id, orders);
 
             var expensiveOrders = db.Query(
                 db.FromQueryIndex<OrderCostIndex>(x => x.CustomerId == customer.Id && x.Cost > 10)).ToList();
@@ -175,7 +175,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 LineItem = "Item " + (i + 1),
             });
 
-            db.PutRelated(customer.Id, orders);
+            db.PutRelatedItems(customer.Id, orders);
 
             var expensiveOrders = db.Query(db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10)).ToList();
 

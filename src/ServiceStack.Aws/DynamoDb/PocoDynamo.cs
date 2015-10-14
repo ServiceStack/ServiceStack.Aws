@@ -38,6 +38,10 @@ namespace ServiceStack.Aws.DynamoDb
         void PutRelated<T>(object hash, IEnumerable<T> items);
         IEnumerable<T> GetRelated<T>(object hash);
         void DeleteRelated<T>(object hash, IEnumerable<object> ranges);
+        void PutRelatedItem<T>(object hash, T item);
+        void PutRelatedItems<T>(object hash, IEnumerable<T> items);
+        IEnumerable<T> GetRelatedItems<T>(object hash);
+        void DeleteRelatedItems<T>(object hash, IEnumerable<object> ranges);
 
         IEnumerable<T> ScanAll<T>();
 
@@ -433,6 +437,7 @@ namespace ServiceStack.Aws.DynamoDb
         }
 
         public void DeleteRelated<T>(object hash, IEnumerable<object> ranges)
+        public void DeleteRelatedItems<T>(object hash, IEnumerable<object> ranges)
         {
             var table = DynamoMetadata.GetTable<T>();
 
@@ -462,6 +467,7 @@ namespace ServiceStack.Aws.DynamoDb
         }
 
         public void PutRelated<T>(object hash, T item)
+        public void PutRelatedItem<T>(object hash, T item)
         {
             var table = DynamoMetadata.GetTable<T>();
 
@@ -473,6 +479,7 @@ namespace ServiceStack.Aws.DynamoDb
         }
 
         public void PutRelated<T>(object hash, IEnumerable<T> items)
+        public void PutRelatedItems<T>(object hash, IEnumerable<T> items)
         {
             var table = DynamoMetadata.GetTable<T>();
 
