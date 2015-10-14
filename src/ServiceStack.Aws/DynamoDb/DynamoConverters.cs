@@ -171,6 +171,17 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
+        public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(IPocoDynamo db, DynamoMetadataType table, DynamoId id)
+        {
+            using (AwsClientUtils.GetJsScope())
+            {
+                return new Dictionary<string, AttributeValue> {
+                    { table.HashKey.Name, ToAttributeValue(db, table.HashKey.Type, table.HashKey.DbType, id.Hash) },
+                    { table.RangeKey.Name, ToAttributeValue(db, table.RangeKey.Type, table.RangeKey.DbType, id.Range) },
+                };
+            }
+        }
+
         public virtual Dictionary<string, AttributeValue> ToAttributeKeyValue(IPocoDynamo db, DynamoMetadataType table, object hash, object range)
         {
             using (AwsClientUtils.GetJsScope())

@@ -34,8 +34,10 @@ namespace ServiceStack.Aws.DynamoDb
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
 
+        void PutRelated<T>(object hash, T item);
         void PutRelated<T>(object hash, IEnumerable<T> items);
         IEnumerable<T> GetRelated<T>(object hash);
+        void DeleteRelated<T>(object hash, IEnumerable<object> ranges);
 
         IEnumerable<T> ScanAll<T>();
 
@@ -422,13 +424,23 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 Limit = PagingLimit,
                 KeyConditionExpression = "{0} = :k1".Fmt(table.HashKey.Name),
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
                     {":k1", Converters.ToAttributeValue(this, argType, dbType, hash) }
                 }
             };
 
             return Query(request, r => r.ConvertAll<T>());
+        }
+
+        public void DeleteRelated<T>(object hash, IEnumerable<object> ranges)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+
+            if (table.HashKey == null || table.RangeKey == null)
+                throw new ArgumentException("Related table '{0}' needs both a HashKey and RangeKey".Fmt(typeof(T).Name));
+
+            var ids = ranges.Map(range => new DynamoId(hash, range));
+            DeleteItems<T>(ids);
         }
 
         public T PutItem<T>(T value, bool returnOld = false)
@@ -447,6 +459,17 @@ namespace ServiceStack.Aws.DynamoDb
                 return default(T);
 
             return Converters.FromAttributeValues<T>(table, response.Attributes);
+        }
+
+        public void PutRelated<T>(object hash, T item)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+
+            if (table.HashKey == null || table.RangeKey == null)
+                throw new ArgumentException("Related table '{0}' needs both a HashKey and RangeKey".Fmt(typeof(T).Name));
+
+            table.HashKey.SetValue(item, hash);
+            PutItem(item);
         }
 
         public void PutRelated<T>(object hash, IEnumerable<T> items)
@@ -526,6 +549,37 @@ namespace ServiceStack.Aws.DynamoDb
 
                 var deleteItems = nextBatch.Map(id => new WriteRequest(
                     new DeleteRequest(Converters.ToAttributeKeyValue(this, table.HashKey, id))));
+
+                var request = new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> {
+                    { table.Name, deleteItems }
+                });
+
+                var response = Exec(() => DynamoDb.BatchWriteItem(request));
+
+                var i = 0;
+                while (response.UnprocessedItems.Count > 0)
+                {
+                    response = Exec(() => DynamoDb.BatchWriteItem(response.UnprocessedItems));
+
+                    if (response.UnprocessedItems.Count > 0)
+                        i.SleepBackOffMultiplier();
+                }
+            }
+        }
+
+        public void DeleteItems<T>(IEnumerable<DynamoId> hashes)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var remainingIds = hashes.ToList();
+
+            while (remainingIds.Count > 0)
+            {
+                var batchSize = Math.Min(remainingIds.Count, MaxWriteBatchSize);
+                var nextBatch = remainingIds.GetRange(0, batchSize);
+                remainingIds.RemoveRange(0, batchSize);
+
+                var deleteItems = nextBatch.Map(id => new WriteRequest(
+                    new DeleteRequest(Converters.ToAttributeKeyValue(this, table, id))));
 
                 var request = new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> {
                     { table.Name, deleteItems }

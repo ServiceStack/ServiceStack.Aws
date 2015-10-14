@@ -127,4 +127,39 @@ namespace ServiceStack.Aws.DynamoDb
         public int ReadCapacityUnits { get; set; }
         public int WriteCapacityUnits { get; set; }
     }
+
+    public class DynamoId
+    {
+        public DynamoId() {}
+        public DynamoId(object hash, object range)
+        {
+            Hash = hash;
+            Range = range;
+        }
+
+        public object Hash { get; set; }
+
+        public object Range { get; set; }
+
+        protected bool Equals(DynamoId other)
+        {
+            return Equals(Hash, other.Hash) && Equals(Range, other.Range);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((DynamoId) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Hash != null ? Hash.GetHashCode() : 0)*397) ^ (Range != null ? Range.GetHashCode() : 0);
+            }
+        }
+    }
 }
