@@ -104,8 +104,23 @@ namespace ServiceStack.Aws.DynamoDb
 
             db.PutItem((TUserAuth)newUser);
 
-            newUser = db.GetItem<TUserAuth>(newUser.Id);
+            newUser = Sanitize(db.GetItem<TUserAuth>(newUser.Id));
             return newUser;
+        }
+
+        //DynamoDb does not allow null hash keys on Global Indexes
+        //Workaround by populating UserName with Email when null
+        private IUserAuth Sanitize(TUserAuth userAuth)
+        {
+            if (userAuth.UserName != null && userAuth.UserName.Contains("@"))
+            {
+                if (userAuth.Email == null)
+                    userAuth.Email = userAuth.UserName;
+
+                userAuth.UserName = null;
+            }
+
+            return userAuth;
         }
 
         public virtual void LoadUserAuth(IAuthSession session, IAuthTokens tokens)
@@ -124,7 +139,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public virtual IUserAuth GetUserAuth(string userAuthId)
         {
-            return db.GetItem<TUserAuth>(int.Parse(userAuthId));
+            return Sanitize(db.GetItem<TUserAuth>(int.Parse(userAuthId)));
         }
 
         public void SaveUserAuth(IAuthSession authSession)
@@ -223,7 +238,7 @@ namespace ServiceStack.Aws.DynamoDb
             var authProviderIndex = GetUserAuthByProviderUserId(tokens.Provider, tokens.UserId);
             if (authProviderIndex != null)
             {
-                var userAuth = db.GetItem<TUserAuth>(authProviderIndex.UserAuthId);
+                var userAuth = Sanitize(db.GetItem<TUserAuth>(authProviderIndex.UserAuthId));
                 return userAuth;
             }
             return null;
@@ -254,7 +269,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var userAuthId = index.Id;
 
-            return db.GetItem<TUserAuth>(userAuthId);
+            return Sanitize(db.GetItem<TUserAuth>(userAuthId));
         }
 
         public bool TryAuthenticate(string userName, string password, out IUserAuth userAuth)
@@ -299,6 +314,14 @@ namespace ServiceStack.Aws.DynamoDb
             ValidateNewUser(newUser, password);
 
             AssertNoExistingUser(newUser, existingUser);
+
+            //DynamoDb does not allow null hash keys on Global Indexes
+            //Workaround by populating UserName with Email when null
+            if (newUser.UserName == null)
+                newUser.UserName = newUser.Email;
+
+            if (this.LowerCaseUsernames)
+                newUser.UserName = newUser.UserName.ToLower();
 
             var hash = existingUser.PasswordHash;
             var salt = existingUser.Salt;

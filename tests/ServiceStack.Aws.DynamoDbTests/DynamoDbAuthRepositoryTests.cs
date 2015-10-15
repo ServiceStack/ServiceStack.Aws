@@ -69,23 +69,39 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var authRepo = CreateAuthRepo(db);
 
-            authRepo.CreateUserAuth(new UserAuth
+            var user1 = new UserAuth
             {
                 DisplayName = "Credentials",
                 FirstName = "First",
                 LastName = "Last",
                 FullName = "First Last",
                 Email = "demis.bellot@gmail.com",
-            }, "test");
+            };
+            authRepo.CreateUserAuth(user1, "test");
+            Assert.That(user1.Id, Is.GreaterThan(0));
 
-            authRepo.CreateUserAuth(new UserAuth
+            var user2 = new UserAuth
             {
                 DisplayName = "Credentials",
                 FirstName = "First",
                 LastName = "Last",
                 FullName = "First Last",
                 UserName = "mythz",
-            }, "test");
+            };
+            authRepo.CreateUserAuth(user2, "test");
+            Assert.That(user2.Id, Is.GreaterThan(0));
+
+            var dbUser1 = db.GetItem<UserAuth>(user1.Id);
+            Assert.That(dbUser1.Email, Is.EqualTo(user1.Email));
+            dbUser1 = (UserAuth)authRepo.GetUserAuth(user1.Id);
+            Assert.That(dbUser1.Email, Is.EqualTo(user1.Email));
+            Assert.That(dbUser1.UserName, Is.Null);
+
+            var dbUser2 = db.GetItem<UserAuth>(user2.Id);
+            Assert.That(dbUser2.UserName, Is.EqualTo(user2.UserName));
+            dbUser2 = (UserAuth)authRepo.GetUserAuth(user2.Id);
+            Assert.That(dbUser2.UserName, Is.EqualTo(user2.UserName));
+            Assert.That(dbUser2.Email, Is.Null);
         }
     }
 }
