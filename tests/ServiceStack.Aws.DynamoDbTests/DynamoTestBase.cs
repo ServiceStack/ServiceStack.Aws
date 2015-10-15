@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Amazon;
 using Amazon.DynamoDBv2;
+using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
 using ServiceStack.Caching;
@@ -54,6 +55,31 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItems(items);
             return items;
+        }
+
+        protected void AssertIndex(DynamoIndex index, string indexName, string hashField, string rangeField = null)
+        {
+            Assert.That(index.Name, Is.EqualTo(indexName));
+            Assert.That(index.HashKey.Name, Is.EqualTo(hashField));
+
+            if (rangeField == null)
+                Assert.That(index.RangeKey, Is.Null);
+            else
+                Assert.That(index.RangeKey.Name, Is.EquivalentTo(rangeField));
+        }
+
+        protected DynamoMetadataType AssertTable(IPocoDynamo db, Type type, string hashField, string rangeField = null)
+        {
+            var table = db.GetTableMetadata(type);
+
+            Assert.That(table.HashKey.Name, Is.EquivalentTo(hashField));
+
+            if (rangeField == null)
+                Assert.That(table.RangeKey, Is.Null);
+            else
+                Assert.That(table.RangeKey.Name, Is.EquivalentTo(rangeField));
+
+            return table;
         }
     }
 }

@@ -40,6 +40,11 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static HashSet<DynamoMetadataType> Types;
 
+        public static void Reset()
+        {
+            Types = null;
+        }
+
         public static DynamoMetadataType GetTable<T>()
         {
             return GetTable(typeof(T));
