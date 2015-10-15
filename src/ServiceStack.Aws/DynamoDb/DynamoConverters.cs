@@ -9,6 +9,7 @@ using Amazon.DynamoDBv2.Model;
 using ServiceStack.Aws.Support;
 using ServiceStack.DataAnnotations;
 using ServiceStack.Text;
+using ServiceStack.Text.Common;
 
 namespace ServiceStack.Aws.DynamoDb
 {
@@ -60,11 +61,11 @@ namespace ServiceStack.Aws.DynamoDb
             if (nullable != null && DynamoMetadata.FieldTypeMap.TryGetValue(nullable, out fieldType))
                 return fieldType;
 
-            if (type.IsOrHasGenericInterfaceTypeOf(typeof(ICollection<>)))
-                return DynamoType.List;
-
             if (type.IsOrHasGenericInterfaceTypeOf(typeof(IDictionary<,>)))
                 return DynamoType.Map;
+
+            if (type.IsOrHasGenericInterfaceTypeOf(typeof(ICollection<>)))
+                return DynamoType.List;
 
             if (type.IsUserType())
                 return DynamoType.Map;
@@ -266,9 +267,9 @@ namespace ServiceStack.Aws.DynamoDb
                             ? new AttributeValue { B = new MemoryStream(((Stream)value).ReadFully()) }
                             : new AttributeValue { B = new MemoryStream((byte[])value) };
                 case DynamoType.NumberSet:
-                    return new AttributeValue { NS = value.ConvertTo<List<string>>() };
+                    return ToNumberSetAttributeValue(value);
                 case DynamoType.StringSet:
-                    return new AttributeValue { SS = value.ConvertTo<List<string>>() };
+                    return ToStringSetAttributeValue(value);
                 case DynamoType.List:
                     return ToListAttributeValue(db, value);
                 case DynamoType.Map:
@@ -276,6 +277,26 @@ namespace ServiceStack.Aws.DynamoDb
                 default:
                     return new AttributeValue { S = value.ToJsv() };
             }
+        }
+
+        public virtual AttributeValue ToNumberSetAttributeValue(object value)
+        {
+            var to = new AttributeValue { NS = value.ConvertTo<List<string>>() };
+            //DynamoDB does not support empty sets
+            //http://docs.amazonaws.cn/en_us/amazondynamodb/latest/developerguide/DataModel.html
+            if (to.NS.Count == 0)
+                to.NULL = true;
+            return to;
+        }
+
+        public virtual AttributeValue ToStringSetAttributeValue(object value)
+        {
+            var to = new AttributeValue { SS = value.ConvertTo<List<string>>() };
+            //DynamoDB does not support empty sets
+            //http://docs.amazonaws.cn/en_us/amazondynamodb/latest/developerguide/DataModel.html
+            if (to.SS.Count == 0)
+                to.NULL = true;
+            return to;
         }
 
         public virtual AttributeValue ToMapAttributeValue(IPocoDynamo db, object oMap)
@@ -291,7 +312,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var value = map[key];
                 if (value != null)
                 {
-                    value = ApplyFieldBehavior(db, 
+                    value = ApplyFieldBehavior(db,
                         meta,
                         meta != null ? meta.GetField((string)key) : null,
                         oMap,
@@ -302,15 +323,37 @@ namespace ServiceStack.Aws.DynamoDb
                     ? ToAttributeValue(db, value.GetType(), GetFieldType(value.GetType()), value)
                     : new AttributeValue { NULL = true };
             }
-            return new AttributeValue { M = to };
+            return new AttributeValue { M = to, IsMSet = true };
         }
 
         public virtual object FromMapAttributeValue(Dictionary<string, AttributeValue> map, Type type)
         {
-            var table = DynamoMetadata.GetType(type);
-
             var from = new Dictionary<string, object>();
-            foreach (var field in table.Fields)
+
+            var metaType = DynamoMetadata.GetType(type);
+            if (metaType == null)
+            {
+                var toMap = (IDictionary)type.CreateInstance();
+                var genericDict = type.GetTypeWithGenericTypeDefinitionOf(typeof(IDictionary<,>));
+                if (genericDict != null)
+                {
+                    var genericArgs = genericDict.GetGenericArguments();
+                    var keyType = genericArgs[1];
+                    var valueType = genericArgs[1];
+
+                    foreach (var entry in map)
+                    {
+                        var key = ConvertValue(entry.Key, keyType);
+                        toMap[key] = FromAttributeValue(entry.Value, valueType);
+                    }
+
+                    return toMap;
+                }
+
+                throw new ArgumentException("Unknown Map Type " + type.Name);
+            }
+
+            foreach (var field in metaType.Fields)
             {
                 AttributeValue attrValue;
                 if (!map.TryGetValue(field.Name, out attrValue))
@@ -327,7 +370,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var list = ((IEnumerable)oList).Map(x => x);
             if (list.Count <= 0)
-                return new AttributeValue { L = new List<AttributeValue>() };
+                return new AttributeValue { L = new List<AttributeValue>(), IsLSet = true };
 
             var elType = list[0].GetType();
             var elMeta = DynamoMetadata.GetType(elType);

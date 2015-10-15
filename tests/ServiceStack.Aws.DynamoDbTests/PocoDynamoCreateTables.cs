@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
+using ServiceStack.Auth;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
+using ServiceStack.DataAnnotations;
 
 namespace ServiceStack.Aws.DynamoDbTests
 {
@@ -108,5 +111,81 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(table.GlobalIndexes[0].ReadCapacityUnits, Is.EqualTo(100));
             Assert.That(table.GlobalIndexes[0].WriteCapacityUnits, Is.EqualTo(50));
         }
+
+        [Test]
+        public void Can_put_UserAuth()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<UserAuth>();
+            db.InitSchema();
+
+            db.PutItem(new UserAuth
+            {
+                DisplayName = "Credentials",
+                FirstName = "First",
+                LastName = "Last",
+                FullName = "First Last",
+                UserName = "mythz",
+            });
+        }
+
+        [Test]
+        public void Can_put_CustomUserAuth()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<CustomUserAuth>();
+            db.InitSchema();
+
+            db.PutItem(new CustomUserAuth
+            {
+                Custom = "CustomUserAuth",
+                DisplayName = "Credentials",
+                FirstName = "First",
+                LastName = "Last",
+                FullName = "First Last",
+                UserName = "demis.bellot@gmail.com",
+            });
+        }
+
+        [Test]
+        public void Does_create_Collection_Table()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Collection>();
+            db.InitSchema();
+
+            var table = db.GetTableMetadata<Collection>();
+            Assert.That(table.GetField("Id").DbType, Is.EqualTo(DynamoType.Number));
+            Assert.That(table.GetField("Title").DbType, Is.EqualTo(DynamoType.String));
+            Assert.That(table.GetField("ArrayInts").DbType, Is.EqualTo(DynamoType.List));
+            Assert.That(table.GetField("SetStrings").DbType, Is.EqualTo(DynamoType.StringSet));
+            Assert.That(table.GetField("ArrayStrings").DbType, Is.EqualTo(DynamoType.List));
+            Assert.That(table.GetField("ListInts").DbType, Is.EqualTo(DynamoType.List));
+            Assert.That(table.GetField("ListStrings").DbType, Is.EqualTo(DynamoType.List));
+            Assert.That(table.GetField("SetInts").DbType, Is.EqualTo(DynamoType.NumberSet));
+            Assert.That(table.GetField("DictionaryInts").DbType, Is.EqualTo(DynamoType.Map));
+            Assert.That(table.GetField("DictionaryStrings").DbType, Is.EqualTo(DynamoType.Map));
+        }
+
+        [Test]
+        public void Can_put_empty_Collection()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Collection>();
+            db.InitSchema();
+
+            db.PutItem(new Collection
+            {
+                ArrayInts = new int[0],
+                SetStrings = new HashSet<string>(),
+                ArrayStrings = new string[0],
+                ListInts = new List<int>(),
+                ListStrings = new List<string>(),
+                SetInts = new HashSet<int>(),
+                DictionaryInts = new Dictionary<int, int>(),
+                DictionaryStrings = new Dictionary<string, string>(),
+            });
+        }
     }
+
 }

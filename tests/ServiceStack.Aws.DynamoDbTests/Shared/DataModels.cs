@@ -288,11 +288,16 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public HashSet<int> SetInts { get; set; }
         public List<int> ListInts { get; set; }
 
+        public Dictionary<int, int> DictionaryInts { get; set; }
+        public Dictionary<string, string> DictionaryStrings { get; set; }
+
         public Collection InitStrings(params string[] strings)
         {
             ArrayStrings = strings;
             SetStrings = new HashSet<string>(strings);
             ListStrings = new List<string>(strings);
+            DictionaryStrings = new Dictionary<string, string>();
+            strings.Each(x => DictionaryStrings[x] = x);
             return this;
         }
 
@@ -301,6 +306,8 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             ArrayInts = ints;
             SetInts = new HashSet<int>(ints);
             ListInts = new List<int>(ints);
+            DictionaryInts = new Dictionary<int, int>();
+            ints.Each(x => DictionaryInts[x] = x);
             return this;
         }
 
@@ -312,7 +319,9 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
                 && ListStrings.EquivalentTo(other.ListStrings)
                 && ArrayInts.EquivalentTo(other.ArrayInts)
                 && SetInts.EquivalentTo(other.SetInts)
-                && ListInts.EquivalentTo(other.ListInts);
+                && ListInts.EquivalentTo(other.ListInts)
+                && DictionaryInts.EquivalentTo(other.DictionaryInts)
+                && DictionaryStrings.EquivalentTo(other.DictionaryStrings);
         }
 
         public override bool Equals(object obj)
@@ -334,6 +343,8 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
                 hashCode = (hashCode * 397) ^ (ArrayInts != null ? ArrayInts.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (SetInts != null ? SetInts.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ListInts != null ? ListInts.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (DictionaryInts != null ? DictionaryInts.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (DictionaryStrings != null ? DictionaryStrings.GetHashCode() : 0);
                 return hashCode;
             }
         }

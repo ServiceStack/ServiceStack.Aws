@@ -408,8 +408,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (table.HashKey == null || table.RangeKey == null)
                 throw new ArgumentException("Related table '{0}' needs both a HashKey and RangeKey".Fmt(typeof(T).Name));
 
-            var ids = ranges.Map(range => new DynamoId(hash, range));
-            DeleteItems<T>(ids);
+            DeleteItems<T>(ranges.Map(range => new DynamoId(hash, range)));
         }
 
         public T PutItem<T>(T value, bool returnOld = false)
@@ -450,7 +449,6 @@ namespace ServiceStack.Aws.DynamoDb
 
             var related = items.ToList();
             related.Each(x => table.HashKey.SetValue(x, hash));
-
             PutItems(related);
         }
 

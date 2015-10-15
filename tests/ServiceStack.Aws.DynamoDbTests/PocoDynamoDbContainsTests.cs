@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
@@ -7,6 +8,13 @@ namespace ServiceStack.Aws.DynamoDbTests
 {
     public class PocoDynamoDbContainsTests : DynamoTestBase
     {
+        [TestFixtureSetUp]
+        public void TestFixtureSetUp()
+        {
+            var db = CreatePocoDynamo();
+            db.DeleteAllTables(TimeSpan.FromMinutes(1));
+        }
+
         private static Collection PutCollection(IPocoDynamo db)
         {
             db.RegisterTable<Collection>();
