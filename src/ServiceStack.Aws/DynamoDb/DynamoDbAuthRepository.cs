@@ -68,18 +68,14 @@ namespace ServiceStack.Aws.DynamoDb
                 var existingUser = GetUserAuthByUserName(newUser.UserName);
                 if (existingUser != null
                     && (exceptForExistingUser == null || existingUser.Id != exceptForExistingUser.Id))
-                {
                     throw new ArgumentException("User {0} already exists".Fmt(newUser.UserName));
-                }
             }
             if (newUser.Email != null)
             {
                 var existingUser = GetUserAuthByUserName(newUser.Email);
                 if (existingUser != null
                     && (exceptForExistingUser == null || existingUser.Id != exceptForExistingUser.Id))
-                {
                     throw new ArgumentException("Email {0} already exists".Fmt(newUser.Email));
-                }
             }
         }
 
@@ -92,7 +88,7 @@ namespace ServiceStack.Aws.DynamoDb
             string salt, hash;
             HostContext.Resolve<IHashProvider>().GetHashAndSaltString(password, out hash, out salt);
 
-            //DynamoDb does not allow null hash keys on Glonal Indexes
+            //DynamoDb does not allow null hash keys on Global Indexes
             //Workaround by populating UserName with Email when null
             if (newUser.UserName == null)
                 newUser.UserName = newUser.Email;
@@ -235,8 +231,11 @@ namespace ServiceStack.Aws.DynamoDb
 
         private UserIdUserAuthDetailsIndex GetUserAuthByProviderUserId(string provider, string userId)
         {
-            var oAuthProvider = db.Query(db.FromQueryIndex<UserIdUserAuthDetailsIndex>(
-                q => q.UserId == userId && q.Provider == provider)).FirstOrDefault();
+            var oAuthProvider = db.FromQueryIndex<UserIdUserAuthDetailsIndex>(
+                    q => q.UserId == userId && q.Provider == provider)
+                .Query()
+                .FirstOrDefault();
+
             return oAuthProvider;
         }
 
@@ -255,7 +254,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var userAuthId = index.Id;
 
-            return db.FromQuery<UserAuth>(q => q.Id == userAuthId).Query().FirstOrDefault();
+            return db.GetItem<TUserAuth>(userAuthId);
         }
 
         public bool TryAuthenticate(string userName, string password, out IUserAuth userAuth)
@@ -328,10 +327,14 @@ namespace ServiceStack.Aws.DynamoDb
 
             db.DeleteItem<TUserAuth>(userAuthId);
 
-            var userAuthDetails = db.Query(db.FromQuery<TUserAuthDetails>(x => x.UserAuthId == userId).Select(x => x.Id));
+            var userAuthDetails = db.FromQuery<TUserAuthDetails>(x => x.UserAuthId == userId)
+                .Select(x => x.Id)
+                .Query();
             db.DeleteItems<TUserAuthDetails>(userAuthDetails.Map(x => x.Id));
 
-            var userAuthRoles = db.Query(db.FromQuery<UserAuthRole>(x => x.UserAuthId == userId).Select(x => x.Id));
+            var userAuthRoles = db.FromQuery<UserAuthRole>(x => x.UserAuthId == userId)
+                .Select(x => x.Id)
+                .Query();
             db.DeleteItems<UserAuthRole>(userAuthRoles.Map(x => x.Id));
         }
 
@@ -482,6 +485,5 @@ namespace ServiceStack.Aws.DynamoDb
             db.InitSchema();
         }
     }
-
 
 }
