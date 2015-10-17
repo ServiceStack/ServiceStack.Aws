@@ -11,7 +11,7 @@ namespace ServiceStack.Aws.DynamoDb
         public DynamoDbAuthRepository(IPocoDynamo db) : base(db) { }
     }
 
-    public class DynamoDbAuthRepository<TUserAuth, TUserAuthDetails> : IUserAuthRepository, IClearable, IRequiresSchema
+    public class DynamoDbAuthRepository<TUserAuth, TUserAuthDetails> : IUserAuthRepository, IManageRoles, IClearable, IRequiresSchema
         where TUserAuth : class, IUserAuth
         where TUserAuthDetails : class, IUserAuthDetails
     {
@@ -372,7 +372,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var authId = int.Parse(userAuthId);
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
-                .IndexCondition(x => x.Role != null)
+                .LocalIndex(x => x.Role != null)
                 .Query()
                 .Map(x => x.Role);
         }
@@ -381,7 +381,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var authId = int.Parse(userAuthId);
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
-                .IndexCondition(x => x.Permission != null)
+                .LocalIndex(x => x.Permission != null)
                 .Query()
                 .Map(x => x.Permission);
         }
@@ -397,7 +397,7 @@ namespace ServiceStack.Aws.DynamoDb
             var authId = int.Parse(userAuthId);
 
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
-                .IndexCondition(x => x.Role == role)
+                .Filter(x => x.Role == role)
                 .Query()
                 .Any();
         }
@@ -413,7 +413,7 @@ namespace ServiceStack.Aws.DynamoDb
             var authId = int.Parse(userAuthId);
 
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
-                .IndexCondition(x => x.Permission == permission)
+                .Filter(x => x.Permission == permission)
                 .Query()
                 .Any();
         }
@@ -423,7 +423,8 @@ namespace ServiceStack.Aws.DynamoDb
             var userAuth = GetUserAuth(userAuthId);
             var now = DateTime.UtcNow;
 
-            var userRoles = db.Query(db.FromQuery<UserAuthRole>(q => q.UserAuthId == userAuth.Id));
+            var userRoles = db.FromQuery<UserAuthRole>(q => q.UserAuthId == userAuth.Id)
+                .Query().ToList();
 
             if (!roles.IsEmpty())
             {
@@ -467,7 +468,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (!roles.IsEmpty())
             {
                 var authRoleIds = db.FromQuery<UserAuthRole>(x => x.UserAuthId == userAuth.Id)
-                    .IndexCondition(x => roles.Contains(x.Role))
+                    .LocalIndex(x => roles.Contains(x.Role))
                     .Select(x => new { x.UserAuthId, x.Id })
                     .Query()
                     .Map(x => new DynamoId(x.UserAuthId, x.Id));
@@ -478,7 +479,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (!permissions.IsEmpty())
             {
                 var authRoleIds = db.FromQuery<UserAuthRole>(x => x.UserAuthId == userAuth.Id)
-                    .IndexCondition(x => permissions.Contains(x.Permission))
+                    .LocalIndex(x => permissions.Contains(x.Permission))
                     .Select(x => new { x.UserAuthId, x.Id })
                     .Query()
                     .Map(x => new DynamoId(x.UserAuthId, x.Id));
@@ -509,10 +510,10 @@ namespace ServiceStack.Aws.DynamoDb
 
             typeof(UserAuthRole).AddAttributes(
                 new CompositeIndexAttribute("UserAuthId", "Id"));
-            typeof(UserAuthRole).GetProperty("Role")
-                .AddAttributes(new IndexAttribute());
-            typeof(UserAuthRole).GetProperty("Permission")
-                .AddAttributes(new IndexAttribute());
+            //typeof(UserAuthRole).GetProperty("Role")
+            //    .AddAttributes(new IndexAttribute());
+            //typeof(UserAuthRole).GetProperty("Permission")
+            //    .AddAttributes(new IndexAttribute());
 
             db.RegisterTable<UserAuthRole>();
 

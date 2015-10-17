@@ -100,7 +100,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.PutRelatedItems(customer.Id, orders);
 
             var q = db.FromQuery<OrderWithFieldIndex>(x => x.CustomerId == customer.Id)
-                .IndexCondition(x => x.Cost > 10);
+                .LocalIndex(x => x.Cost > 10);
 
             var expensiveOrders = db.Query(q).ToList();
             Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.Cost > 10)));
@@ -120,7 +120,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0));
 
             Assert.Throws<AmazonDynamoDBException>(() =>
-                db.Query(db.FromQuery<OrderWithFieldIndex>().IndexCondition(x => x.Cost > 10)).ToList());
+                db.Query(db.FromQuery<OrderWithFieldIndex>().LocalIndex(x => x.Cost > 10)).ToList());
         }
 
         [Test]
