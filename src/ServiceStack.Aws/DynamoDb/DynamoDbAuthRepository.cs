@@ -432,7 +432,8 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     if (!roleSet.Contains(role))
                     {
-                        db.PutRelatedItem(userAuth.Id, new UserAuthRole {
+                        db.PutRelatedItem(userAuth.Id, new UserAuthRole
+                        {
                             Role = role,
                             CreatedDate = now,
                             ModifiedDate = now,
@@ -448,7 +449,8 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     if (!permissionSet.Contains(permission))
                     {
-                        db.PutRelatedItem(userAuth.Id, new UserAuthRole {
+                        db.PutRelatedItem(userAuth.Id, new UserAuthRole
+                        {
                             Permission = permission,
                             CreatedDate = now,
                             ModifiedDate = now,
@@ -485,24 +487,33 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
+        private bool hasInitSchema = false;
+
         public void InitSchema()
         {
+            if (hasInitSchema)
+                return;
+
+            hasInitSchema = true;
+
             typeof(TUserAuth).AddAttributes(
                 new ReferencesAttribute(typeof(UsernameUserAuthIndex)));
+
+            db.RegisterTable<TUserAuth>();
 
             typeof(TUserAuthDetails).AddAttributes(
                 new ReferencesAttribute(typeof(UserIdUserAuthDetailsIndex)),
                 new CompositeIndexAttribute("UserAuthId", "Id"));
+
+            db.RegisterTable<TUserAuthDetails>();
 
             typeof(UserAuthRole).AddAttributes(
                 new CompositeIndexAttribute("UserAuthId", "Id"));
             typeof(UserAuthRole).GetProperty("Role")
                 .AddAttributes(new IndexAttribute());
             typeof(UserAuthRole).GetProperty("Permission")
-               .AddAttributes(new IndexAttribute());
+                .AddAttributes(new IndexAttribute());
 
-            db.RegisterTable<TUserAuth>();
-            db.RegisterTable<TUserAuthDetails>();
             db.RegisterTable<UserAuthRole>();
 
             db.InitSchema();
