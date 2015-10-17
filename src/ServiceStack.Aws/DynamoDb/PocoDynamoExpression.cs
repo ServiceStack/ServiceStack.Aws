@@ -26,6 +26,8 @@ namespace ServiceStack.Aws.DynamoDb
 
         public Dictionary<string, object> Params { get; set; }
 
+        public Dictionary<string, string> Aliases { get; set; }
+
         public string ParamPrefix { get; set; }
 
         public PocoDynamoExpression(Type type)
@@ -35,6 +37,7 @@ namespace ServiceStack.Aws.DynamoDb
             ParamPrefix = "p";
             Params = new Dictionary<string, object>();
             ReferencedFields = new List<string>();
+            Aliases = new Dictionary<string, string>();
         }
 
         public PocoDynamoExpression Parse(Expression expr)
@@ -417,10 +420,36 @@ namespace ServiceStack.Aws.DynamoDb
             if (field != null && !ReferencedFields.Contains(field.Name))
                 ReferencedFields.Add(field.Name);
 
-            if (propertyInfo != null && propertyInfo.PropertyType.IsEnum)
-                return new EnumMemberAccess(m.Member.Name, propertyInfo.PropertyType);
+            var memberName = GetMemberName(m.Member.Name);
 
-            return new PartialString(m.Member.Name);
+            if (propertyInfo != null && propertyInfo.PropertyType.IsEnum)
+                return new EnumMemberAccess(memberName, propertyInfo.PropertyType);
+
+            return new PartialString(memberName);
+        }
+
+        public string GetMemberName(string memberName)
+        {
+            if (DynamoConfig.IsReservedWord(memberName))
+            {
+                var alias = "#" + memberName.Substring(0, 2);
+                bool aliasExists = false;
+                foreach (var entry in Aliases)
+                {
+                    if (entry.Value == memberName)
+                        return entry.Key;
+                    if (entry.Key == alias)
+                        aliasExists = true;
+                }
+
+                if (aliasExists)
+                    alias += Aliases.Count;
+
+                Aliases[alias] = memberName;
+                return alias;
+            }
+
+            return memberName;
         }
 
         protected object GetQuotedTrueValue()

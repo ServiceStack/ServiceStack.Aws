@@ -121,7 +121,7 @@ namespace ServiceStack.Aws.DynamoDb
             return KeyCondition(q.FilterExpression, q.Params);
         }
 
-        public QueryExpression<T> IndexCondition(Expression<Func<T, bool>> keyExpression, string indexName = null)
+        public QueryExpression<T> LocalIndex(Expression<Func<T, bool>> keyExpression, string indexName = null)
         {
             var q = PocoDynamoExpression.Create(typeof(T), keyExpression, paramPrefix: "i");
 
@@ -151,7 +151,7 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
-        public QueryExpression<T> Filter(string filterExpression, Dictionary<string, object> args = null)
+        public QueryExpression<T> Filter(string filterExpression, Dictionary<string, object> args = null, Dictionary<string,string> aliases = null)
         {
             AddFilterExpression(filterExpression);
 
@@ -161,10 +161,18 @@ namespace ServiceStack.Aws.DynamoDb
                     this.ExpressionAttributeValues[x.Key] = x.Value);
             }
 
+            if (aliases != null)
+            {
+                foreach (var entry in aliases)
+                {
+                    this.ExpressionAttributeNames[entry.Key] = entry.Value;
+                }
+            }
+
             return this;
         }
 
-        public QueryExpression<T> Filter(string filterExpression, object args)
+        public QueryExpression<T> Filter(string filterExpression, object args, Dictionary<string, string> aliases = null)
         {
             return Filter(filterExpression, args.ToObjectDictionary());
         }
@@ -172,7 +180,7 @@ namespace ServiceStack.Aws.DynamoDb
         public QueryExpression<T> Filter(Expression<Func<T, bool>> filterExpression)
         {
             var q = PocoDynamoExpression.Create(typeof(T), filterExpression, paramPrefix: "p");
-            return Filter(q.FilterExpression, q.Params);
+            return Filter(q.FilterExpression, q.Params, q.Aliases);
         }
 
         public QueryExpression<T> OrderByAscending()
