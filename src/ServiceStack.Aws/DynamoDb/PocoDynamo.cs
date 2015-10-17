@@ -155,7 +155,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public DynamoMetadataType GetTableMetadata(Type table)
         {
-            return DynamoMetadata.GetTable(table);
+            return DynamoMetadata.TryGetTable(table);
         }
 
         public List<string> GetTableNames()
@@ -715,6 +715,9 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var table = typeof(T).GetIndexTable();
             var index = table.GetIndex(typeof(T));
+            if (index == null)
+                throw new ArgumentException("Index is not referenced on table Type " + typeof(T).Name);
+
             var q = new QueryExpression<T>(this, table)
             {
                 IndexName = index.Name,

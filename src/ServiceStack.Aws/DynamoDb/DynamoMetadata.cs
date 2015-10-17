@@ -108,13 +108,9 @@ namespace ServiceStack.Aws.DynamoDb
             if (Types == null)
                 Types = new HashSet<DynamoMetadataType>();
 
-            var table = Types.FirstOrDefault(x => x.Type == type);
-            if (table != null && table.IsTable)
-                return table;
-
             Types.RemoveWhere(x => x.Type == type);
 
-            table = ToMetadataTable(type);
+            var table = ToMetadataTable(type);
             Types.Add(table);
 
             LicenseUtils.AssertValidUsage(LicenseFeature.Aws, QuotaType.Tables, Types.Count);

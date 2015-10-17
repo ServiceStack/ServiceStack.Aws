@@ -37,7 +37,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static DynamoMetadataType GetTableMetadata<T>(this IPocoDynamo db)
         {
-            return db.GetTableMetadata(typeof(T));
+            return db.GetTableMetadata(typeof(T)) ?? DynamoMetadata.RegisterTable(typeof(T));
         }
 
         public static bool CreateTableIfMissing<T>(this IPocoDynamo db)
