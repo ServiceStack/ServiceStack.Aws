@@ -155,7 +155,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public DynamoMetadataType GetTableMetadata(Type table)
         {
-            return DynamoMetadata.TryGetTable(table);
+            return DynamoMetadata.TryGetTable(table) ?? DynamoMetadata.RegisterTable(table);
         }
 
         public List<string> GetTableNames()
