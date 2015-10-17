@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using ServiceStack.Auth;
 using ServiceStack.Aws.DynamoDb;
@@ -58,9 +59,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             var userAuthDetails = AssertTable(db, typeof(UserAuthDetails), "UserAuthId", "Id");
             AssertIndex(userAuthDetails.GlobalIndexes[0], "UserIdUserAuthDetailsIndex", "UserId", "Provider");
 
-            var userAuthRole = AssertTable(db, typeof(UserAuthRole), "UserAuthId", "Id");
-            AssertIndex(userAuthRole.LocalIndexes[0], "UserAuthRoleRoleIndex", "UserAuthId", "Role");
-            AssertIndex(userAuthRole.LocalIndexes[1], "UserAuthRolePermissionIndex", "UserAuthId", "Permission");
+            AssertTable(db, typeof(UserAuthRole), "UserAuthId", "Id");
         }
 
         [Test]
@@ -102,6 +101,99 @@ namespace ServiceStack.Aws.DynamoDbTests
             dbUser2 = (UserAuth)authRepo.GetUserAuth(user2.Id);
             Assert.That(dbUser2.UserName, Is.EqualTo(user2.UserName));
             Assert.That(dbUser2.Email, Is.Null);
+        }
+
+        [Test]
+        public void Can_GetUserAuthByUserName_Username()
+        {
+            var db = CreatePocoDynamo();
+            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
+
+            var dbUser = authRepo.GetUserAuthByUserName("testusername");
+            Assert.That(dbUser, Is.Null);
+
+            authRepo.CreateUserAuth(new UserAuth
+            {
+                DisplayName = "Credentials",
+                FirstName = "First",
+                LastName = "Last",
+                FullName = "First Last",
+                Email = "testusername",
+            }, "test");
+
+            dbUser = authRepo.GetUserAuthByUserName("testusername");
+            Assert.That(dbUser.FullName, Is.EqualTo("First Last"));
+        }
+
+        [Test]
+        public void Can_GetUserAuthByUserName_Email()
+        {
+            var db = CreatePocoDynamo();
+            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
+
+            var dbUser = authRepo.GetUserAuthByUserName("testemail@gmail.com");
+            Assert.That(dbUser, Is.Null);
+
+            authRepo.CreateUserAuth(new UserAuth
+            {
+                DisplayName = "Credentials",
+                FirstName = "First",
+                LastName = "Last",
+                FullName = "First Last",
+                Email = "testemail@gmail.com",
+            }, "test");
+
+            dbUser = authRepo.GetUserAuthByUserName("testemail@gmail.com");
+            Assert.That(dbUser.FullName, Is.EqualTo("First Last"));
+        }
+
+        [Test]
+        public void Can_put_UserAuthRole()
+        {
+            var db = CreatePocoDynamo();
+            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
+
+            db.PutItem(new UserAuthRole
+            {
+                UserAuthId = 1,
+                Id = 2,
+                CreatedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.UtcNow,
+            });
+
+            var userAuthRole = db.GetItem<UserAuthRole>(1, 2);
+            Assert.That(userAuthRole, Is.Not.Null);
+
+            userAuthRole.PrintDump();
+        }
+
+        [Test]
+        public void Can_Assign_Roles()
+        {
+            var db = CreatePocoDynamo();
+            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
+
+            var userAuth = authRepo.CreateUserAuth(new UserAuth
+            {
+                DisplayName = "Credentials",
+                FirstName = "First",
+                LastName = "Last",
+                FullName = "First Last",
+                Email = "testrole@gmail.com",
+            }, "test");
+
+            Assert.That(!authRepo.HasRole(userAuth.Id, "TheRole"));
+            Assert.That(!authRepo.HasPermission(userAuth.Id, "ThePermission"));
+
+            authRepo.AssignRoles(userAuth.Id.ToString(),
+                roles: new[] { "TheRole" });
+
+            Assert.That(authRepo.HasRole(userAuth.Id, "TheRole"));
+
+            authRepo.AssignRoles(userAuth.Id.ToString(),
+                permissions: new[] { "ThePermission" });
+
+            Assert.That(authRepo.HasPermission(userAuth.Id, "ThePermission"));
         }
     }
 }
