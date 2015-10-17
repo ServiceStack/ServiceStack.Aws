@@ -97,28 +97,22 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
-        public QueryExpression<T> KeyCondition(string filterExpression, Dictionary<string, object> args = null)
+        public QueryExpression<T> KeyCondition(string filterExpression, Dictionary<string, object> args = null, Dictionary<string, string> aliases = null)
         {
             AddKeyCondition(filterExpression);
-
-            if (args != null)
-            {
-                Db.ToExpressionAttributeValues(args).Each(x =>
-                    this.ExpressionAttributeValues[x.Key] = x.Value);
-            }
-
+            AddExpressionNamesAndValues(args, aliases);
             return this;
         }
 
-        public QueryExpression<T> KeyCondition(string filterExpression, object args)
+        public QueryExpression<T> KeyCondition(string filterExpression, object args, Dictionary<string, string> aliases = null)
         {
-            return KeyCondition(filterExpression, args.ToObjectDictionary());
+            return KeyCondition(filterExpression, args.ToObjectDictionary(), aliases);
         }
 
         public QueryExpression<T> KeyCondition(Expression<Func<T, bool>> filterExpression)
         {
             var q = PocoDynamoExpression.Create(typeof(T), filterExpression, paramPrefix: "k");
-            return KeyCondition(q.FilterExpression, q.Params);
+            return KeyCondition(q.FilterExpression, q.Params, q.Aliases);
         }
 
         public QueryExpression<T> LocalIndex(Expression<Func<T, bool>> keyExpression, string indexName = null)
@@ -144,9 +138,7 @@ namespace ServiceStack.Aws.DynamoDb
             }
 
             AddKeyCondition(q.FilterExpression);
-
-            Db.ToExpressionAttributeValues(q.Params).Each(x =>
-                this.ExpressionAttributeValues[x.Key] = x.Value);
+            AddExpressionNamesAndValues(q.Params, q.Aliases);
 
             return this;
         }
@@ -154,7 +146,12 @@ namespace ServiceStack.Aws.DynamoDb
         public QueryExpression<T> Filter(string filterExpression, Dictionary<string, object> args = null, Dictionary<string,string> aliases = null)
         {
             AddFilterExpression(filterExpression);
+            AddExpressionNamesAndValues(args, aliases);
+            return this;
+        }
 
+        private void AddExpressionNamesAndValues(Dictionary<string, object> args, Dictionary<string, string> aliases)
+        {
             if (args != null)
             {
                 Db.ToExpressionAttributeValues(args).Each(x =>
@@ -168,8 +165,6 @@ namespace ServiceStack.Aws.DynamoDb
                     this.ExpressionAttributeNames[entry.Key] = entry.Value;
                 }
             }
-
-            return this;
         }
 
         public QueryExpression<T> Filter(string filterExpression, object args, Dictionary<string, string> aliases = null)
