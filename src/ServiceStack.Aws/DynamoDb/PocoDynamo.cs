@@ -30,6 +30,7 @@ namespace ServiceStack.Aws.DynamoDb
         void PutItems<T>(IEnumerable<T> items);
         T DeleteItem<T>(object hash, ReturnItem returnItem = ReturnItem.None);
         void DeleteItems<T>(IEnumerable<object> hashes);
+        void DeleteItems<T>(IEnumerable<DynamoId> hashes);
         long Increment<T>(object hash, string fieldName, long amount = 1);
         bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
         bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
