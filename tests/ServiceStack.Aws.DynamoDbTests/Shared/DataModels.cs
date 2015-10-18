@@ -155,7 +155,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
     [References(typeof(OrderCostIndex))]
     public class OrderWithLocalTypedIndex : Order { }
 
-    [CompositeIndex("ProductId", "Cost")]
+    [CompositeKey("ProductId", "Cost")]
     public class OrderGlobalCostIndex : IGlobalIndex<OrderWithGlobalTypedIndex>
     {
         public int ProductId { get; set; }
@@ -364,8 +364,8 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public string E { get; set; }
     }
 
-    [CompositeIndex("D", "C")]
-    public class TableWithCompositeIndex
+    [CompositeKey("D", "C")]
+    public class TableWithCompositeKey
     {
         public string A { get; set; }
         public string B { get; set; }

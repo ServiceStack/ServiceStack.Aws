@@ -60,9 +60,9 @@ namespace ServiceStack.Aws.DynamoDbTests
         public void Does_create_table_using_composite_index()
         {
             var db = CreatePocoDynamo();
-            db.RegisterTable<TableWithCompositeIndex>();
+            db.RegisterTable<TableWithCompositeKey>();
 
-            var table = DynamoMetadata.GetTable<TableWithCompositeIndex>();
+            var table = DynamoMetadata.GetTable<TableWithCompositeKey>();
 
             Assert.That(table.HashKey.Name, Is.EqualTo("D"));
             Assert.That(table.RangeKey.Name, Is.EqualTo("C"));

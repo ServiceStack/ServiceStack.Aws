@@ -701,20 +701,20 @@ namespace ServiceStack.Aws.DynamoDb
             }
             else if (hash == null)
             {
-                var compositeIndex = type.FirstAttribute<CompositeIndexAttribute>();
-                if (compositeIndex != null && compositeIndex.FieldNames.Count > 0)
+                var compositeKey = type.FirstAttribute<CompositeKeyAttribute>();
+                if (compositeKey != null && compositeKey.FieldNames.Count > 0)
                 {
-                    if (compositeIndex.FieldNames.Count > 2)
+                    if (compositeKey.FieldNames.Count > 2)
                         throw new ArgumentException("Only max of 2 fields allowed in [CompositeIndex] for defining Hash and Range Key");
 
-                    var hashField = compositeIndex.FieldNames[0];
+                    var hashField = compositeKey.FieldNames[0];
                     hash = props.FirstOrDefault(x => x.Name == hashField);
                     if (hash == null)
                         throw new ArgumentException("Could not find Hash Key field '{0}' in CompositeIndex".Fmt(hashField));
 
-                    if (compositeIndex.FieldNames.Count == 2)
+                    if (compositeKey.FieldNames.Count == 2)
                     {
-                        var rangeField = compositeIndex.FieldNames[1];
+                        var rangeField = compositeKey.FieldNames[1];
                         range = props.FirstOrDefault(x => x.Name == rangeField);
                         if (range == null)
                             throw new ArgumentException("Could not find Range Key field '{0}' in CompositeIndex".Fmt(rangeField));

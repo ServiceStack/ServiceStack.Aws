@@ -372,7 +372,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var authId = int.Parse(userAuthId);
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
-                .LocalIndex(x => x.Role != null)
+                .Filter(x => x.Role != null)
                 .Query()
                 .Map(x => x.Role);
         }
@@ -381,7 +381,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var authId = int.Parse(userAuthId);
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
-                .LocalIndex(x => x.Permission != null)
+                .Filter(x => x.Permission != null)
                 .Query()
                 .Map(x => x.Permission);
         }
@@ -504,12 +504,12 @@ namespace ServiceStack.Aws.DynamoDb
 
             typeof(TUserAuthDetails).AddAttributes(
                 new ReferencesAttribute(typeof(UserIdUserAuthDetailsIndex)),
-                new CompositeIndexAttribute("UserAuthId", "Id"));
+                new CompositeKeyAttribute("UserAuthId", "Id"));
 
             db.RegisterTable<TUserAuthDetails>();
 
             typeof(UserAuthRole).AddAttributes(
-                new CompositeIndexAttribute("UserAuthId", "Id"));
+                new CompositeKeyAttribute("UserAuthId", "Id"));
 
             db.RegisterTable<UserAuthRole>();
 
