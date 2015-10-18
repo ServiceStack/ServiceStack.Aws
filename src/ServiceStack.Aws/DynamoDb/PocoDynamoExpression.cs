@@ -170,8 +170,12 @@ namespace ServiceStack.Aws.DynamoDb
                 args.Count == 1 ? ", {0}".Fmt(GetValueAsParam(args[0])) : ""));
         }
 
+        private bool visitingExpressionList = false;
+
         protected virtual List<object> VisitExpressionList(ReadOnlyCollection<Expression> original)
         {
+            var hold = visitingExpressionList;
+            visitingExpressionList = true;
             var list = new List<object>();
             for (int i = 0, n = original.Count; i < n; i++)
             {
@@ -186,6 +190,7 @@ namespace ServiceStack.Aws.DynamoDb
                     list.Add(Visit(e));
                 }
             }
+            visitingExpressionList = hold;
             return list;
         }
 
@@ -208,7 +213,7 @@ namespace ServiceStack.Aws.DynamoDb
                     var memberExpr = m.Arguments[0] as MemberExpression;
                     if (memberExpr != null && memberExpr.Expression.NodeType == ExpressionType.Parameter)
                     {
-                        var memberName = memberExpr.Member.Name;
+                        var memberName = GetMemberName(memberExpr.Member.Name);
                         var expr = "contains({0}, {1})".Fmt(
                             memberName, GetValueAsParam(arg));
                         return new PartialString(expr);
@@ -217,8 +222,9 @@ namespace ServiceStack.Aws.DynamoDb
                     {
                         var items = Flatten(args[0] as IEnumerable);
                         var dbParams = items.Map(GetValueAsParam);
+                        var memberName = GetMemberName(arg.ToString());
                         var expr = "{0} IN ({1})".Fmt(
-                            arg, string.Join(",", dbParams));
+                            memberName, string.Join(",", dbParams));
 
                         return new PartialString(expr);
                     }
@@ -245,15 +251,38 @@ namespace ServiceStack.Aws.DynamoDb
             switch (m.Method.Name)
             {
                 case "Contains":
-                    List<object> args = this.VisitExpressionList(m.Arguments);
-                    object arg = args[0];
-                    var memberName = ((MemberExpression) m.Object).Member.Name;
-                    var expr = "contains({0}, {1})".Fmt(memberName, GetValueAsParam(arg));
-                    return new PartialString(expr);
+                    var args = this.VisitExpressionList(m.Arguments);
+
+                    var memberExpr = (MemberExpression)m.Object;
+                    if (memberExpr.Expression.NodeType == ExpressionType.Constant && m.Method.Name == "Contains")
+                    {
+                        var memberName = GetMemberName(args[0].ToString());
+                        return ToInPartialString(m.Object, memberName);
+                    }
+                    else
+                    {
+                        object arg = args[0];
+                        var memberName = GetMemberName(memberExpr.Member.Name);
+                        var expr = "contains({0}, {1})".Fmt(memberName, GetValueAsParam(arg));
+                        return new PartialString(expr);
+                    }
 
                 default:
                     throw new NotSupportedException();
             }
+        }
+
+        private object ToInPartialString(Expression memberExpr, string memberName)
+        {
+            var member = Expression.Convert(memberExpr, typeof(object));
+            var lambda = Expression.Lambda<Func<object>>(member);
+            var getter = lambda.Compile();
+
+            var items = Flatten(getter() as IEnumerable);
+            var dbParams = items.Map(GetValueAsParam);
+            var expr = "{0} IN ({1})".Fmt(
+                memberName, string.Join(",", dbParams));
+            return new PartialString(expr);
         }
 
         public static List<object> Flatten(IEnumerable list)
@@ -430,9 +459,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         public string GetMemberName(string memberName)
         {
-            if (DynamoConfig.IsReservedWord(memberName))
+            if (DynamoConfig.IsReservedWord(memberName) && !visitingExpressionList)
             {
-                var alias = "#" + memberName.Substring(0, 2);
+                var alias = "#" + memberName.Substring(0, 2).ToUpper();
                 bool aliasExists = false;
                 foreach (var entry in Aliases)
                 {

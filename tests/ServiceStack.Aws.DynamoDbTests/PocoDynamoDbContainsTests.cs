@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using ServiceStack.Auth;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDbTests
 {
@@ -38,7 +41,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var row = PutCollection(db);
 
-            var results = db.Scan(db.FromScan<Collection>(x => 
+            var results = db.Scan(db.FromScan<Collection>(x =>
                 x.SetStrings.Contains("A")
                 && x.Title.StartsWith("T")
                 && x.Title.Contains("itl")
@@ -160,6 +163,38 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             results = db.Scan(db.FromScan<Collection>().Filter("attribute_type(Title, :s)", new { s = "N" })).ToList();
             Assert.That(results.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Can_Filter_field_IN_Collection()
+        {
+            var roles = new[] { "A", "B", "C" };
+            var db = CreatePocoDynamo();
+            db.RegisterTable<UserAuthRole>();
+            db.InitSchema();
+
+            db.PutItem(new UserAuthRole {
+                UserAuthId = 1,
+                Id = 2,
+                Role = "B"
+            });
+
+            var dbRoles = db.FromQuery<UserAuthRole>(x => x.Id == 2)
+                .Filter(x => roles.Contains(x.Role))
+                .Query()
+                .ToList();
+
+            Assert.That(dbRoles.Count, Is.EqualTo(1));
+
+            var rolesList = roles.ToList();
+            dbRoles = db.FromQuery<UserAuthRole>(x => x.Id == 2)
+                .Filter(x => rolesList.Contains(x.Role))
+                .Query()
+                .ToList();
+
+            dbRoles.PrintDump();
+
+            Assert.That(dbRoles.Count, Is.EqualTo(1));
         }
     }
 }

@@ -168,7 +168,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Can_Assign_Roles()
+        public void Can_Assign_and_Unassign_Roles()
         {
             var db = CreatePocoDynamo();
             var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
@@ -194,6 +194,13 @@ namespace ServiceStack.Aws.DynamoDbTests
                 permissions: new[] { "ThePermission" });
 
             Assert.That(authRepo.HasPermission(userAuth.Id, "ThePermission"));
+
+
+            authRepo.UnAssignRoles(userAuth.Id, roles: new[] { "TheRole" });
+            Assert.That(!authRepo.HasRole(userAuth.Id, "TheRole"));
+
+            authRepo.UnAssignRoles(userAuth.Id, permissions: new[] { "ThePermission" });
+            Assert.That(!authRepo.HasPermission(userAuth.Id, "ThePermission"));
         }
     }
 }
