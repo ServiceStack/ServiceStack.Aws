@@ -68,9 +68,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             var userAuthDetails = AssertTable(db, typeof(CustomUserAuthDetails), "UserAuthId", "Id");
             AssertIndex(userAuthDetails.GlobalIndexes[0], "UserIdUserAuthDetailsIndex", "UserId", "Provider");
 
-            var userAuthRole = AssertTable(db, typeof(UserAuthRole), "UserAuthId", "Id");
-            AssertIndex(userAuthRole.LocalIndexes[0], "UserAuthRoleRoleIndex", "UserAuthId", "Role");
-            AssertIndex(userAuthRole.LocalIndexes[1], "UserAuthRolePermissionIndex", "UserAuthId", "Permission");
+            AssertTable(db, typeof(UserAuthRole), "UserAuthId", "Id");
         }
 
         [Test]
