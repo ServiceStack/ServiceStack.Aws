@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
@@ -56,10 +57,10 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(low5.Count, Is.EqualTo(5));
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan<Poco>(q => q.Filter("Id < :Count", new { Count = 5 }), limit:5);
+            low5 = db.Scan<Poco>(q => q.Filter("Id < :Count", new { Count = 5 }), limit: 5);
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan(db.FromScan<Poco>(x => x.Id < 5), limit:5);
+            low5 = db.Scan(db.FromScan<Poco>(x => x.Id < 5), limit: 5);
             Assert.That(low5, Is.EquivalentTo(expected));
 
             var low3 = db.Scan<Poco>(q => q.Filter("Id < :Count", new { Count = 5 }), limit: 3);
@@ -111,6 +112,72 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var results = db.Scan(db.FromScan<Poco>(x => names.Contains(x.Title)));
             Assert.That(results, Is.EquivalentTo(expected));
+        }
+
+        [Test]
+        public void Can_check_for_null()
+        {
+            var db = CreatePocoDynamo();
+
+            db.RegisterTable<Poco>();
+            db.InitSchema();
+
+            db.PutItem(new Poco { Id = 1, Title = "Has Value" });
+            db.PutItem(new Poco { Id = 2, Title = null });
+
+            var request = new ScanRequest
+            {
+                TableName = db.GetTableMetadata(typeof(Poco)).Name,
+                FilterExpression = "Title = :null",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":null", new AttributeValue { NULL = true } },
+                }
+            };
+
+            var results = db.Scan<Poco>(request).ToList();
+            Assert.That(results.Count, Is.EqualTo(1));
+            Assert.That(results[0].Title, Is.Null);
+
+            results = db.FromScan<Poco>()
+                .Filter(x => x.Title == null)
+                .Scan()
+                .ToList();
+            Assert.That(results.Count, Is.EqualTo(1));
+            Assert.That(results[0].Title, Is.Null);
+        }
+
+        [Test]
+        public void Can_check_for_not_null()
+        {
+            var db = CreatePocoDynamo();
+
+            db.RegisterTable<Poco>();
+            db.InitSchema();
+
+            db.PutItem(new Poco { Id = 1, Title = "Has Value" });
+            db.PutItem(new Poco { Id = 2, Title = null });
+
+            var request = new ScanRequest
+            {
+                TableName = db.GetTableMetadata(typeof(Poco)).Name,
+                FilterExpression = "Title <> :null",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":null", new AttributeValue { NULL = true } },
+                }
+            };
+
+            var results = db.Scan<Poco>(request).ToList();
+            Assert.That(results.Count, Is.EqualTo(1));
+            Assert.That(results[0].Title, Is.EqualTo("Has Value"));
+
+            results = db.FromScan<Poco>()
+                .Filter(x => x.Title != null)
+                .Scan()
+                .ToList();
+            Assert.That(results.Count, Is.EqualTo(1));
+            Assert.That(results[0].Title, Is.EqualTo("Has Value"));
         }
     }
 }

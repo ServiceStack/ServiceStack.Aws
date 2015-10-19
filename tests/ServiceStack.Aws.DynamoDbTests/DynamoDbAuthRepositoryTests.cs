@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using ServiceStack.Auth;
 using ServiceStack.Aws.DynamoDb;
@@ -195,6 +196,10 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             Assert.That(authRepo.HasPermission(userAuth.Id, "ThePermission"));
 
+            var dbPermissions = authRepo.GetPermissions(userAuth.Id).ToList();
+            Assert.That(dbPermissions[0], Is.EqualTo("ThePermission"));
+            var dbRoles = authRepo.GetRoles(userAuth.Id).ToList();
+            Assert.That(dbRoles[0], Is.EqualTo("TheRole"));
 
             authRepo.UnAssignRoles(userAuth.Id, roles: new[] { "TheRole" });
             Assert.That(!authRepo.HasRole(userAuth.Id, "TheRole"));

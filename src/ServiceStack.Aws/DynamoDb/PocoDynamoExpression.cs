@@ -572,9 +572,6 @@ namespace ServiceStack.Aws.DynamoDb
                 }
             }
 
-            if (operand == "=" && right.ToString().Equals("null", StringComparison.OrdinalIgnoreCase)) operand = "is";
-            else if (operand == "<>" && right.ToString().Equals("null", StringComparison.OrdinalIgnoreCase)) operand = "is not";
-
             VisitFilter(operand, originalLeft, originalRight, ref left, ref right);
 
             switch (operand)
@@ -619,12 +616,20 @@ namespace ServiceStack.Aws.DynamoDb
 
         protected void ConvertToPlaceholderAndParameter(ref object right)
         {
-            var paramName = ":" + ParamPrefix + Params.Count;
-            var paramValue = right;
+            var partialString = right as PartialString;
+            if (partialString != null && partialString.Text == "null")
+            {
+                right = GetNullParam();
+            }
+            else
+            {
+                var paramName = ":" + ParamPrefix + Params.Count;
+                var paramValue = right;
 
-            Params[paramName] = paramValue;
+                Params[paramName] = paramValue;
 
-            right = paramName;
+                right = paramName;
+            }
         }
 
         protected virtual List<object> VisitNewArrayFromExpressionList(NewArrayExpression na)
@@ -637,6 +642,13 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var paramName = ":" + ParamPrefix + Params.Count;
             Params[paramName] = value;
+            return paramName;
+        }
+
+        public string GetNullParam()
+        {
+            var paramName = ":null";
+            Params[paramName] = null;
             return paramName;
         }
 
