@@ -919,7 +919,7 @@ namespace ServiceStack.Aws.DynamoDb
                 if (genericDict != null)
                 {
                     var genericArgs = genericDict.GetGenericArguments();
-                    var keyType = genericArgs[1];
+                    var keyType = genericArgs[0];
                     var valueType = genericArgs[1];
 
                     foreach (var entry in map)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using ServiceStack.Auth;
 using ServiceStack.Aws.DynamoDb;
@@ -185,6 +186,63 @@ namespace ServiceStack.Aws.DynamoDbTests
                 DictionaryInts = new Dictionary<int, int>(),
                 DictionaryStrings = new Dictionary<string, string>(),
             });
+        }
+
+        [Test]
+        public void Can_Create_and_put_populated_AllTypes()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<AllTypes>();
+            db.InitSchema();
+
+            var dto = new AllTypes
+            {
+                Id = 1,
+                NullableId = 2,
+                Byte = 3,
+                Short = 4,
+                Int = 5,
+                Long = 6,
+                UShort = 7,
+                UInt = 8,
+                ULong = 9,
+                Float = 1.1f,
+                Double = 2.2,
+                Decimal = 3.3M,
+                String = "String",
+                DateTime = new DateTime(2001, 01, 01),
+                TimeSpan = new TimeSpan(1, 1, 1, 1, 1),
+                DateTimeOffset = new DateTimeOffset(new DateTime(2001, 01, 01)),
+                Guid = new Guid("DC8837C3-84FB-401B-AB59-CE799FF99142"),
+                Char = 'A',
+                NullableDateTime = new DateTime(2001, 01, 01),
+                NullableTimeSpan = new TimeSpan(1, 1, 1, 1, 1),
+                StringList = new[] { "A", "B", "C" }.ToList(),
+                StringArray = new[] { "D", "E", "F" },
+                StringMap = new Dictionary<string, string>
+                {
+                    {"A","1"},
+                    {"B","2"},
+                    {"C","3"},
+                },
+                IntStringMap = new Dictionary<int, string>
+                {
+                    { 1, "A" },
+                    { 2, "B" },
+                    { 3, "C" },
+                },
+                SubType = new SubType
+                {
+                    Id = 1,
+                    Name = "Name"
+                }
+            };
+
+            db.PutItem(dto);
+
+            var row = db.GetItem<AllTypes>(1);
+
+            Assert.That(dto, Is.EqualTo(row));
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Amazon.DynamoDBv2.DataModel;
 using ServiceStack.Aws.DynamoDb;
@@ -275,6 +276,132 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         }
     }
 
+    public class AllTypes
+    {
+        public int Id { get; set; }
+        public int? NullableId { get; set; }
+        public byte Byte { get; set; }
+        public short Short { get; set; }
+        public int Int { get; set; }
+        public long Long { get; set; }
+        public ushort UShort { get; set; }
+        public uint UInt { get; set; }
+        public ulong ULong { get; set; }
+        public float Float { get; set; }
+        public double Double { get; set; }
+        public decimal Decimal { get; set; }
+        public string String { get; set; }
+        public DateTime DateTime { get; set; }
+        public TimeSpan TimeSpan { get; set; }
+        public DateTimeOffset DateTimeOffset { get; set; }
+        public Guid Guid { get; set; }
+        public char Char { get; set; }
+        public DateTime? NullableDateTime { get; set; }
+        public TimeSpan? NullableTimeSpan { get; set; }
+        public List<string> StringList { get; set; }
+        public string[] StringArray { get; set; }
+        public Dictionary<string, string> StringMap { get; set; }
+        public Dictionary<int, string> IntStringMap { get; set; }
+        public SubType SubType { get; set; }
+
+        protected bool Equals(AllTypes other)
+        {
+            return Id == other.Id && NullableId == other.NullableId
+                && Byte == other.Byte
+                && Short == other.Short
+                && Int == other.Int 
+                && Long == other.Long 
+                && UShort == other.UShort 
+                && UInt == other.UInt 
+                && ULong == other.ULong 
+                && Float.Equals(other.Float) 
+                && Double.Equals(other.Double) 
+                && Decimal == other.Decimal 
+                && string.Equals(String, other.String) 
+                && DateTime.Equals(other.DateTime) 
+                && TimeSpan.Equals(other.TimeSpan) 
+                && DateTimeOffset.Equals(other.DateTimeOffset) 
+                && Guid.Equals(other.Guid) 
+                && Char == other.Char 
+                && NullableDateTime.Equals(other.NullableDateTime) 
+                && NullableTimeSpan.Equals(other.NullableTimeSpan) 
+                && StringList.EquivalentTo(other.StringList) 
+                && StringArray.EquivalentTo(other.StringArray) 
+                && StringMap.EquivalentTo(other.StringMap) 
+                && IntStringMap.EquivalentTo(other.IntStringMap) 
+                && Equals(SubType, other.SubType);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((AllTypes)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Id;
+                hashCode = (hashCode * 397) ^ NullableId.GetHashCode();
+                hashCode = (hashCode * 397) ^ Byte.GetHashCode();
+                hashCode = (hashCode * 397) ^ Short.GetHashCode();
+                hashCode = (hashCode * 397) ^ Int;
+                hashCode = (hashCode * 397) ^ Long.GetHashCode();
+                hashCode = (hashCode * 397) ^ UShort.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int)UInt;
+                hashCode = (hashCode * 397) ^ ULong.GetHashCode();
+                hashCode = (hashCode * 397) ^ Float.GetHashCode();
+                hashCode = (hashCode * 397) ^ Double.GetHashCode();
+                hashCode = (hashCode * 397) ^ Decimal.GetHashCode();
+                hashCode = (hashCode * 397) ^ (String != null ? String.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ DateTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ TimeSpan.GetHashCode();
+                hashCode = (hashCode * 397) ^ DateTimeOffset.GetHashCode();
+                hashCode = (hashCode * 397) ^ Guid.GetHashCode();
+                hashCode = (hashCode * 397) ^ Char.GetHashCode();
+                hashCode = (hashCode * 397) ^ NullableDateTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ NullableTimeSpan.GetHashCode();
+                hashCode = (hashCode * 397) ^ (StringList != null ? StringList.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (StringArray != null ? StringArray.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (StringMap != null ? StringMap.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (IntStringMap != null ? IntStringMap.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SubType != null ? SubType.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+    }
+
+    public class SubType
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        protected bool Equals(SubType other)
+        {
+            return Id == other.Id 
+                && string.Equals(Name, other.Name);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((SubType) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Id*397) ^ (Name != null ? Name.GetHashCode() : 0);
+            }
+        }
+    }
+
     public class Collection
     {
         public int Id { get; set; }
@@ -288,8 +415,14 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public HashSet<int> SetInts { get; set; }
         public List<int> ListInts { get; set; }
 
+        public Poco[] ArrayPocos { get; set; }
+        public List<Poco> ListPocos { get; set; }
+
         public Dictionary<int, int> DictionaryInts { get; set; }
         public Dictionary<string, string> DictionaryStrings { get; set; }
+
+        public Dictionary<string, List<Poco>> PocoLookup { get; set; }
+        public Dictionary<string, List<Dictionary<string, Poco>>> PocoLookupMap { get; set; }
 
         public Collection InitStrings(params string[] strings)
         {
@@ -349,6 +482,8 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             }
         }
     }
+
+
 
     public class TableWithDynamoAttributes
     {
