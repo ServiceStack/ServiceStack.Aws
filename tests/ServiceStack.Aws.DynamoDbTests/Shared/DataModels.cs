@@ -309,26 +309,26 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             return Id == other.Id && NullableId == other.NullableId
                 && Byte == other.Byte
                 && Short == other.Short
-                && Int == other.Int 
-                && Long == other.Long 
-                && UShort == other.UShort 
-                && UInt == other.UInt 
-                && ULong == other.ULong 
-                && Float.Equals(other.Float) 
-                && Double.Equals(other.Double) 
-                && Decimal == other.Decimal 
-                && string.Equals(String, other.String) 
-                && DateTime.Equals(other.DateTime) 
-                && TimeSpan.Equals(other.TimeSpan) 
-                && DateTimeOffset.Equals(other.DateTimeOffset) 
-                && Guid.Equals(other.Guid) 
-                && Char == other.Char 
-                && NullableDateTime.Equals(other.NullableDateTime) 
-                && NullableTimeSpan.Equals(other.NullableTimeSpan) 
-                && StringList.EquivalentTo(other.StringList) 
-                && StringArray.EquivalentTo(other.StringArray) 
-                && StringMap.EquivalentTo(other.StringMap) 
-                && IntStringMap.EquivalentTo(other.IntStringMap) 
+                && Int == other.Int
+                && Long == other.Long
+                && UShort == other.UShort
+                && UInt == other.UInt
+                && ULong == other.ULong
+                && Float.Equals(other.Float)
+                && Double.Equals(other.Double)
+                && Decimal == other.Decimal
+                && string.Equals(String, other.String)
+                && DateTime.Equals(other.DateTime)
+                && TimeSpan.Equals(other.TimeSpan)
+                && DateTimeOffset.Equals(other.DateTimeOffset)
+                && Guid.Equals(other.Guid)
+                && Char == other.Char
+                && NullableDateTime.Equals(other.NullableDateTime)
+                && NullableTimeSpan.Equals(other.NullableTimeSpan)
+                && StringList.EquivalentTo(other.StringList)
+                && StringArray.EquivalentTo(other.StringArray)
+                && StringMap.EquivalentTo(other.StringMap)
+                && IntStringMap.EquivalentTo(other.IntStringMap)
                 && Equals(SubType, other.SubType);
         }
 
@@ -381,7 +381,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
 
         protected bool Equals(SubType other)
         {
-            return Id == other.Id 
+            return Id == other.Id
                 && string.Equals(Name, other.Name);
         }
 
@@ -390,14 +390,14 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((SubType) obj);
+            return Equals((SubType)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return (Id*397) ^ (Name != null ? Name.GetHashCode() : 0);
+                return (Id * 397) ^ (Name != null ? Name.GetHashCode() : 0);
             }
         }
     }
@@ -431,6 +431,12 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             ListStrings = new List<string>(strings);
             DictionaryStrings = new Dictionary<string, string>();
             strings.Each(x => DictionaryStrings[x] = x);
+            PocoLookup = new Dictionary<string, List<Poco>>();
+            strings.Each(x => PocoLookup[x] = new List<Poco> { new Poco { Id = 1, Title = x } });
+            PocoLookupMap = new Dictionary<string, List<Dictionary<string, Poco>>>();
+            strings.Each(x => PocoLookupMap[x] = new List<Dictionary<string, Poco>> {
+                new Dictionary<string, Poco> { { x, new Poco { Id = 1, Title = x } } }
+            });
             return this;
         }
 
@@ -454,7 +460,9 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
                 && SetInts.EquivalentTo(other.SetInts)
                 && ListInts.EquivalentTo(other.ListInts)
                 && DictionaryInts.EquivalentTo(other.DictionaryInts)
-                && DictionaryStrings.EquivalentTo(other.DictionaryStrings);
+                && DictionaryStrings.EquivalentTo(other.DictionaryStrings)
+                && PocoLookup.EquivalentTo(other.PocoLookup, (a, b) => a.EquivalentTo(b))
+                && PocoLookupMap.EquivalentTo(other.PocoLookupMap, (a, b) => a.EquivalentTo(b, (m1, m2) => m1.EquivalentTo(m2)));
         }
 
         public override bool Equals(object obj)
@@ -478,6 +486,8 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
                 hashCode = (hashCode * 397) ^ (ListInts != null ? ListInts.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (DictionaryInts != null ? DictionaryInts.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (DictionaryStrings != null ? DictionaryStrings.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PocoLookup != null ? PocoLookup.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PocoLookupMap != null ? PocoLookupMap.GetHashCode() : 0);
                 return hashCode;
             }
         }

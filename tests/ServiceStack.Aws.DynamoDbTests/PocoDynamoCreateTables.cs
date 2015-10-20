@@ -166,6 +166,8 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(table.GetField("SetInts").DbType, Is.EqualTo(DynamoType.NumberSet));
             Assert.That(table.GetField("DictionaryInts").DbType, Is.EqualTo(DynamoType.Map));
             Assert.That(table.GetField("DictionaryStrings").DbType, Is.EqualTo(DynamoType.Map));
+            Assert.That(table.GetField("PocoLookup").DbType, Is.EqualTo(DynamoType.Map));
+            Assert.That(table.GetField("PocoLookupMap").DbType, Is.EqualTo(DynamoType.Map));
         }
 
         [Test]
@@ -185,6 +187,8 @@ namespace ServiceStack.Aws.DynamoDbTests
                 SetInts = new HashSet<int>(),
                 DictionaryInts = new Dictionary<int, int>(),
                 DictionaryStrings = new Dictionary<string, string>(),
+                PocoLookup = new Dictionary<string, List<Poco>>(),
+                PocoLookupMap = new Dictionary<string, List<Dictionary<string, Poco>>>(),
             });
         }
 
@@ -237,6 +241,22 @@ namespace ServiceStack.Aws.DynamoDbTests
                     Name = "Name"
                 }
             };
+
+            db.PutItem(dto);
+
+            var row = db.GetItem<AllTypes>(1);
+
+            Assert.That(dto, Is.EqualTo(row));
+        }
+
+        [Test]
+        public void Can_Create_and_put_empty_AllTypes()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<AllTypes>();
+            db.InitSchema();
+
+            var dto = new AllTypes { Id = 1 };
 
             db.PutItem(dto);
 
