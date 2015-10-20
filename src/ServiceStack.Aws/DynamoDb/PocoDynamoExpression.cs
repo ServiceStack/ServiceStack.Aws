@@ -574,14 +574,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             VisitFilter(operand, originalLeft, originalRight, ref left, ref right);
 
-            switch (operand)
-            {
-                case "MOD":
-                case "COALESCE":
-                    return new PartialString(string.Format("{0}({1},{2})", operand, left, right));
-                default:
-                    return new PartialString("(" + left + sep + operand + sep + right + ")");
-            }
+            return new PartialString("(" + left + sep + operand + sep + right + ")");
         }
 
         protected bool VisitedExpressionIsTable = false;
@@ -657,7 +650,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (SkipParameterizationForThisExpression)
                 return GetQuotedValue(value, type);
 
-            return value ?? "null";
+            return value ?? GetNullParam();
         }
 
         private string GetQuotedValue(object value, Type fieldType)
@@ -698,10 +691,6 @@ namespace ServiceStack.Aws.DynamoDb
                     return "*";
                 case ExpressionType.Divide:
                     return "/";
-                case ExpressionType.Modulo:
-                    return "MOD";
-                case ExpressionType.Coalesce:
-                    return "COALESCE";
                 default:
                     return e.ToString();
             }
