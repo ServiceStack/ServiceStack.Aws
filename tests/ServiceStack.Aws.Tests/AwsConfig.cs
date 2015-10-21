@@ -9,7 +9,7 @@ namespace ServiceStack.Aws.Tests
         {
             get
             {
-                var accessKey = ConfigUtils.GetAppSetting("AWS_ACCESS_KEY")
+                var accessKey = ConfigUtils.GetNullableAppSetting("AWS_ACCESS_KEY")
                     ?? Environment.GetEnvironmentVariable("AWS_ACCESS_KEY");
 
                 if (string.IsNullOrEmpty(accessKey))
@@ -23,7 +23,7 @@ namespace ServiceStack.Aws.Tests
         {
             get
             {
-                var secretKey = ConfigUtils.GetAppSetting("AWS_SECRET_KEY")
+                var secretKey = ConfigUtils.GetNullableAppSetting("AWS_SECRET_KEY")
                     ?? Environment.GetEnvironmentVariable("AWS_SECRET_KEY");
 
                 if (string.IsNullOrEmpty(secretKey))
