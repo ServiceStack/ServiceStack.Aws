@@ -20,7 +20,7 @@ namespace ServiceStack.Aws.S3
 
         public S3FileStorageProvider(S3ConnectionFactory s3ConnFactory)
         {
-            Guard.AgainstNullArgument(s3ConnectionFactory, "s3ConnectionFactory");
+            Guard.AgainstNullArgument(s3ConnFactory, "s3ConnFactory");
             s3ConnectionFactory = s3ConnFactory;
         }
 
