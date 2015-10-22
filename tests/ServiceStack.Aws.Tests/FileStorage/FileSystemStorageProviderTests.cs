@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using NUnit.Framework;
-using ServiceStack.Aws.Services;
+using ServiceStack.Aws.FileStorage;
 
-namespace ServiceStack.Aws.Tests.Services
+namespace ServiceStack.Aws.Tests.FileStorage
 {
     [TestFixture]
     public class FileSystemStorageProviderTests : FileStorageProviderCommonTests

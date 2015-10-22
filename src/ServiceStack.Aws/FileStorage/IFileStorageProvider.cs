@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using ServiceStack.Aws.Models;
 
-namespace ServiceStack.Aws.Interfaces
+namespace ServiceStack.Aws.FileStorage
 {
     public interface IFileStorageProvider
     {

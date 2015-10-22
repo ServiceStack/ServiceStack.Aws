@@ -3,7 +3,7 @@ using Amazon;
 using Amazon.S3;
 using ServiceStack.Aws.Services;
 
-namespace ServiceStack.Aws.S3
+namespace ServiceStack.Aws.FileStorage
 {
     public class S3ConnectionFactory : AwsConnectionFactory<IAmazonS3>
     {

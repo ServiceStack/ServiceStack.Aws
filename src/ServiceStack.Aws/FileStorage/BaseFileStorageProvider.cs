@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using ServiceStack.Aws.Interfaces;
-using ServiceStack.Aws.Models;
 
-namespace ServiceStack.Aws.Services
+namespace ServiceStack.Aws.FileStorage
 {
     public abstract class BaseFileStorageProvider : IFileStorageProvider
     {
@@ -14,10 +12,7 @@ namespace ServiceStack.Aws.Services
 
         public virtual char DirectorySeparatorCharacter
         {
-            get
-            {
-                return Path.DirectorySeparatorChar;
-            }
+            get { return Path.DirectorySeparatorChar; }
         }
 
         private string ReplaceThisDirectorySeparatorCharacter
@@ -26,8 +21,8 @@ namespace ServiceStack.Aws.Services
             {
                 return replaceThisDirectorySeparatorCharacter ??
                        (replaceThisDirectorySeparatorCharacter = DirectorySeparatorCharacter.Equals('\\')
-                                                                      ? "/"
-                                                                      : "\\");
+                    ? "/"
+                    : "\\");
             }
         }
 

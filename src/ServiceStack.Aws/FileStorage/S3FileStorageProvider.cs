@@ -5,12 +5,8 @@ using System.Linq;
 using Amazon.S3;
 using Amazon.S3.IO;
 using Amazon.S3.Model;
-using ServiceStack.Aws.Interfaces;
-using ServiceStack.Aws.Models;
-using ServiceStack.Aws.Services;
-using ServiceStack.Aws.Support;
 
-namespace ServiceStack.Aws.S3
+namespace ServiceStack.Aws.FileStorage
 {
     public class S3FileStorageProvider : BaseFileStorageProvider, IDisposable
     {

@@ -1,4 +1,6 @@
 ﻿using System;
+using Amazon;
+using Amazon.S3;
 using ServiceStack.Configuration;
 
 namespace ServiceStack.Aws.Tests
@@ -31,6 +33,11 @@ namespace ServiceStack.Aws.Tests
 
                 return secretKey;
             }
+        }
+
+        public static AmazonS3Client CreateAmazonS3Client()
+        {
+            return new AmazonS3Client(AwsAccessKey, AwsSecretKey, RegionEndpoint.USEast1);
         }
     }
 }

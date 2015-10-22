@@ -3,10 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ServiceStack.Aws.Interfaces;
-using ServiceStack.Aws.Models;
 
-namespace ServiceStack.Aws.Services
+namespace ServiceStack.Aws.FileStorage
 {
     internal class MemoryFileMeta
     {
@@ -49,8 +47,8 @@ namespace ServiceStack.Aws.Services
             var map = TryGetMap(fso.FullName);
 
             return map == null
-                       ? null
-                       : new MemoryStream(map.Bytes);
+                ? null
+                : new MemoryStream(map.Bytes);
         }
 
         public override byte[] Get(FileSystemObject fso)
@@ -58,8 +56,8 @@ namespace ServiceStack.Aws.Services
             var map = TryGetMap(fso.FullName);
 
             return map == null
-                       ? null
-                       : map.Bytes;
+                ? null
+                : map.Bytes;
         }
 
         public override void Store(byte[] bytes, FileSystemObject fso)
@@ -154,17 +152,17 @@ namespace ServiceStack.Aws.Services
         public override IEnumerable<string> ListFolder(string folderName, bool recursive = false, bool fileNamesOnly = false)
         {
             return fileMap.Where(f => recursive
-                                           ? f.Value.Fso.FolderName.StartsWith(folderName, StringComparison.InvariantCulture)
-                                           : f.Value.Fso.FolderName.Equals(folderName, StringComparison.InvariantCulture))
-                           .Select(f => fileNamesOnly
-                                            ? f.Value.Fso.FileNameAndExtension
-                                            : f.Value.Fso.FullName);
+                    ? f.Value.Fso.FolderName.StartsWith(folderName, StringComparison.InvariantCulture)
+                    : f.Value.Fso.FolderName.Equals(folderName, StringComparison.InvariantCulture))
+                .Select(f => fileNamesOnly
+                    ? f.Value.Fso.FileNameAndExtension
+                    : f.Value.Fso.FullName);
         }
 
         public override void DeleteFolder(string path, bool recursive)
         {
             var keysToDelete = fileMap.Where(i => i.Value.Fso.FolderName.StartsWith(path, StringComparison.InvariantCulture))
-                                       .Select(kvp => kvp.Key);
+                .Select(kvp => kvp.Key);
 
             Delete(keysToDelete);
         }
@@ -177,9 +175,7 @@ namespace ServiceStack.Aws.Services
         private bool TreatAsInMemoryProvider(IFileStorageProvider targetProvider)
         {
             if (targetProvider == null)
-            {
                 return true;
-            }
 
             var provider = targetProvider as InMemoryFileStorageProvider;
 
@@ -191,8 +187,8 @@ namespace ServiceStack.Aws.Services
             MemoryFileMeta item;
 
             return fileMap.TryGetValue(key, out item)
-                       ? item
-                       : null;
+                ? item
+                : null;
         }
 
         private void SaveToMap(byte[] bytes, FileSystemObject target)
@@ -205,6 +201,5 @@ namespace ServiceStack.Aws.Services
 
             fileMap[target.FullName] = s;
         }
-
     }
 }

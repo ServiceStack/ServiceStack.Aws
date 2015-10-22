@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using NUnit.Framework;
-using ServiceStack.Aws.Models;
+using ServiceStack.Aws.FileStorage;
 
-namespace ServiceStack.Aws.Tests.Models
+namespace ServiceStack.Aws.Tests.FileStorage
 {
     [TestFixture]
     public class FileSystemObjectTests

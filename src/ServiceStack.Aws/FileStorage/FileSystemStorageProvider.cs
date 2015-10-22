@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ServiceStack.Aws.Interfaces;
-using ServiceStack.Aws.Models;
 
-namespace ServiceStack.Aws.Services
+namespace ServiceStack.Aws.FileStorage
 {
     public class FileSystemStorageProvider : BaseFileStorageProvider
     {
@@ -26,15 +23,15 @@ namespace ServiceStack.Aws.Services
         public override Stream GetStream(FileSystemObject fso)
         {
             return Exists(fso.FullName)
-                       ? new FileStream(fso.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)
-                       : null;
+                ? new FileStream(fso.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)
+                : null;
         }
 
         public override byte[] Get(FileSystemObject fso)
         {
             return Exists(fso.FullName)
-                       ? File.ReadAllBytes(fso.FullName)
-                       : null;
+                ? File.ReadAllBytes(fso.FullName)
+                : null;
         }
 
         public override void Store(byte[] bytes, FileSystemObject fso)
@@ -145,14 +142,14 @@ namespace ServiceStack.Aws.Services
         public override IEnumerable<string> ListFolder(string folderName, bool recursive = false, bool fileNamesOnly = false)
         {
             var searchOption = recursive
-                                   ? SearchOption.AllDirectories
-                                   : SearchOption.TopDirectoryOnly;
+                ? SearchOption.AllDirectories
+                : SearchOption.TopDirectoryOnly;
 
             var files = Directory.EnumerateFiles(folderName, "*", searchOption);
 
             return fileNamesOnly
-                       ? files.Select(f => new FileSystemObject(f).FileNameAndExtension)
-                       : files;
+                ? files.Select(f => new FileSystemObject(f).FileNameAndExtension)
+                : files;
         }
 
         public override void DeleteFolder(string path, bool recursive)

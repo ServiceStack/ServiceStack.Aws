@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
 using Amazon.S3.Model;
-using ServiceStack.Aws.Models;
-using ServiceStack.Aws.Support;
 
-namespace ServiceStack.Aws.S3
+namespace ServiceStack.Aws.FileStorage
 {
     public class S3BucketKeyInfo : IEquatable<S3BucketKeyInfo>
     {

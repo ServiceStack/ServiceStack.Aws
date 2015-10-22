@@ -33,11 +33,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AWSSDK.Core, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\..\src\packages\AWSSDK.Core.3.1.0.0\lib\net45\AWSSDK.Core.dll</HintPath>
+      <HintPath>..\..\src\packages\AWSSDK.Core.3.1.2.1\lib\net45\AWSSDK.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="AWSSDK.DynamoDBv2, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\..\src\packages\AWSSDK.DynamoDBv2.3.1.0.0\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.S3, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\..\src\packages\AWSSDK.S3.3.1.3.1\lib\net45\AWSSDK.S3.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="AWSSDK.SQS, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
@@ -76,12 +80,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AwsConfig.cs" />
-    <Compile Include="Models\FileSystemObjectTests.cs" />
+    <Compile Include="FileStorage\FileSystemObjectTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="S3\S3FileStorageProviderTests.cs" />
-    <Compile Include="Services\FileStorageProviderCommonTests.cs" />
-    <Compile Include="Services\FileSystemStorageProviderTests.cs" />
-    <Compile Include="Services\InMemoryStorageProviderTests.cs" />
+    <Compile Include="FileStorage\S3FileStorageProviderTests.cs" />
+    <Compile Include="FileStorage\FileStorageProviderCommonTests.cs" />
+    <Compile Include="FileStorage\FileSystemStorageProviderTests.cs" />
+    <Compile Include="FileStorage\InMemoryStorageProviderTests.cs" />
     <Compile Include="Shared\DataModels.cs" />
     <Compile Include="Sqs\FakeAmazonSqsTests.cs" />
     <Compile Include="Sqs\FakeSqsClientHelper.cs" />

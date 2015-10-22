@@ -4,12 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using ServiceStack.Aws.Interfaces;
-using ServiceStack.Aws.Models;
-using ServiceStack.Aws.Services;
+using ServiceStack.Aws.FileStorage;
 using ServiceStack.Aws.Support;
 
-namespace ServiceStack.Aws.Tests.Services
+namespace ServiceStack.Aws.Tests.FileStorage
 {
     public abstract class FileStorageProviderCommonTests
     {

@@ -1,10 +1,8 @@
-﻿using System;
-using Amazon;
+﻿using Amazon;
 using NUnit.Framework;
-using ServiceStack.Aws.S3;
-using ServiceStack.Aws.Tests.Services;
+using ServiceStack.Aws.FileStorage;
 
-namespace ServiceStack.Aws.Tests.S3
+namespace ServiceStack.Aws.Tests.FileStorage
 {
     [TestFixture, Category("Integration")]
     [Explicit]

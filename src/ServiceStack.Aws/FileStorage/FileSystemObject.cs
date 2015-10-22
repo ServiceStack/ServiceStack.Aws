@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.IO;
 
-namespace ServiceStack.Aws.Models
+namespace ServiceStack.Aws.FileStorage
 {
     public class FileSystemObject : ICloneable, IEquatable<FileSystemObject>
     {
@@ -30,8 +30,8 @@ namespace ServiceStack.Aws.Models
             var backslashPartIndex = filePathAndName.IndexOf("\\", StringComparison.InvariantCultureIgnoreCase);
 
             var useBackslashDirectorySeparator = (slashPartIndex >= 0 && backslashPartIndex >= 0)
-                                                     ? backslashPartIndex < slashPartIndex
-                                                     : backslashPartIndex >= 0;
+                ? backslashPartIndex < slashPartIndex
+                : backslashPartIndex >= 0;
 
             // Set the character separator to use
             directorySeparatorCharacter = useBackslashDirectorySeparator
