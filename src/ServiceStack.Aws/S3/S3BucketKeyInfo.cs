@@ -14,7 +14,8 @@ namespace ServiceStack.Aws.S3
 
         public S3BucketKeyInfo(string fullPathAndFileName, bool terminateWithPathDelimiter = false)
         {
-            Guard.Against(String.IsNullOrEmpty(fullPathAndFileName), "fullPathAndFileName must not be empty.");
+            if (string.IsNullOrEmpty(fullPathAndFileName))
+                throw new ArgumentNullException("fullPathAndFileName");
 
             Key = string.Empty;
             FileName = string.Empty;
@@ -93,10 +94,10 @@ namespace ServiceStack.Aws.S3
         public override string ToString()
         {
             return string.Concat(BucketName,
-                                 BucketName.EndsWith("/")
-                                     ? string.Empty
-                                     : "/",
-                                 Key);
+                BucketName.EndsWith("/")
+                    ? string.Empty
+                    : "/",
+                Key);
         }
         
         public override int GetHashCode()

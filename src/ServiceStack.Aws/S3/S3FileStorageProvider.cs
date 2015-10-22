@@ -20,16 +20,16 @@ namespace ServiceStack.Aws.S3
 
         public S3FileStorageProvider(S3ConnectionFactory s3ConnFactory)
         {
-            Guard.AgainstNullArgument(s3ConnFactory, "s3ConnFactory");
+            if (s3ConnFactory == null)
+                throw new ArgumentNullException("s3ConnFactory");
+
             s3ConnectionFactory = s3ConnFactory;
         }
 
         public void Dispose()
         {
             if (s3Client == null)
-            {
                 return;
-            }
 
             try
             {
@@ -46,10 +46,7 @@ namespace ServiceStack.Aws.S3
 
         public override char DirectorySeparatorCharacter
         {
-            get
-            {
-                return '/';
-            }
+            get { return '/'; }
         }
 
         public override void Download(FileSystemObject thisFso, FileSystemObject downloadToFso)
@@ -68,10 +65,10 @@ namespace ServiceStack.Aws.S3
             var bki = new S3BucketKeyInfo(fso.FullName);
 
             var request = new GetObjectRequest
-                          {
-                              BucketName = bki.BucketName,
-                              Key = bki.Key
-                          };
+            {
+                BucketName = bki.BucketName,
+                Key = bki.Key
+            };
 
             try
             {
@@ -80,26 +77,25 @@ namespace ServiceStack.Aws.S3
             catch (AmazonS3Exception s3x)
             {
                 if (IsMissingObjectException(s3x))
-                {
                     return null;
-                }
+
                 throw;
             }
         }
 
         public override byte[] Get(FileSystemObject fso)
         {
-            using(var stream = GetStream(fso))
+            using (var stream = GetStream(fso))
             {
                 return stream == null
-                           ? null
-                           : stream.ToBytes();
+                    ? null
+                    : stream.ToBytes();
             }
         }
 
         public override void Store(byte[] bytes, FileSystemObject fso)
         {
-            using(var byteStream = new MemoryStream(bytes))
+            using (var byteStream = new MemoryStream(bytes))
             {
                 Store(byteStream, fso);
             }
@@ -116,12 +112,12 @@ namespace ServiceStack.Aws.S3
                 try
                 {
                     var request = new PutObjectRequest
-                                  {
-                                      BucketName = bki.BucketName,
-                                      Key = bki.Key,
-                                      InputStream = stream,
-                                      StorageClass = S3StorageClass.Standard
-                                  };
+                    {
+                        BucketName = bki.BucketName,
+                        Key = bki.Key,
+                        InputStream = stream,
+                        StorageClass = S3StorageClass.Standard
+                    };
 
                     S3Client.PutObject(request);
 
@@ -167,10 +163,10 @@ namespace ServiceStack.Aws.S3
         private void Delete(S3BucketKeyInfo bki)
         {
             var request = new DeleteObjectRequest
-                          {
-                              BucketName = bki.BucketName,
-                              Key = bki.Key
-                          };
+            {
+                BucketName = bki.BucketName,
+                Key = bki.Key
+            };
 
             try
             {
@@ -210,7 +206,7 @@ namespace ServiceStack.Aws.S3
 
             // Copying across providers. With S3 in this case, need to basically download the file
             // to the local file system first, then copy from there to the target provder
-            
+
             var localFile = new FileSystemObject(Path.Combine(Path.GetTempPath(), targetFso.FileNameAndExtension));
 
             try
@@ -235,12 +231,12 @@ namespace ServiceStack.Aws.S3
             var targetBki = new S3BucketKeyInfo(targetFso);
 
             var request = new CopyObjectRequest
-                          {
-                              SourceBucket = sourceBki.BucketName,
-                              SourceKey = sourceBki.Key,
-                              DestinationBucket = targetBki.BucketName,
-                              DestinationKey = targetBki.Key
-                          };
+            {
+                SourceBucket = sourceBki.BucketName,
+                SourceKey = sourceBki.Key,
+                DestinationBucket = targetBki.BucketName,
+                DestinationKey = targetBki.Key
+            };
 
             S3Client.CopyObject(request);
         }
@@ -250,16 +246,16 @@ namespace ServiceStack.Aws.S3
             var bki = new S3BucketKeyInfo(fso.FullName);
 
             var request = new GetObjectRequest
-                          {
-                              BucketName = bki.BucketName,
-                              Key = bki.Key
-                          };
+            {
+                BucketName = bki.BucketName,
+                Key = bki.Key
+            };
 
             localFs.CreateFolder(downloadToFso.FolderName);
 
             localFs.Delete(downloadToFso);
 
-            using(var response = S3Client.GetObject(request))
+            using (var response = S3Client.GetObject(request))
             {
                 response.WriteResponseStreamToFile(downloadToFso.FullName);
             }
@@ -282,7 +278,7 @@ namespace ServiceStack.Aws.S3
             try
             {
                 GetToLocalFile(sourceFso, localFile);
-                
+
                 targetProvider.Store(localFile, targetFso);
 
                 Delete(sourceFso);
@@ -341,7 +337,7 @@ namespace ServiceStack.Aws.S3
                 var bucketLocation = S3Client.GetBucketLocation(bki.BucketName);
                 return true;
             }
-            catch(AmazonS3Exception s3x)
+            catch (AmazonS3Exception s3x)
             {
                 if (IsMissingObjectException(s3x))
                 {
@@ -350,7 +346,7 @@ namespace ServiceStack.Aws.S3
 
                 throw;
             }
-            
+
         }
 
         public override IEnumerable<string> ListFolder(string folderName, bool recursive = false, bool fileNamesOnly = false)
@@ -369,19 +365,17 @@ namespace ServiceStack.Aws.S3
                 var listResponse = ListFolderResponse(bki, nextMarker);
 
                 if (listResponse == null || listResponse.S3Objects == null)
-                {
                     break;
-                }
 
                 var filesOnly = listResponse.S3Objects
-                                            .Select(o => new S3BucketKeyInfo(bki.BucketName, o))
-                                            .Where(b => !string.IsNullOrEmpty(b.FileName))
-                                            .Where(b => recursive
-                                                            ? b.Prefix.StartsWith(bki.Prefix, StringComparison.InvariantCulture)
-                                                            : b.Prefix.Equals(bki.Prefix, StringComparison.InvariantCulture))
-                                            .Select(b => fileNamesOnly
-                                                             ? b.FileName
-                                                             : b.ToString()
+                    .Select(o => new S3BucketKeyInfo(bki.BucketName, o))
+                    .Where(b => !string.IsNullOrEmpty(b.FileName))
+                    .Where(b => recursive
+                        ? b.Prefix.StartsWith(bki.Prefix, StringComparison.InvariantCulture)
+                        : b.Prefix.Equals(bki.Prefix, StringComparison.InvariantCulture))
+                    .Select(b => fileNamesOnly
+                        ? b.FileName
+                        : b.ToString()
                     );
 
                 foreach (var file in filesOnly)
@@ -407,8 +401,8 @@ namespace ServiceStack.Aws.S3
             var listResponse = ListFolderResponse(bki);
 
             return listResponse == null
-                       ? new List<S3Object>()
-                       : listResponse.S3Objects ?? new List<S3Object>();
+                ? new List<S3Object>()
+                : listResponse.S3Objects ?? new List<S3Object>();
         }
 
         private ListObjectsResponse ListFolderResponse(S3BucketKeyInfo bki, string nextMarker = null)
@@ -416,9 +410,9 @@ namespace ServiceStack.Aws.S3
             try
             {
                 var listRequest = new ListObjectsRequest
-                                  {
-                                      BucketName = bki.BucketName
-                                  };
+                {
+                    BucketName = bki.BucketName
+                };
 
                 if (!string.IsNullOrEmpty(nextMarker))
                 {
@@ -455,9 +449,7 @@ namespace ServiceStack.Aws.S3
             catch (AmazonS3Exception s3x)
             {
                 if (IsMissingObjectException(s3x))
-                {
                     return;
-                }
 
                 throw;
             }
@@ -479,22 +471,20 @@ namespace ServiceStack.Aws.S3
                     var objects = ListFolder(bki);
 
                     if (!objects.Any())
-                    {
                         break;
-                    }
 
                     var keys = objects.Select(o => new KeyVersion
-                                                   {
-                                                       Key = o.Key
-                                                   })
-                                      .ToList();
+                    {
+                        Key = o.Key
+                    })
+                    .ToList();
 
                     var deleteObjectsRequest = new DeleteObjectsRequest
-                                               {
-                                                   BucketName = bki.BucketName,
-                                                   Quiet = true,
-                                                   Objects = keys
-                                               };
+                    {
+                        BucketName = bki.BucketName,
+                        Quiet = true,
+                        Objects = keys
+                    };
 
                     S3Client.DeleteObjects(deleteObjectsRequest);
                 }
@@ -502,10 +492,10 @@ namespace ServiceStack.Aws.S3
             else if (!bki.IsBucketObject)
             {
                 var deleteObjectRequest = new DeleteObjectRequest
-                                          {
-                                              BucketName = bki.BucketName,
-                                              Key = bki.Key
-                                          };
+                {
+                    BucketName = bki.BucketName,
+                    Key = bki.Key
+                };
 
                 S3Client.DeleteObject(deleteObjectRequest);
             }
@@ -513,10 +503,10 @@ namespace ServiceStack.Aws.S3
             if (bki.IsBucketObject)
             {
                 var request = new DeleteBucketRequest
-                              {
-                                  BucketName = bki.BucketName,
-                                  UseClientRegion = true
-                              };
+                {
+                    BucketName = bki.BucketName,
+                    UseClientRegion = true
+                };
 
                 S3Client.DeleteBucket(request);
             }
@@ -525,17 +515,15 @@ namespace ServiceStack.Aws.S3
         public override void CreateFolder(string path)
         {
             if (string.IsNullOrEmpty(path))
-            {
                 return;
-            }
 
             var bki = new S3BucketKeyInfo(path);
 
             var request = new PutBucketRequest
-                          {
-                              BucketName = bki.BucketName,
-                              UseClientRegion = true
-                          };
+            {
+                BucketName = bki.BucketName,
+                UseClientRegion = true
+            };
 
             S3Client.PutBucket(request);
         }

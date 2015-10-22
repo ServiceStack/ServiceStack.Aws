@@ -6,7 +6,6 @@ namespace ServiceStack.Aws.Models
 {
     public class FileSystemObject : ICloneable, IEquatable<FileSystemObject>
     {
-        #region ICloneable
         object ICloneable.Clone()
         {
             return Clone();
@@ -17,7 +16,6 @@ namespace ServiceStack.Aws.Models
             var cloned = (FileSystemObject)MemberwiseClone();
             return cloned;
         }
-        #endregion ICloneable
 
         private readonly string directorySeparatorCharacter;
 
@@ -37,8 +35,8 @@ namespace ServiceStack.Aws.Models
 
             // Set the character separator to use
             directorySeparatorCharacter = useBackslashDirectorySeparator
-                                               ? "\\"
-                                               : "/";
+                ? "\\"
+                : "/";
 
             Init(filePathAndName);
         }
@@ -64,12 +62,13 @@ namespace ServiceStack.Aws.Models
                 }
             }
 
-            Func<string, string> pathScrubber = (f) => f.Replace(directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
-                                                                     ? "/"
-                                                                     : "\\",
-                                                                 directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
-                                                                     ? "\\"
-                                                                     : "/");
+            Func<string, string> pathScrubber = (f) => f.Replace(
+                directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
+                    ? "/"
+                    : "\\",
+                directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
+                    ? "\\"
+                    : "/");
 
             FileName = pathScrubber(Path.GetFileNameWithoutExtension(filePathAndName));
             FolderName = pathScrubber(Path.GetDirectoryName(filePathAndName));
@@ -77,8 +76,8 @@ namespace ServiceStack.Aws.Models
             var fileExtension = pathScrubber(Path.GetExtension(filePathAndName));
 
             FileExtension = fileExtension.StartsWith(".", StringComparison.InvariantCultureIgnoreCase)
-                                ? fileExtension.Substring(1)
-                                : fileExtension;
+                ? fileExtension.Substring(1)
+                : fileExtension;
         }
 
         public string FileName { get; private set; }
@@ -88,20 +87,18 @@ namespace ServiceStack.Aws.Models
         private string Combine(params string[] paths)
         {
             var appendSeparator = false;
-            var returnVal = String.Empty;
+            var returnVal = string.Empty;
 
             foreach (var path in paths)
             {
                 if (string.IsNullOrEmpty(path))
-                {
                     continue;
-                }
 
                 returnVal = string.Concat(returnVal,
-                                          appendSeparator
-                                              ? directorySeparatorCharacter
-                                              : string.Empty,
-                                          path);
+                    appendSeparator
+                        ? directorySeparatorCharacter
+                        : string.Empty,
+                    path);
 
                 appendSeparator = !path.EndsWith(directorySeparatorCharacter, StringComparison.InvariantCultureIgnoreCase);
             }
@@ -122,8 +119,8 @@ namespace ServiceStack.Aws.Models
             get
             {
                 return string.IsNullOrEmpty(FileExtension)
-                           ? FileName
-                           : string.Concat(FileName, ".", FileExtension);
+                    ? FileName
+                    : string.Concat(FileName, ".", FileExtension);
             }
         }
         
@@ -136,13 +133,10 @@ namespace ServiceStack.Aws.Models
         public override bool Equals(object obj)
         {
             if (obj == null)
-            {
                 return false;
-            }
+
             if (ReferenceEquals(this, obj))
-            {
                 return true;
-            }
 
             var fsoObject = obj as FileSystemObject;
 
@@ -158,6 +152,5 @@ namespace ServiceStack.Aws.Models
         {
             return ToString().GetHashCode();
         }
-        
     }
 }
