@@ -86,6 +86,8 @@
     <Compile Include="FileStorage\FileStorageProviderCommonTests.cs" />
     <Compile Include="FileStorage\FileSystemStorageProviderTests.cs" />
     <Compile Include="FileStorage\InMemoryStorageProviderTests.cs" />
+    <Compile Include="S3\S3AdhocTests.cs" />
+    <Compile Include="S3\VirtualPathProviderTests.cs" />
     <Compile Include="Shared\DataModels.cs" />
     <Compile Include="Sqs\FakeAmazonSqsTests.cs" />
     <Compile Include="Sqs\FakeSqsClientHelper.cs" />
