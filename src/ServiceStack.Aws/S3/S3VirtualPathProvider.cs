@@ -169,4 +169,31 @@ namespace ServiceStack.Aws.S3
                 : null;
         }
     }
+
+    public partial class S3VirtualPathProvider : IS3Client
+    {
+        public const int MultiObjectLimit = 1000;
+
+        public void ClearBucket()
+        {
+            var batches = EnumerateFiles(null)
+                .BatchesOf(MultiObjectLimit);
+
+            foreach (var batch in batches)
+            {
+                var request = new DeleteObjectsRequest
+                {
+                    BucketName = BucketName,
+                };
+
+                foreach (var file in batch)
+                {
+                    request.AddKey(file.FilePath);
+                }
+
+                Client.DeleteObjects(request);
+            }
+
+        }
+    }
 }

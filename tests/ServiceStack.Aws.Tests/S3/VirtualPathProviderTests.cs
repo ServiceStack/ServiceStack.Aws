@@ -16,6 +16,12 @@ namespace ServiceStack.Aws.Tests.S3
         {
             return new S3VirtualPathProvider(client, BucketName, appHost);
         }
+
+        [SetUp]
+        public void SetUp()
+        {
+            s3Provider.ClearBucket();
+        }
     }
 
     public class InMemoryVirtualPathProviderTests : VirtualPathProviderTests
