@@ -51,9 +51,15 @@ namespace ServiceStack.Aws.S3
         }
 
         public string DirPath { get; set; }
-        public override string Name
+
+        public override string VirtualPath
         {
             get { return DirPath; }
+        }
+
+        public override string Name
+        {
+            get { return DirPath != null ? DirPath.SplitOnLast(InMemoryVirtualPathProvider.DirSep).Last() : null; }
         }
 
         public override IVirtualFile GetFile(string virtualPath)

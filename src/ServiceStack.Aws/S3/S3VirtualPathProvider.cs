@@ -11,6 +11,8 @@ namespace ServiceStack.Aws.S3
 {
     public partial class S3VirtualPathProvider : AbstractVirtualPathProviderBase, IWriteableVirtualPathProvider
     {
+        public const int MultiObjectLimit = 1000;
+
         public IAmazonS3 Client { get; private set; }
         public string BucketName { get; private set; }
         private readonly S3VirtualDirectory rootDirectory;
@@ -89,6 +91,42 @@ namespace ServiceStack.Aws.S3
             });
         }
 
+        public void DeleteFile(string filePath)
+        {
+            filePath = SanitizePath(filePath);
+            Client.DeleteObject(new DeleteObjectRequest {
+                BucketName = BucketName,
+                Key = filePath,
+            });
+        }
+
+        public void DeleteFiles(IEnumerable<string> filePaths)
+        {
+            var batches = filePaths
+                .BatchesOf(MultiObjectLimit);
+
+            foreach (var batch in batches)
+            {
+                var request = new DeleteObjectsRequest {
+                    BucketName = BucketName,
+                };
+
+                foreach (var filePath in batch)
+                {
+                    request.AddKey(filePath);
+                }
+
+                Client.DeleteObjects(request);
+            }
+        }
+
+        public void DeleteFolder(string dirPath)
+        {
+            dirPath = SanitizePath(dirPath);
+            var nestedFiles = EnumerateFiles(dirPath).Map(x => x.FilePath);
+            DeleteFiles(nestedFiles);
+        }
+
         public IEnumerable<S3VirtualFile> EnumerateFiles(string prefix)
         {
             var response = Client.ListObjects(new ListObjectsRequest
@@ -114,7 +152,7 @@ namespace ServiceStack.Aws.S3
             var dirPaths = EnumerateFiles(fromDirPath)
                 .Map(x => x.DirPath)
                 .Distinct()
-                .Map(x => GetSubDirPath(fromDirPath, x))
+                .Map(x => GetImmediateSubDirPath(fromDirPath, x))
                 .Where(x => x != null)
                 .Distinct();
 
@@ -138,7 +176,7 @@ namespace ServiceStack.Aws.S3
                 : null;
         }
 
-        public string GetSubDirPath(string fromDirPath, string subDirPath)
+        public string GetImmediateSubDirPath(string fromDirPath, string subDirPath)
         {
             if (string.IsNullOrEmpty(subDirPath))
                 return null;
@@ -172,28 +210,12 @@ namespace ServiceStack.Aws.S3
 
     public partial class S3VirtualPathProvider : IS3Client
     {
-        public const int MultiObjectLimit = 1000;
-
         public void ClearBucket()
         {
-            var batches = EnumerateFiles(null)
-                .BatchesOf(MultiObjectLimit);
+            var allFilePaths = EnumerateFiles(null)
+                .Map(x => x.FilePath);
 
-            foreach (var batch in batches)
-            {
-                var request = new DeleteObjectsRequest
-                {
-                    BucketName = BucketName,
-                };
-
-                foreach (var file in batch)
-                {
-                    request.AddKey(file.FilePath);
-                }
-
-                Client.DeleteObjects(request);
-            }
-
+            DeleteFiles(allFilePaths);
         }
     }
 }

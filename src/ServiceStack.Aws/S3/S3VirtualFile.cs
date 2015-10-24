@@ -30,19 +30,19 @@ namespace ServiceStack.Aws.S3
 
         public string DirPath
         {
-            get { return base.Directory.Name; }
+            get { return base.Directory.VirtualPath; }
         }
 
         public string FilePath { get; set; }
 
-        public string FileName
-        {
-            get { return FilePath.SplitOnLast('/').Last(); }
-        }
-
         public string ContentType { get; set; }
 
         public override string Name
+        {
+            get { return FilePath.SplitOnLast(InMemoryVirtualPathProvider.DirSep).Last(); }
+        }
+
+        public override string VirtualPath
         {
             get { return FilePath; }
         }
