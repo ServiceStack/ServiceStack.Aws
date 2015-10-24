@@ -1,30 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
 using ServiceStack.IO;
-using ServiceStack.Text;
 using ServiceStack.VirtualPath;
 
 namespace ServiceStack.Aws.S3
 {
-    public class S3VirtualPathProvider : AbstractVirtualPathProviderBase, IWriteableVirtualPathProvider
+    public partial class S3VirtualPathProvider : AbstractVirtualPathProviderBase, IWriteableVirtualPathProvider
     {
         public IAmazonS3 Client { get; private set; }
         public string BucketName { get; private set; }
+        private readonly S3VirtualDirectory rootDirectory;
 
         public S3VirtualPathProvider(IAmazonS3 client, string bucketName, IAppHost appHost)
             : base(appHost)
         {
             this.Client = client;
             this.BucketName = bucketName;
-            this.rootDirectory = new S3VirtualDirectory(this);
+            this.rootDirectory = new S3VirtualDirectory(this, null);
         }
 
-        public S3VirtualDirectory rootDirectory;
+        public const char DirSep = '/';
 
         public override IVirtualDirectory RootDirectory
         {
@@ -41,98 +40,20 @@ namespace ServiceStack.Aws.S3
             get { return "/"; }
         }
 
-        protected override void Initialize()
-        {
-        }
-
-        public void AddFile(string filePath, string contents)
-        {
-            rootDirectory.AddFile(filePath, contents);
-        }
-
-        public void AddFile(string filePath, Stream stream)
-        {
-            rootDirectory.AddFile(filePath, stream);
-        }
+        protected override void Initialize() {}
 
         public override IVirtualFile GetFile(string virtualPath)
         {
-            return rootDirectory.GetFile(virtualPath)
-                ?? base.GetFile(virtualPath);
-        }
-    }
-
-    public class S3VirtualDirectory : AbstractVirtualDirectoryBase
-    {
-        private S3VirtualPathProvider pathProvider;
-
-        public S3VirtualDirectory(S3VirtualPathProvider pathProvider)
-            : base(pathProvider)
-        {
-            this.pathProvider = pathProvider;
-            this.files = new List<S3VirtualFile>();
-            this.dirs = new List<S3VirtualDirectory>();
-            this.DirLastModified = DateTime.MinValue;
-        }
-
-        public S3VirtualDirectory(IVirtualPathProvider owningProvider, IVirtualDirectory parentDirectory)
-            : base(owningProvider, parentDirectory) { }
-
-        static readonly char DirSep = '/';
-
-        public DateTime DirLastModified { get; set; }
-
-        public override DateTime LastModified
-        {
-            get { return DirLastModified; }
-        }
-
-        public List<S3VirtualFile> files;
-        public override IEnumerable<IVirtualFile> Files
-        {
-            get { return files; }
-        }
-
-        public List<S3VirtualDirectory> dirs;
-        public override IEnumerable<IVirtualDirectory> Directories
-        {
-            get { return dirs; }
-        }
-
-        public IAmazonS3 Client
-        {
-            get { return pathProvider.Client; }
-        }
-
-        public string BucketName
-        {
-            get { return pathProvider.BucketName; }
-        }
-
-        public string DirName { get; set; }
-        public override string Name
-        {
-            get { return DirName; }
-        }
-
-        public override IVirtualFile GetFile(string virtualPath)
-        {
+            var filePath = SanitizePath(virtualPath);
             try
             {
                 var response = Client.GetObject(new GetObjectRequest
                 {
-                    Key = StripDirSeparatorPrefix(virtualPath),
+                    Key = filePath,
                     BucketName = BucketName,
                 });
 
-                return new S3VirtualFile(pathProvider, this)
-                {
-                    FileName = response.Key.SplitOnLast('/').Last(),
-                    FilePath = response.Key,
-                    ContentType = response.Headers.ContentType,
-                    FileLastModified = response.LastModified,
-                    Stream = response.ResponseStream,
-                };
+                return new S3VirtualFile(this, GetDirectory(GetDirPath(filePath))).Init(response);
             }
             catch (AmazonS3Exception ex)
             {
@@ -143,121 +64,109 @@ namespace ServiceStack.Aws.S3
             }
         }
 
-        public override IEnumerator<IVirtualNode> GetEnumerator()
+        public IVirtualDirectory GetDirectory(string dirPath)
         {
-            throw new NotImplementedException();
+            return new S3VirtualDirectory(this, dirPath);
         }
 
-        protected override IVirtualFile GetFileFromBackingDirectoryOrDefault(string fileName)
+        public void WriteFile(string filePath, string contents)
         {
-            return GetFile(fileName);
-        }
-
-        protected override IEnumerable<IVirtualFile> GetMatchingFilesInDir(string globPattern)
-        {
-            var matchingFilesInBackingDir = EnumerateFiles(globPattern).Cast<IVirtualFile>();
-            return matchingFilesInBackingDir;
-        }
-
-        public IEnumerable<S3VirtualFile> EnumerateFiles(string pattern)
-        {
-            foreach (var file in files.Where(f => f.Name.Glob(pattern)))
+            Client.PutObject(new PutObjectRequest
             {
-                yield return file;
-            }
-            foreach (var file in dirs.SelectMany(d => d.EnumerateFiles(pattern)))
-            {
-                yield return file;
-            }
-        }
-
-        protected override IVirtualDirectory GetDirectoryFromBackingDirectoryOrDefault(string directoryName)
-        {
-            return null;
-        }
-
-        public void AddFile(string filePath, string contents)
-        {
-            Client.PutObject(new PutObjectRequest {
-                Key = StripDirSeparatorPrefix(filePath),
-                BucketName = pathProvider.BucketName,
+                Key = SanitizePath(filePath),
+                BucketName = BucketName,
                 ContentBody = contents,
             });
         }
 
-        public void AddFile(string filePath, Stream stream)
+        public void WriteFile(string filePath, Stream stream)
         {
-            Client.PutObject(new PutObjectRequest {
-                Key = StripDirSeparatorPrefix(filePath),
-                BucketName = pathProvider.BucketName,
+            Client.PutObject(new PutObjectRequest
+            {
+                Key = SanitizePath(filePath),
+                BucketName = BucketName,
                 InputStream = stream,
             });
         }
 
-        private static string StripDirSeparatorPrefix(string filePath)
+        public IEnumerable<S3VirtualFile> EnumerateFiles(string prefix)
         {
-            return string.IsNullOrEmpty(filePath)
-                ? filePath
-                : (filePath[0] == DirSep ? filePath.Substring(1) : filePath);
-        }
-    }
-
-    public class S3VirtualFile : AbstractVirtualFileBase
-    {
-        public S3VirtualFile(IVirtualPathProvider owningProvider, IVirtualDirectory directory)
-            : base(owningProvider, directory)
-        {
-            this.FileLastModified = DateTime.MinValue;
-        }
-
-        public string FilePath { get; set; }
-
-        public string FileName { get; set; }
-
-        public string ContentType { get; set; }
-
-        public override string Name
-        {
-            get { return FilePath; }
-        }
-
-        public DateTime FileLastModified { get; set; }
-
-        public override DateTime LastModified
-        {
-            get { return FileLastModified; }
-        }
-
-        public override long Length
-        {
-            get
+            var response = Client.ListObjects(new ListObjectsRequest
             {
-                return TextContents != null ?
-                    TextContents.Length
-                      : ByteContents != null ?
-                    ByteContents.Length :
-                    0;
+                BucketName = BucketName,
+                Prefix = prefix,
+            });
+
+            foreach (var file in response.S3Objects)
+            {
+                var filePath = SanitizePath(file.Key);
+                yield return new S3VirtualFile(this, GetDirectory(GetDirPath(filePath)))
+                {
+                    FilePath = filePath,
+                    ContentLength = file.Size,
+                    FileLastModified = file.LastModified,
+                };
             }
         }
 
-        private string textContents;
-        public string TextContents
+        public IEnumerable<S3VirtualDirectory> GetImmediateDirectories(string fromDirPath)
         {
-            get { return textContents ?? (textContents = ReadAllText()); }
+            var dirPaths = EnumerateFiles(fromDirPath)
+                .Map(x => x.DirPath)
+                .Distinct()
+                .Map(x => GetSubDirPath(fromDirPath, x))
+                .Where(x => x != null)
+                .Distinct();
+
+            return dirPaths.Map(x => new S3VirtualDirectory(this, x));
         }
 
-        private byte[] byteContents;
-        public byte[] ByteContents
+        public IEnumerable<S3VirtualFile> GetImmediateFiles(string fromDirPath)
         {
-            get { return byteContents ?? (byteContents = OpenRead().ReadFully()); }
+            return EnumerateFiles(fromDirPath)
+                .Where(x => x.DirPath == fromDirPath);
         }
 
-        public Stream Stream { get; set; }
-
-        public override Stream OpenRead()
+        public string GetDirPath(string filePath)
         {
-            return Stream;
+            if (string.IsNullOrEmpty(filePath))
+                return null;
+
+            var lastDirPos = filePath.LastIndexOf(DirSep);
+            return lastDirPos >= 0
+                ? filePath.Substring(0, lastDirPos)
+                : null;
+        }
+
+        public string GetSubDirPath(string fromDirPath, string subDirPath)
+        {
+            if (string.IsNullOrEmpty(subDirPath))
+                return null;
+
+            if (fromDirPath == null)
+            {
+                return subDirPath.CountOccurrencesOf(DirSep) == 0
+                    ? subDirPath
+                    : null;
+            }
+
+            if (!subDirPath.StartsWith(fromDirPath))
+                return null;
+
+            return fromDirPath.CountOccurrencesOf(DirSep) == subDirPath.CountOccurrencesOf(DirSep) - 1
+                ? subDirPath
+                : null;
+        }
+
+        public string SanitizePath(string filePath)
+        {
+            var sanitizedPath = string.IsNullOrEmpty(filePath)
+                ? null
+                : (filePath[0] == DirSep ? filePath.Substring(1) : filePath);
+
+            return sanitizedPath != null
+                ? sanitizedPath.Replace('\\', DirSep)
+                : null;
         }
     }
-
 }
