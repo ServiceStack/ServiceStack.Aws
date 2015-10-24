@@ -20,6 +20,7 @@ namespace ServiceStack.Aws.Tests.S3
         [SetUp]
         public void SetUp()
         {
+            var s3Provider = (IS3Client)GetPathProvider();
             s3Provider.ClearBucket();
         }
     }
