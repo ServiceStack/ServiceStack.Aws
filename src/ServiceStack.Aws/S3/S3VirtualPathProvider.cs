@@ -127,7 +127,7 @@ namespace ServiceStack.Aws.S3
             DeleteFiles(nestedFiles);
         }
 
-        public IEnumerable<S3VirtualFile> EnumerateFiles(string prefix)
+        public IEnumerable<S3VirtualFile> EnumerateFiles(string prefix = null)
         {
             var response = Client.ListObjects(new ListObjectsRequest
             {
@@ -138,6 +138,7 @@ namespace ServiceStack.Aws.S3
             foreach (var file in response.S3Objects)
             {
                 var filePath = SanitizePath(file.Key);
+
                 yield return new S3VirtualFile(this, GetDirectory(GetDirPath(filePath)))
                 {
                     FilePath = filePath,
@@ -145,6 +146,11 @@ namespace ServiceStack.Aws.S3
                     FileLastModified = file.LastModified,
                 };
             }
+        }
+
+        public override IEnumerable<IVirtualFile> GetAllFiles()
+        {
+            return EnumerateFiles();
         }
 
         public IEnumerable<S3VirtualDirectory> GetImmediateDirectories(string fromDirPath)
@@ -205,6 +211,11 @@ namespace ServiceStack.Aws.S3
             return sanitizedPath != null
                 ? sanitizedPath.Replace('\\', DirSep)
                 : null;
+        }
+
+        public static string GetFileName(string filePath)
+        {
+            return filePath.SplitOnLast(DirSep).Last();
         }
     }
 

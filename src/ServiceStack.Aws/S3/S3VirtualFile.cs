@@ -39,7 +39,7 @@ namespace ServiceStack.Aws.S3
 
         public override string Name
         {
-            get { return FilePath.SplitOnLast(InMemoryVirtualPathProvider.DirSep).Last(); }
+            get { return S3VirtualPathProvider.GetFileName(FilePath); }
         }
 
         public override string VirtualPath

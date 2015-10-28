@@ -95,26 +95,15 @@ namespace ServiceStack.Aws.S3
 
         protected override IEnumerable<IVirtualFile> GetMatchingFilesInDir(string globPattern)
         {
-            var matchingFilesInBackingDir = EnumerateFiles(globPattern).Cast<IVirtualFile>();
+            var matchingFilesInBackingDir = EnumerateFiles(globPattern);
             return matchingFilesInBackingDir;
         }
 
         public IEnumerable<S3VirtualFile> EnumerateFiles(string pattern)
         {
-            var response = Client.ListObjects(new ListObjectsRequest
+            foreach (var file in PathProvider.GetImmediateFiles(DirPath).Where(f => f.Name.Glob(pattern)))
             {
-                BucketName = BucketName,
-                Prefix = DirPath,
-            });
-
-            foreach (var file in response.S3Objects)
-            {
-                yield return new S3VirtualFile(PathProvider, this)
-                {
-                    FilePath = file.Key,
-                    ContentLength = file.Size,
-                    FileLastModified = file.LastModified,                    
-                };
+                yield return file;
             }
         }
 
