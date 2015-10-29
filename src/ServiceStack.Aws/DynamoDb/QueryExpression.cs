@@ -7,23 +7,15 @@ using Amazon.DynamoDBv2.Model;
 
 namespace ServiceStack.Aws.DynamoDb
 {
-    public class QueryExpression : QueryRequest
+    public class QueryExpression : QueryRequest, IDynamoCommonQuery
     {
         protected IPocoDynamo Db { get; set; }
 
         protected DynamoMetadataType Table { get; set; }
 
-        protected void Project(IEnumerable<string> fields)
-        {
-            var fieldArray = fields.ToArray();
-            this.ProjectionExpression = fieldArray.Length > 0
-                ? string.Join(", ", fieldArray)
-                : null;
-        }
-
         internal QueryExpression SelectInto<TModel>()
         {
-            Project(typeof(TModel).AllFields().Where(Table.HasField));
+            this.SelectFields(typeof(TModel).AllFields().Where(Table.HasField));
             return this;
         }
     }
@@ -198,7 +190,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public QueryExpression<T> Select(IEnumerable<string> fields)
         {
-            Project(fields);
+            this.SelectFields(fields);
             return this;
         }
 
@@ -230,7 +222,17 @@ namespace ServiceStack.Aws.DynamoDb
 
         public List<T> Query(int limit)
         {
-            return Db.Query(this, limit);
+            return Db.Query(this, limit:limit);
+        }
+
+        public IEnumerable<Into> QueryInto<Into>()
+        {
+            return Db.Query<Into>(this.SelectInto<Into>());
+        }
+
+        public List<Into> Query<Into>(int limit)
+        {
+            return Db.Query<Into>(this.SelectInto<Into>(), limit:limit);
         }
     }
 }
