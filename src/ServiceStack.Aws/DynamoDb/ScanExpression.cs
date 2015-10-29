@@ -13,7 +13,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         protected DynamoMetadataType Table { get;  set; }
 
-        internal ScanExpression SelectInto<TModel>()
+        public ScanExpression SelectInto<TModel>()
         {
             this.SelectFields(typeof(TModel).AllFields().Where(Table.HasField));
             return this;

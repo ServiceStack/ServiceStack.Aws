@@ -181,6 +181,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.ProductId == 1 && x.Cost > 10)));
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
 
+            //Note: Local DynamoDb supports projecting attributes not in GlobalIndex, AWS DynamoDB Doesn't
             var dbOrders = db.QueryInto<OrderWithGlobalTypedIndex>(db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10)).ToList();
             Assert.That(dbOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0 && x.LineItem != null));
             dbOrders = db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10).QueryInto<OrderWithGlobalTypedIndex>().ToList();
