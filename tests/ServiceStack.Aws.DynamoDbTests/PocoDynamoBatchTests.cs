@@ -63,5 +63,27 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             Assert.That(results.Count, Is.EqualTo(items.Count - deleteIds.Count));
         }
+
+        [Test]
+        public void Does_get_ScanItemCount()
+        {
+            var db = CreatePocoDynamo();
+            db.DeleteAllTables(TimeSpan.FromMinutes(1));
+
+            var items = PutPocoItems(db, count: 20);
+
+            var count = db.ScanItemCount<Poco>();
+            Assert.That(count, Is.EqualTo(20));
+
+            db.DeleteItems<Poco>(items.Take(10).Map(x => x.Id));
+
+            count = db.ScanItemCount<Poco>();
+            Assert.That(count, Is.EqualTo(10));
+
+            db.DeleteItems<Poco>(items.Skip(10).Map(x => x.Id));
+
+            count = db.ScanItemCount<Poco>();
+            Assert.That(count, Is.EqualTo(0));
+        }
     }
 }

@@ -60,6 +60,12 @@ namespace ServiceStack.Aws.DynamoDb
         IEnumerable<T> Query<T>(QueryRequest request);
         IEnumerable<T> Query<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter);
 
+        //Return Live ItemCount using Table ScanRequest
+        long ScanItemCount<T>();
+
+        //Return cached ItemCount in summary DescribeTable
+        long DescribeItemCount<T>();
+
         IPocoDynamo ClientWith(
             bool? consistentRead = null,
             long? readCapacityUnits = null,
@@ -695,6 +701,21 @@ namespace ServiceStack.Aws.DynamoDb
         public IEnumerable<T> Scan<T>(ScanRequest request)
         {
             return Scan(request, r => r.ConvertAll<T>());
+        }
+
+        public long ScanItemCount<T>()
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new ScanRequest(table.Name);
+            var response = Scan(request, r => new[] { r.Count });
+            return response.Sum();
+        }
+
+        public long DescribeItemCount<T>()
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var response = Exec(() => DynamoDb.DescribeTable(table.Name));
+            return response.Table.ItemCount;
         }
 
         public QueryExpression<T> FromQuery<T>(Expression<Func<T, bool>> keyExpression = null)
