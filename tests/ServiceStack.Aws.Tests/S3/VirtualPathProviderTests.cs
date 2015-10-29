@@ -214,6 +214,8 @@ namespace ServiceStack.Aws.Tests.S3
             pathProvider.DeleteFile("testfile.txt");
             pathProvider.DeleteFolder("a");
             pathProvider.DeleteFolder("e");
+
+            Assert.That(pathProvider.GetAllFiles().ToList().Count, Is.EqualTo(0));
         }
 
         public void AssertContents(IVirtualDirectory dir,

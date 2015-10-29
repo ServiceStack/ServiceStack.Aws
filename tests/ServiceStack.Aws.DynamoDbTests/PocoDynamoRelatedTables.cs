@@ -178,9 +178,13 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.PutRelatedItems(customer.Id, orders);
 
             var expensiveOrders = db.Query(db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10)).ToList();
-
             Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.ProductId == 1 && x.Cost > 10)));
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
+
+            var dbOrders = db.QueryInto<OrderWithGlobalTypedIndex>(db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10)).ToList();
+            Assert.That(dbOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0 && x.LineItem != null));
+            dbOrders = db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10).QueryInto<OrderWithGlobalTypedIndex>().ToList();
+            Assert.That(dbOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0 && x.LineItem != null));
 
             expensiveOrders = db.Scan(db.FromScanIndex<OrderGlobalCostIndex>(x => x.Cost > 10)).ToList();
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
