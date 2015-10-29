@@ -14,7 +14,7 @@ namespace ServiceStack.Aws.S3
 
         public IAmazonS3 Client
         {
-            get { return PathProvider.Client; }
+            get { return PathProvider.AmazonS3; }
         }
 
         public string BucketName

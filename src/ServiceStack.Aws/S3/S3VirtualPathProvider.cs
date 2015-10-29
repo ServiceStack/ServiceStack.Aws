@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -13,14 +14,14 @@ namespace ServiceStack.Aws.S3
     {
         public const int MultiObjectLimit = 1000;
 
-        public IAmazonS3 Client { get; private set; }
+        public IAmazonS3 AmazonS3 { get; private set; }
         public string BucketName { get; private set; }
         private readonly S3VirtualDirectory rootDirectory;
 
         public S3VirtualPathProvider(IAmazonS3 client, string bucketName, IAppHost appHost)
             : base(appHost)
         {
-            this.Client = client;
+            this.AmazonS3 = client;
             this.BucketName = bucketName;
             this.rootDirectory = new S3VirtualDirectory(this, null);
         }
@@ -49,7 +50,7 @@ namespace ServiceStack.Aws.S3
             var filePath = SanitizePath(virtualPath);
             try
             {
-                var response = Client.GetObject(new GetObjectRequest
+                var response = AmazonS3.GetObject(new GetObjectRequest
                 {
                     Key = filePath,
                     BucketName = BucketName,
@@ -73,7 +74,7 @@ namespace ServiceStack.Aws.S3
 
         public void WriteFile(string filePath, string contents)
         {
-            Client.PutObject(new PutObjectRequest
+            AmazonS3.PutObject(new PutObjectRequest
             {
                 Key = SanitizePath(filePath),
                 BucketName = BucketName,
@@ -83,7 +84,7 @@ namespace ServiceStack.Aws.S3
 
         public void WriteFile(string filePath, Stream stream)
         {
-            Client.PutObject(new PutObjectRequest
+            AmazonS3.PutObject(new PutObjectRequest
             {
                 Key = SanitizePath(filePath),
                 BucketName = BucketName,
@@ -91,10 +92,15 @@ namespace ServiceStack.Aws.S3
             });
         }
 
+        public void WriteFiles(IEnumerable<IVirtualFile> files, Func<IVirtualFile, string> toPath = null)
+        {
+            this.CopyFrom(files, toPath);
+        }
+
         public void DeleteFile(string filePath)
         {
             filePath = SanitizePath(filePath);
-            Client.DeleteObject(new DeleteObjectRequest {
+            AmazonS3.DeleteObject(new DeleteObjectRequest {
                 BucketName = BucketName,
                 Key = filePath,
             });
@@ -116,7 +122,7 @@ namespace ServiceStack.Aws.S3
                     request.AddKey(filePath);
                 }
 
-                Client.DeleteObjects(request);
+                AmazonS3.DeleteObjects(request);
             }
         }
 
@@ -129,7 +135,7 @@ namespace ServiceStack.Aws.S3
 
         public IEnumerable<S3VirtualFile> EnumerateFiles(string prefix = null)
         {
-            var response = Client.ListObjects(new ListObjectsRequest
+            var response = AmazonS3.ListObjects(new ListObjectsRequest
             {
                 BucketName = BucketName,
                 Prefix = prefix,
@@ -223,7 +229,7 @@ namespace ServiceStack.Aws.S3
     {
         public void ClearBucket()
         {
-            var allFilePaths = EnumerateFiles(null)
+            var allFilePaths = EnumerateFiles()
                 .Map(x => x.FilePath);
 
             DeleteFiles(allFilePaths);
