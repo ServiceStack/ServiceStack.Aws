@@ -57,6 +57,12 @@ namespace ServiceStack.Aws.DynamoDb
             return db.DeleteTables(new[] { table.Name }, timeout);
         }
 
+        public static bool CreateTable<T>(this IPocoDynamo db, TimeSpan? timeout = null)
+        {
+            var table = db.GetTableMetadata<T>();
+            return db.CreateTables(new[] { table }, timeout);
+        }
+
         public static long DecrementById<T>(this IPocoDynamo db, object id, string fieldName, long amount = 1)
         {
             return db.Increment<T>(id, fieldName, amount * -1);

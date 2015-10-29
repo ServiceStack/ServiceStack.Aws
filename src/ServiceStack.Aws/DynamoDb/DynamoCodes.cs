@@ -112,7 +112,14 @@ namespace ServiceStack.Aws.DynamoDb
         public const string HashKey = "HashKey";
         public const string RangeKey = "RangeKey";
     }
-    
+
+    public static class DynamoErrors
+    {
+        public const string NotFound = "ResourceNotFoundException";
+        public const string AlreadyExists = "ResourceInUseException";
+    }
+
+
     public interface IDynamoIndex { }
     public interface IDynamoIndex<T> : IDynamoIndex { }
 

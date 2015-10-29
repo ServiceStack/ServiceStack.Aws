@@ -23,6 +23,7 @@ namespace ServiceStack.Aws.DynamoDb
         bool CreateMissingTables(IEnumerable<DynamoMetadataType> tables, TimeSpan? timeout = null);
         bool DeleteAllTables(TimeSpan? timeout = null);
         bool DeleteTables(IEnumerable<string> tableNames, TimeSpan? timeout = null);
+        bool CreateTables(IEnumerable<DynamoMetadataType> tables, TimeSpan? timeout = null);
         T GetItem<T>(object hash);
         T GetItem<T>(object hash, object range);
         List<T> GetItems<T>(IEnumerable<object> hashes);
@@ -220,25 +221,46 @@ namespace ServiceStack.Aws.DynamoDb
                 if (Log.IsDebugEnabled)
                     Log.Debug("Creating Table: " + table.Name);
 
-                var request = ToCreateTableRequest(table);
-                Exec(() =>
-                {
-                    try
-                    {
-                        DynamoDb.CreateTable(request);
-                    }
-                    catch (AmazonDynamoDBException ex)
-                    {
-                        const string TableAlreadyExists = "ResourceInUseException";
-                        if (ex.ErrorCode == TableAlreadyExists)
-                            return;
-
-                        throw;
-                    }
-                });
+                CreateTable(table);
             }
 
             return WaitForTablesToBeReady(tablesList.Map(x => x.Name), timeout);
+        }
+
+        public bool CreateTables(IEnumerable<DynamoMetadataType> tables, TimeSpan? timeout = null)
+        {
+            var tablesList = tables.Safe().ToList();
+            if (tablesList.Count == 0)
+                return true;
+
+            foreach (var table in tablesList)
+            {
+                if (Log.IsDebugEnabled)
+                    Log.Debug("Creating Table: " + table.Name);
+
+                CreateTable(table);
+            }
+
+            return WaitForTablesToBeReady(tablesList.Map(x => x.Name), timeout);
+        }
+
+        private void CreateTable(DynamoMetadataType table)
+        {
+            var request = ToCreateTableRequest(table);
+            Exec(() =>
+            {
+                try
+                {
+                    DynamoDb.CreateTable(request);
+                }
+                catch (AmazonDynamoDBException ex)
+                {
+                    if (ex.ErrorCode == DynamoErrors.AlreadyExists)
+                        return;
+
+                    throw;
+                }
+            });
         }
 
         protected virtual CreateTableRequest ToCreateTableRequest(DynamoMetadataType table)
@@ -330,7 +352,15 @@ namespace ServiceStack.Aws.DynamoDb
         {
             foreach (var tableName in tableNames)
             {
-                Exec(() => DynamoDb.DeleteTable(new DeleteTableRequest(tableName)));
+                try
+                {
+                    Exec(() => DynamoDb.DeleteTable(new DeleteTableRequest(tableName)));
+                }
+                catch (AmazonDynamoDBException ex)
+                {
+                    if (ex.ErrorCode != DynamoErrors.NotFound)
+                        throw;
+                }
             }
 
             return WaitForTablesToBeDeleted(tableNames);
