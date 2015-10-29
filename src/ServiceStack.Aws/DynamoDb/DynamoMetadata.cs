@@ -138,10 +138,16 @@ namespace ServiceStack.Aws.DynamoDb
                 Interlocked.CompareExchange(ref Types, newCache, snapshot), snapshot));
         }
 
+        private static PropertyInfo[] GetTableProperties(Type type)
+        {
+            var props = type.GetSerializableProperties().Where(x => x.CanRead && x.CanWrite).ToArray();
+            return props;
+        }
+
         private static DynamoMetadataType ToMetadataType(Type type)
         {
             var alias = type.FirstAttribute<AliasAttribute>();
-            var props = type.GetSerializableProperties();
+            var props = GetTableProperties(type);
 
             var metadata = new DynamoMetadataType
             {
@@ -166,7 +172,7 @@ namespace ServiceStack.Aws.DynamoDb
         private static DynamoMetadataType ToMetadataTable(Type type)
         {
             var alias = type.FirstAttribute<AliasAttribute>();
-            var props = type.GetSerializableProperties();
+            var props = GetTableProperties(type);
             PropertyInfo hash, range;
             Converters.GetHashAndRangeKeyFields(type, props, out hash, out range);
 

@@ -75,6 +75,7 @@
     <Compile Include="DynamoDbAuthRepositoryTests.cs" />
     <Compile Include="DynamoDbCacheClientTests.cs" />
     <Compile Include="DynamoDbCustomCacheClientTests.cs" />
+    <Compile Include="DynamoDbIndexTests.cs" />
     <Compile Include="DynamoTestBase.cs" />
     <Compile Include="Issues\LocalDynamoDbHangsWhenPuttingNullValue.cs" />
     <Compile Include="PocoDynaboDbTests.cs" />
