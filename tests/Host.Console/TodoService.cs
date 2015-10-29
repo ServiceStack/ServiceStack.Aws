@@ -1,7 +1,7 @@
 using ServiceStack;
 using ServiceStack.Aws.DynamoDb;
 
-namespace Host.Console
+namespace Todos
 {
     [Route("/todos")]
     [Route("/todos/{Id}")]

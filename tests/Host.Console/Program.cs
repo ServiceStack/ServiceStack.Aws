@@ -4,8 +4,8 @@ using Amazon.DynamoDBv2;
 using Funq;
 using ServiceStack;
 using ServiceStack.Aws.DynamoDb;
-using ServiceStack.Configuration;
 using ServiceStack.Text;
+using Todos;
 
 namespace Host.Console
 {
