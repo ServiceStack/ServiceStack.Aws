@@ -44,7 +44,10 @@ namespace Imgur
         readonly string ThumbnailsDir = "imgur/uploads/thumbnails";
         readonly List<string> ImageSizes = new[] { "320x480", "640x960", "640x1136", "768x1024", "1536x2048" }.ToList();
 
-        public IWriteableVirtualPathProvider Files { get; set; }
+        public IWriteableVirtualPathProvider Files
+        {
+            get { return HostContext.WriteableVirtualPathProvider; }
+        }
 
         public object Get(Images request)
         {
@@ -180,22 +183,17 @@ namespace Imgur
         public object Any(DeleteUpload request)
         {
             var file = request.Id + ".png";
-            var filesToDelete = new[] {
-                UploadsDir.CombineWith(file),
-                ThumbnailsDir.CombineWith(file),
-            }.ToList();
-
+            var filesToDelete = new[] { UploadsDir.CombineWith(file), ThumbnailsDir.CombineWith(file) }.ToList();
             ImageSizes.Each(x => filesToDelete.Add(UploadsDir.CombineWith(x, file)));
-
             Files.DeleteFiles(filesToDelete);
 
-            return filesToDelete;
+            return HttpResult.Redirect("/imgur/");
         }
 
         public object Any(Reset request)
         {
             Files.DeleteFiles(Files.GetDirectory(UploadsDir).GetAllMatchingFiles("*.png"));
-            File.ReadAllLines("~/preset-urls.txt".MapHostAbsolutePath()).ToList()
+            File.ReadAllLines("~/imgur/preset-urls.txt".MapHostAbsolutePath()).ToList()
                 .ForEach(url => WriteImage(new MemoryStream(url.Trim().GetBytesFromUrl())));
 
             return HttpResult.Redirect("/imgur/");

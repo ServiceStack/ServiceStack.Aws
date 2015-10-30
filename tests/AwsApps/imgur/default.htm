@@ -14,6 +14,7 @@
         #thumbnails img { float: left; }
         #thumbnails img:hover { -moz-box-shadow: 1px 4px 10px #aaa; -webkit-box-shadow: 1px 4px 10px #aaa; box-shadow: 1px 4px 10px #aaa; cursor: pointer; }
         .links { position: absolute; top: 0; right: 10px; }
+        .delete { position: absolute; left: 790px; margin: 40px 0 0 0; }
     </style>
 </head>
 <body>
@@ -59,7 +60,7 @@
     $("#thumbnails").click(function(e) {
         var id = $(e.target).data("id");
         if (!id) return;
-        var html = [];
+        var html = ['<a class="delete" href="delete/' + id + '" title="delete upload">delete</a>'];
         for (var size in resolutions) {
             var wh = size.split('x');
             html.push("<h3>" + size + " - " + resolutions[size] + "</h3>");

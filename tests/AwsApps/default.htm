@@ -9,6 +9,7 @@
             text-align: center;
             font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
             font-weight: 300;
+            line-height: 150%;
         }
         a {
             text-decoration: none;
@@ -52,10 +53,18 @@
 
         <div id="content">
             <div class="app">
-                <a href="https://github.com/ServiceStack/ServiceStack.Aws/tree/master/tests" class="github-src"></a>
+                <a href="https://github.com/ServiceStack/ServiceStack.Aws/tree/master/tests/AwsApps/todo" class="github-src"></a>
                 <a href="/todo/">TODO App</a>
                 <p>
                     TODO App rewritten to use a DynamoDB Backend with PocoDynamo
+                </p>
+            </div>
+            <div class="app">
+                <a href="https://github.com/ServiceStack/ServiceStack.Aws/tree/master/tests/AwsApps/imgur" class="github-src"></a>
+                <a href="/imgur/">Imgur</a>
+                <p>
+                    Imgur rewritten to use the <a href="https://github.com/ServiceStack/ServiceStack/wiki/Virtual-file-system">Virtual File System</a> 
+                    to support either Local FileSystem or S3 bucket backends
                 </p>
             </div>
             <div class="app">
