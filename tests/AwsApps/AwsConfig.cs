@@ -7,7 +7,7 @@ using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.S3;
 using ServiceStack.Configuration;
 
-namespace AwsStacks
+namespace AwsApps
 {
     public static class AwsConfig
     {

@@ -29,7 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demos", "Demos", "{13DBB9CD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host.Console", "..\tests\Host.Console\Host.Console.csproj", "{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsStacks", "..\tests\AwsStacks\AwsStacks.csproj", "{91A8DAE9-1A3C-4B3B-BC6A-507C12741D5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsApps", "..\tests\AwsApps\AwsApps.csproj", "{995D08B7-4880-4B4C-AEBD-297C51E945BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,16 +53,16 @@ Global
 		{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{91A8DAE9-1A3C-4B3B-BC6A-507C12741D5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{91A8DAE9-1A3C-4B3B-BC6A-507C12741D5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{91A8DAE9-1A3C-4B3B-BC6A-507C12741D5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{91A8DAE9-1A3C-4B3B-BC6A-507C12741D5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{995D08B7-4880-4B4C-AEBD-297C51E945BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{995D08B7-4880-4B4C-AEBD-297C51E945BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{995D08B7-4880-4B4C-AEBD-297C51E945BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{995D08B7-4880-4B4C-AEBD-297C51E945BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD} = {13DBB9CD-5C5B-43D1-B1E9-C51DAFD68A47}
-		{91A8DAE9-1A3C-4B3B-BC6A-507C12741D5E} = {13DBB9CD-5C5B-43D1-B1E9-C51DAFD68A47}
+		{995D08B7-4880-4B4C-AEBD-297C51E945BA} = {13DBB9CD-5C5B-43D1-B1E9-C51DAFD68A47}
 	EndGlobalSection
 EndGlobal

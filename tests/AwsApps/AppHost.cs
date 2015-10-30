@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Amazon;
 using Amazon.S3;
 using Funq;
@@ -11,11 +12,11 @@ using ServiceStack.Text;
 using ServiceStack.VirtualPath;
 using Todos;
 
-namespace AwsStacks
+namespace AwsApps
 {
     public class AppHost : AppHostBase
     {
-        public AppHost() : base("AWS Examples", typeof(TodoService).Assembly) { }
+        public AppHost() : base("AWS Examples", typeof(AppHost).Assembly) { }
 
         public override void Configure(Container container)
         {
@@ -24,6 +25,9 @@ namespace AwsStacks
             var s3Client = new AmazonS3Client(AwsConfig.AwsAccessKey, AwsConfig.AwsSecretKey, RegionEndpoint.USEast1);
             container.Register<IWriteableVirtualPathProvider>(c =>
                 new S3VirtualPathProvider(s3Client, AwsConfig.S3BucketName, this));
+
+            //container.Register(c =>
+            //    (IWriteableVirtualPathProvider)GetVirtualPathProviders().First(x => x is FileSystemVirtualPathProvider));
 
             container.Register<IPocoDynamo>(c => new PocoDynamo(AwsConfig.CreateAmazonDynamoDb()));
             var db = container.Resolve<IPocoDynamo>();

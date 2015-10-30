@@ -3,7 +3,7 @@ using ServiceStack;
 using ServiceStack.Aws.S3;
 using ServiceStack.Testing;
 
-namespace AwsStacks
+namespace AwsApps
 {
     [TestFixture]
     public class AdminTasks

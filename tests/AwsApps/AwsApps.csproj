@@ -9,12 +9,12 @@
     <ProductVersion>
     </ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{91A8DAE9-1A3C-4B3B-BC6A-507C12741D5E}</ProjectGuid>
+    <ProjectGuid>{995D08B7-4880-4B4C-AEBD-297C51E945BA}</ProjectGuid>
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AwsStacks</RootNamespace>
-    <AssemblyName>AwsStacks</AssemblyName>
+    <RootNamespace>AwsApps</RootNamespace>
+    <AssemblyName>AwsApps</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
@@ -44,7 +44,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AWSSDK.Core, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\..\src\packages\AWSSDK.Core.3.1.2.1\lib\net45\AWSSDK.Core.dll</HintPath>
+      <HintPath>..\..\src\packages\AWSSDK.Core.3.1.3.3\lib\net45\AWSSDK.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="AWSSDK.DynamoDBv2, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
@@ -52,7 +52,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="AWSSDK.S3, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\..\src\packages\AWSSDK.S3.3.1.3.3\lib\net45\AWSSDK.S3.dll</HintPath>
+      <HintPath>..\..\src\packages\AWSSDK.S3.3.1.3.4\lib\net45\AWSSDK.S3.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -61,11 +61,14 @@
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\src\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="ServiceStack">
       <HintPath>..\..\lib\ServiceStack.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.Aws">
+      <HintPath>..\..\lib\ServiceStack.Aws.dll</HintPath>
     </Reference>
     <Reference Include="ServiceStack.Client">
       <HintPath>..\..\lib\ServiceStack.Client.dll</HintPath>
@@ -91,17 +94,25 @@
     <Reference Include="ServiceStack.Text">
       <HintPath>..\..\lib\ServiceStack.Text.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Web" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Razor">
       <HintPath>..\..\lib\System.Web.Razor.dll</HintPath>
     </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
@@ -113,18 +124,20 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="todo\css\todos.css" />
-    <EmbeddedResource Include="todo\img\destroy.png" />
-    <EmbeddedResource Include="todo\js\backbone-min.js" />
-    <EmbeddedResource Include="todo\js\jquery.min.js" />
-    <EmbeddedResource Include="todo\js\todos.js" />
-    <EmbeddedResource Include="todo\js\underscore-min.js" />
     <Content Include="default.htm" />
     <Content Include="Global.asax" />
+    <Content Include="imgur\default.htm" />
+    <Content Include="imgur\preset-urls.txt" />
     <Content Include="img\github-icon.png" />
     <Content Include="img\logo-large.png" />
     <Content Include="img\logo.png" />
+    <Content Include="todo\css\todos.css" />
     <Content Include="todo\default.htm" />
+    <Content Include="todo\img\destroy.png" />
+    <Content Include="todo\js\backbone-min.js" />
+    <Content Include="todo\js\jquery.min.js" />
+    <Content Include="todo\js\todos.js" />
+    <Content Include="todo\js\underscore-min.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -134,16 +147,13 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="imgur\ImageService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="todo\TodoService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ServiceStack.Aws\ServiceStack.Aws.csproj">
-      <Project>{ec090b85-e208-4b4e-ae19-bbfef51e4560}</Project>
-      <Name>ServiceStack.Aws</Name>
-    </ProjectReference>
+    <Folder Include="imgur\uploads\" />
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -157,9 +167,9 @@
         <WebProjectProperties>
           <UseIIS>True</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>59217</DevelopmentServerPort>
+          <DevelopmentServerPort>64484</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:58775/</IISUrl>
+          <IISUrl>http://localhost:64484/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

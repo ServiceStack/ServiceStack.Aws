@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AwsStacks
+namespace AwsApps
 {
     public class Global : System.Web.HttpApplication
     {
