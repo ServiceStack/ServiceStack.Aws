@@ -181,7 +181,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var dbRoles = db.FromQuery<UserAuthRole>(x => x.Id == 2)
                 .Filter(x => roles.Contains(x.Role))
-                .Query()
+                .Exec()
                 .ToList();
 
             Assert.That(dbRoles.Count, Is.EqualTo(1));
@@ -189,7 +189,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             var rolesList = roles.ToList();
             dbRoles = db.FromQuery<UserAuthRole>(x => x.Id == 2)
                 .Filter(x => rolesList.Contains(x.Role))
-                .Query()
+                .Exec()
                 .ToList();
 
             dbRoles.PrintDump();

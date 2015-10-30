@@ -141,7 +141,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             results = db.FromScan<Poco>()
                 .Filter(x => x.Title == null)
-                .Scan()
+                .Exec()
                 .ToList();
             Assert.That(results.Count, Is.EqualTo(1));
             Assert.That(results[0].Title, Is.Null);
@@ -174,7 +174,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             results = db.FromScan<Poco>()
                 .Filter(x => x.Title != null)
-                .Scan()
+                .Exec()
                 .ToList();
             Assert.That(results.Count, Is.EqualTo(1));
             Assert.That(results[0].Title, Is.EqualTo("Has Value"));

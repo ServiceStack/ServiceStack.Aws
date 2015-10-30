@@ -248,7 +248,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var oAuthProvider = db.FromQueryIndex<UserIdUserAuthDetailsIndex>(
                     q => q.UserId == userId && q.Provider == provider)
-                .Query()
+                .Exec()
                 .FirstOrDefault();
 
             return oAuthProvider;
@@ -263,7 +263,7 @@ namespace ServiceStack.Aws.DynamoDb
                 userNameOrEmail = userNameOrEmail.ToLower();
 
             var index = db.FromQueryIndex<UsernameUserAuthIndex>(q => q.UserName == userNameOrEmail)
-                .Query().FirstOrDefault();
+                .Exec().FirstOrDefault();
             if (index == null)
                 return null;
 
@@ -352,12 +352,12 @@ namespace ServiceStack.Aws.DynamoDb
 
             var userAuthDetails = db.FromQuery<TUserAuthDetails>(x => x.UserAuthId == userId)
                 .Select(x => x.Id)
-                .Query();
+                .Exec();
             db.DeleteItems<TUserAuthDetails>(userAuthDetails.Map(x => x.Id));
 
             var userAuthRoles = db.FromQuery<UserAuthRole>(x => x.UserAuthId == userId)
                 .Select(x => x.Id)
-                .Query();
+                .Exec();
             db.DeleteItems<UserAuthRole>(userAuthRoles.Map(x => x.Id));
         }
 
@@ -373,7 +373,7 @@ namespace ServiceStack.Aws.DynamoDb
             var authId = int.Parse(userAuthId);
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
                 .Filter(x => x.Role != null)
-                .Query()
+                .Exec()
                 .Map(x => x.Role);
         }
 
@@ -382,7 +382,7 @@ namespace ServiceStack.Aws.DynamoDb
             var authId = int.Parse(userAuthId);
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
                 .Filter(x => x.Permission != null)
-                .Query()
+                .Exec()
                 .Map(x => x.Permission);
         }
 
@@ -398,7 +398,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
                 .Filter(x => x.Role == role)
-                .Query()
+                .Exec()
                 .Any();
         }
 
@@ -414,7 +414,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
                 .Filter(x => x.Permission == permission)
-                .Query()
+                .Exec()
                 .Any();
         }
 
@@ -424,7 +424,7 @@ namespace ServiceStack.Aws.DynamoDb
             var now = DateTime.UtcNow;
 
             var userRoles = db.FromQuery<UserAuthRole>(q => q.UserAuthId == userAuth.Id)
-                .Query().ToList();
+                .Exec().ToList();
 
             if (!roles.IsEmpty())
             {
@@ -470,7 +470,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var authRoleIds = db.FromQuery<UserAuthRole>(x => x.UserAuthId == userAuth.Id)
                     .Filter(x => roles.Contains(x.Role))
                     .Select(x => new { x.UserAuthId, x.Id })
-                    .Query()
+                    .Exec()
                     .Map(x => new DynamoId(x.UserAuthId, x.Id));
 
                 db.DeleteItems<UserAuthRole>(authRoleIds);
@@ -481,7 +481,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var authRoleIds = db.FromQuery<UserAuthRole>(x => x.UserAuthId == userAuth.Id)
                     .Filter(x => permissions.Contains(x.Permission))
                     .Select(x => new { x.UserAuthId, x.Id })
-                    .Query()
+                    .Exec()
                     .Map(x => new DynamoId(x.UserAuthId, x.Id));
 
                 db.DeleteItems<UserAuthRole>(authRoleIds);

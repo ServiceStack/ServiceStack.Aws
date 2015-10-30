@@ -165,22 +165,22 @@ namespace ServiceStack.Aws.DynamoDb
                 .Where(Table.HasField));
         }
 
-        public IEnumerable<T> Scan()
+        public IEnumerable<T> Exec()
         {
             return Db.Scan(this);
         }
 
-        public List<T> Scan(int limit)
+        public List<T> Exec(int limit)
         {
             return Db.Scan(this, limit);
         }
 
-        public IEnumerable<Into> ScanInto<Into>()
+        public IEnumerable<Into> ExecInto<Into>()
         {
             return Db.Scan<Into>(this.SelectInto<Into>());
         }
 
-        public List<Into> Scan<Into>(int limit)
+        public List<Into> Exec<Into>(int limit)
         {
             return Db.Scan<Into>(this.SelectInto<Into>(), limit:limit);
         }
