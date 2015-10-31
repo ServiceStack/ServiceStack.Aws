@@ -4601,6 +4601,16 @@
             The AppHost.Container. Note: it is not thread safe to register dependencies after AppStart.
             </summary>
         </member>
+        <member name="P:ServiceStack.ServiceStackHost.VirtualPathProvider">
+            <summary>
+            Cascading number of file sources, inc. Embedded Resources, File System, In Memory, S3
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.VirtualFileSystem">
+            <summary>
+            Read/Write Virtual FileSystem. Defaults to FileSystemVirtualPathProvider
+            </summary>
+        </member>
         <member name="M:ServiceStack.ServiceStackHost.OnPreExecuteServiceFilter(ServiceStack.IService,System.Object,ServiceStack.Web.IRequest,ServiceStack.Web.IResponse)">
             <summary>
             Executed immediately before a Service is executed. Use return to change the request DTO used, must be of the same type.
@@ -5083,6 +5093,16 @@
             
             Usage of HttpListener allows you to host webservices on the same port (:80) as IIS 
             however it requires admin user privillages.
+            </summary>
+        </member>
+        <member name="P:ServiceStack.HostContext.VirtualPathProvider">
+            <summary>
+            Cascading number of file sources, inc. Embedded Resources, File System, In Memory, S3
+            </summary>
+        </member>
+        <member name="P:ServiceStack.HostContext.VirtualFileSystem">
+            <summary>
+            Read/Write Virtual FileSystem. Defaults to FileSystemVirtualPathProvider
             </summary>
         </member>
         <member name="M:ServiceStack.HostContext.CompleteRequest(ServiceStack.Web.IRequest)">
