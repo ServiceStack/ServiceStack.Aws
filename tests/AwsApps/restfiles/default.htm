@@ -59,7 +59,8 @@
     </div>
     <div id="fileadmin">
         <div class="upload ib">
-            <input type="file" name="fileupload" id="fileupload"/><a class="btn"><span>upload here</span></a>
+            <input type="file" name="fileupload" id="fileupload"/>
+            <a class="btn"><span>upload here</span></a>
         </div>
     </div>
     <div id="fileview"></div>
@@ -138,7 +139,7 @@
             }
             try {
                 $.ajaxFileUpload({
-                    url: href,
+                    url: href + "?format=json",
                     secureuri: false,
                     fileElementId: 'fileupload',
                     success: refresh

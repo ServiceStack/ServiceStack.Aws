@@ -96,7 +96,7 @@ namespace RestFiles
             return response;
         }
 
-        public void Post(Files request)
+        public object Post(Files request)
         {
             var targetDir = GetPath(request);
 
@@ -109,6 +109,8 @@ namespace RestFiles
                 var newFilePath = targetDir.CombineWith(uploadedFile.FileName);
                 Files.WriteFile(newFilePath, uploadedFile.InputStream);
             }
+
+            return new FilesResponse();            
         }
 
         public void Put(Files request)

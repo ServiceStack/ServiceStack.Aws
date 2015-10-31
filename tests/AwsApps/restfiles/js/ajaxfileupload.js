@@ -72,42 +72,36 @@ jQuery.extend({
 			var io = document.getElementById(frameId);
             try 
 			{				
-				if(io.contentWindow)
-				{
-					 xml.responseText = io.contentWindow.document.body?io.contentWindow.document.body.innerHTML:null;
+				if (io.contentWindow) {
+				    xml.responseText = io.contentWindow.document.body ? io.contentWindow.document.body.innerText : null;
                 	 xml.responseXML = io.contentWindow.document.XMLDocument?io.contentWindow.document.XMLDocument:io.contentWindow.document;
-					 
-				}else if(io.contentDocument)
-				{
-					 xml.responseText = io.contentDocument.document.body?io.contentDocument.document.body.innerHTML:null;
+				} else if(io.contentDocument) {
+				    xml.responseText = io.contentDocument.document.body ? io.contentDocument.document.body.innerText : null;
                 	xml.responseXML = io.contentDocument.document.XMLDocument?io.contentDocument.document.XMLDocument:io.contentDocument.document;
-				}						
-            }catch(e)
-			{
+				}			
+            } catch(e) {
 				jQuery.handleError(s, xml, null, e);
 			}
-            if ( xml || isTimeout == "timeout") 
-			{				
+            if (xml || isTimeout == "timeout") {				
                 requestDone = true;
                 var status;
                 try {
                     status = isTimeout != "timeout" ? "success" : "error";
                     // Make sure that the request was successful or notmodified
-                    if ( status != "error" )
-					{
+                    if (status != "error") {
                         // process the data (runs the xml through httpData regardless of callback)
-                        var data = jQuery.uploadHttpData( xml, s.dataType );    
+                        var data = jQuery.uploadHttpData(xml, s.dataType);
                         // If a local callback was specified, fire it and pass it the data
-                        if ( s.success )
-                            s.success( data, status );
-    
+                        if (s.success)
+                            s.success(data, status);
+
                         // Fire the global callback
-                        if( s.global )
-                            jQuery.event.trigger( "ajaxSuccess", [xml, s] );
-                    } else
+                        if (s.global)
+                            jQuery.event.trigger("ajaxSuccess", [xml, s]);
+                    } else {
                         jQuery.handleError(s, xml, status);
-                } catch(e) 
-				{
+                    }
+                } catch(e) {
                     status = "error";
                     jQuery.handleError(s, xml, status, e);
                 }
@@ -117,34 +111,28 @@ jQuery.extend({
                     jQuery.event.trigger( "ajaxComplete", [xml, s] );
 
                 // Handle the global AJAX counter
-                if ( s.global && ! --jQuery.active )
+                if (s.global && ! --jQuery.active)
                     jQuery.event.trigger( "ajaxStop" );
 
                 // Process result
-                if ( s.complete )
+                if (s.complete)
                     s.complete(xml, status);
 
-                jQuery(io).unbind()
+			    jQuery(io).unbind();
 
-                setTimeout(function()
-									{	try 
-										{
-											$(io).remove();
-											$(form).remove();	
-											
-										} catch(e) 
-										{
-											jQuery.handleError(s, xml, null, e);
-										}									
-
-									}, 100)
-
-                xml = null
-
-            }
+			    setTimeout(function() {
+			        try {
+			            $(io).remove();
+			            $(form).remove();
+			        } catch (e) {
+			            jQuery.handleError(s, xml, null, e);
+			        }
+			    }, 100);
+			    xml = null;
+			}
         }
         // Timeout checker
-        if ( s.timeout > 0 ) 
+        if (s.timeout > 0) 
 		{
             setTimeout(function(){
                 // Check to see if the request is still happening
