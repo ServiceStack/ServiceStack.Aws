@@ -72,6 +72,11 @@ namespace ServiceStack.Aws.S3
             return new S3VirtualDirectory(this, dirPath);
         }
 
+        public override bool DirectoryExists(string virtualPath)
+        {
+            return GetDirectory(virtualPath).Files.Any();
+        }
+
         public void WriteFile(string filePath, string contents)
         {
             AmazonS3.PutObject(new PutObjectRequest
