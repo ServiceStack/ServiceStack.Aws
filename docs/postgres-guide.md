@@ -69,7 +69,7 @@ public class AppHost : AppSelfHostBase
 
 ```
 
-Using our connection from a ServiceStack Service, we can use the `Db` property to access our `Customer` table.
+Using our connection from a ServiceStack Service, we can use the `Db` property to access our `Customer` table. Eg, Below is an example of a CRUD service using OrmLite.
 
 ``` csharp
 public class CustomerService : Service
@@ -109,3 +109,5 @@ public class CustomerService : Service
     }
 }
 ```
+
+See the [OrmLite GitHub](https://github.com/ServiceStack/ServiceStack.OrmLite#api-examples) page for more info on working with OrmLite API.
