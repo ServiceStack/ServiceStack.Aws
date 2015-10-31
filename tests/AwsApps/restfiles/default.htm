@@ -8,6 +8,9 @@
     <script type="text/javascript" src="js/ajaxfileupload.js"></script>
 </head>
 <body>
+    <div id="header">
+        <a id="github" title="View source on GitHub" href="https://github.com/ServiceStackApps/RestFiles"><img src="img/btn-github.png" alt="GitHub Project" /></a>
+    </div>
     <div id="title">
         <h1>
             <a href="/"><img src="/img/logo.png" /></a>
@@ -40,9 +43,9 @@
             <h4>
                 <a href="/metadata">The REST /files web service API:</a></h4>
             <dl>
-                <dt><b>GET</b> <a href="#!files/js">/path/to/folder</a></dt>
+                <dt><b>GET</b> <a href="./files/js">/path/to/folder</a></dt>
                 <dd>Directory listing at server</dd>
-                <dt><b>GET</b> <a href="#!files/FilesService.cs">/path/to/file.txt</a></dt>
+                <dt><b>GET</b> <a href="./files/FilesService.cs">/path/to/file.txt</a></dt>
                 <dd>Info and contents of text file at path</dd>
                 <dt><b>POST</b> /path/to/newfolder (no-body)</dt>
                 <dd>Upload file at folder path</dd>
