@@ -6,6 +6,7 @@ using System.Linq;
 using ServiceStack;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using ServiceStack.IO;
 using ServiceStack.Text;
 using ServiceStack.VirtualPath;
 
@@ -44,9 +45,9 @@ namespace Imgur
         readonly string ThumbnailsDir = "imgur/uploads/thumbnails";
         readonly List<string> ImageSizes = new[] { "320x480", "640x960", "640x1136", "768x1024", "1536x2048" }.ToList();
 
-        public IWriteableVirtualPathProvider Files
+        public IVirtualFileSystem Files
         {
-            get { return HostContext.WriteableVirtualPathProvider; }
+            get { return HostContext.VirtualFileSystem; }
         }
 
         public object Get(Images request)
