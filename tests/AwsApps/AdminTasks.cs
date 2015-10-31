@@ -1,7 +1,9 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 using ServiceStack;
 using ServiceStack.Aws.S3;
 using ServiceStack.Testing;
+using ServiceStack.VirtualPath;
 
 namespace AwsApps
 {
@@ -35,6 +37,18 @@ namespace AwsApps
 
             s3.AmazonS3.PutBucket(AwsConfig.S3BucketName);
         }
-        
+
+        [Test]
+        public void Import_RestFiles_into_S3()
+        {
+            var fs = new FileSystemVirtualPathProvider(appHost, "~/restfiles".MapHostAbsolutePath());
+            var skipDirs = new[] { "restfiles/files" };
+
+            foreach (var file in fs.GetAllFiles())
+            {
+                if (skipDirs.Any(x => file.VirtualPath.StartsWith(x))) continue;
+                s3.WriteFile(file, "restfiles/files".CombineWith(file.VirtualPath));
+            }
+        }
     }
 }
