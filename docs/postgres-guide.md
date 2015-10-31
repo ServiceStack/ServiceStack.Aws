@@ -2,7 +2,7 @@
 ## PostgreSQL
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-postgres-powered-by-aws.png)
-ServiceStack.OrmLite library has support for use with PostgreSQL database via the `ServiceStack.OrmLite.PostgreSQL` NuGet package. This can be used in conjunction with Amazon's RDS service using PostgreSQL.
+ServiceStack.OrmLite library has support for use with a [PostgreSQL](http://www.postgresql.org/) database via the [`ServiceStack.OrmLite.PostgreSQL`](https://www.nuget.org/packages/ServiceStack.OrmLite.PostgreSQL/) NuGet package. This can be used in conjunction with Amazon's RDS service using PostgreSQL.
 
 To get started, first you will need to create your PostgreSQL database via the AWS RDS service.
 
