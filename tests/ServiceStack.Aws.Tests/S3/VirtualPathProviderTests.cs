@@ -59,6 +59,8 @@ namespace ServiceStack.Aws.Tests.S3
             var file = pathProvider.GetFile(filePath);
 
             Assert.That(file.ReadAllText(), Is.EqualTo("file"));
+            Assert.That(file.ReadAllText(), Is.EqualTo("file")); //can read twice
+
             Assert.That(file.VirtualPath, Is.EqualTo(filePath));
             Assert.That(file.Name, Is.EqualTo("file.txt"));
             Assert.That(file.Directory.Name, Is.EqualTo("dir"));

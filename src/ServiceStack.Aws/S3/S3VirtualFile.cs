@@ -75,7 +75,7 @@ namespace ServiceStack.Aws.S3
 
         public override Stream OpenRead()
         {
-            if (Stream == null)
+            if (Stream == null || !Stream.CanRead)
             {
                 var response = Client.GetObject(new GetObjectRequest
                 {
