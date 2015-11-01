@@ -1,13 +1,13 @@
 # Getting Started with AWS RDS and OrmLite
-## PostgreSQL
+## SQL Server
 
-![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-postgres-powered-by-aws.png)
+![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-sqlserver-powered-by-aws.png)
 
-ServiceStack.OrmLite library has support for use with a [PostgreSQL](http://www.postgresql.org/) database via the [`ServiceStack.OrmLite.PostgreSQL`](https://www.nuget.org/packages/ServiceStack.OrmLite.PostgreSQL/) NuGet package. This can be used in conjunction with Amazon's RDS service using PostgreSQL.
+ServiceStack.OrmLite library has support for use with a [Microsoft SQL Server](http://www.microsoft.com/en-au/server-cloud/products/sql-server/) database via the [`ServiceStack.OrmLite.SqlServer`](https://www.nuget.org/packages/ServiceStack.OrmLite.SqlServer/) NuGet package. This can be used in conjunction with Amazon's RDS service using SQL Server.
 
-To get started, first you will need to create your PostgreSQL database via the AWS RDS service.
+To get started, first you will need to create your SQL Server database via the AWS RDS service.
 
-## Creating a PostgreSQL RDS Instance
+## Creating a SQL Server RDS Instance
 
 1. Login to the [AWS Web console](https://console.aws.amazon.com/console/home).
 2. Select RDS from the **Services** from the top menu.
@@ -15,49 +15,51 @@ To get started, first you will need to create your PostgreSQL database via the A
 3. Select **Instances** from the **RDS Dashboard** and click **Launch DB Instance**.
 ![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/launch-db-dashboard.png)
 
-The above steps will start the RDS Wizard to launch a new DB instance. To setup a new PostgreSQL instance, follow the wizard selecting the appropriate options for your application. As an example, we can create a `Customers` database for a non-production environment.
+The above steps will start the RDS Wizard to launch a new DB instance. To setup a new SQL Server instance, follow the wizard selecting the appropriate options for your application. As an example, we can create a `Customers` database for a non-production environment.
 
-- **Select Engine** - Select PostgreSQL
-- **Production?** - Select `No` for multi-instance/production setup
+- **Select Engine**
+    - Select **SQL Server**
+    - Select appropriate SQL Server version, for this example, **SQL Server SE** 
 - **Specify DB Details** 
-    - Create a `db.t2.micro` instance with default settings
-    - Specify **Multi-AZ Deployment** as `No`
+    - Select **License Model** `license-included` 
+    - Create a `db.m1.small` instance with default settings by changing the **DB Instance Class**.
 
-![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/postgres-default-details.png)
+![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/mssql-default-details.png)
 
-- Specify **DB Instance Identifier**, eg `servicestack-example-customers`.
-- Specify **Master Username**, eg `postgres`.
+- Specify **DB Instance Identifier**, eg `customers`.
+- Specify **Master Username**, eg `admin`.
 - Create and confirm master user password.
 
-- **Configure Advanced Settings** - Leave the suggested settings and specify a database name, eg `customers`. This will be used in your connection string.
+- **Configure Advanced Settings** - Leave the suggested settings which will create your RDS instance with network rule that restricts public access via your current public IP address.
 
 > Note: Problems can occure if your default VPC is not setup to DNS Resolution and/or DNS Hostname. Navigate to **Services**, **VPC** and enable these two options on your default VPC.
 
 Click **Launch DB Instance** at the *bottom right* to launch your new instance. If all is successful, you should see the following.
 
-![](https://github.com/ServiceStack/Assets/raw/master/img/aws/postgres-success.png)
+![](https://github.com/ServiceStack/Assets/raw/master/img/aws/create-db-success.png)
 
 ## Connecting with ServiceStack.OrmLite
-Now that you're PostgreSQL instance is running, connecting with OrmLite will require the `ServiceStack.OrmLite.PostgreSQL` NuGet package as well as connection string to your new PostgreSQL instance.
+Now that you're SQL Server instance is running, connecting with OrmLite will require the `ServiceStack.OrmLite.SqlServer` NuGet package as well as connection string to your new SQL Server instance.
+> If you are connecting to a new instance without a database, you'll need to create a new Database via SQL Management Studio first. For this example the `customers` database was created.
 
 ``` xml
 <appSettings>
-    <add key="ConnectionString" value="User ID={User};Password={Password};Host={Host};Port={Port};" />   
+    <add key="ConnectionString" value="Data Source={Endpoint},{Port};Initial Catalog=customers;User ID={User};Password={Password}" />   
 </appSettings>
 ```
-![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/nuget-install-postgres.png)
+![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/nuget-install-mssql.png)
 
-Once this dependency is installed, the `OrmLiteConnectionFactory` can be used with the `PostgreSqlDialect.Provider` can be configured in the AppHost Configure method. For example.
+Once this dependency is installed, the `OrmLiteConnectionFactory` can be used with the `SqlServerDialect.Provider` can be configured in the AppHost Configure method. For example.
 
 ``` csharp
 public class AppHost : AppSelfHostBase
 {
-    public AppHost() : base("AWS PostgreSQL Customers", typeof(AppHost).Assembly) {}
+    public AppHost() : base("AWS MS SQL Customers", typeof(AppHost).Assembly) {}
 
     public override void Configure(Container container)
     {
         container.Register<IDbConnectionFactory>(c => new OrmLiteConnectionFactory(
-            AppSettings.GetString("ConnectionString"), PostgreSqlDialect.Provider));
+            AppSettings.GetString("ConnectionString"), SqlServerDialect.Provider));
 
         using (var db = container.Resolve<IDbConnectionFactory>().Open())
         {
