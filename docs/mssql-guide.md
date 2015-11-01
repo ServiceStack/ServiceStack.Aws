@@ -1,4 +1,4 @@
-# Working with AWS RDS and OrmLite
+# Getting Started with AWS RDS and OrmLite
 ## SQL Server
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-sqlserver-powered-by-aws.png)

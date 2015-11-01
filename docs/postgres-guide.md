@@ -1,4 +1,4 @@
-# Working with AWS RDS and OrmLite
+# Getting Started with AWS RDS and OrmLite
 ## PostgreSQL
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-postgres-powered-by-aws.png)
