@@ -10,7 +10,7 @@ using ServiceStack.VirtualPath;
 
 namespace ServiceStack.Aws.S3
 {
-    public partial class S3VirtualPathProvider : AbstractVirtualPathProviderBase, IWriteableVirtualPathProvider
+    public partial class S3VirtualPathProvider : AbstractVirtualPathProviderBase, IVirtualFiles
     {
         public const int MultiObjectLimit = 1000;
 
