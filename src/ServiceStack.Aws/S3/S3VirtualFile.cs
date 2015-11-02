@@ -77,15 +77,20 @@ namespace ServiceStack.Aws.S3
         {
             if (Stream == null || !Stream.CanRead)
             {
-                var response = Client.GetObject(new GetObjectRequest
-                {
-                    Key = FilePath,
-                    BucketName = BucketName,
-                });
-                Init(response);
+                Refresh();
             }
 
             return Stream;
+        }
+
+        public override void Refresh()
+        {
+            var response = Client.GetObject(new GetObjectRequest
+            {
+                Key = FilePath,
+                BucketName = BucketName,
+            });
+            Init(response);
         }
     }
 }
