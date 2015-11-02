@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
+using ServiceStack.Aws.DynamoDb;
 using ServiceStack.IO;
 using ServiceStack.VirtualPath;
 
@@ -61,6 +63,8 @@ namespace ServiceStack.Aws.S3
 
         public long ContentLength { get; set; }
 
+        public string Etag { get; set; }
+
         public Stream Stream { get; set; }
 
         public S3VirtualFile Init(GetObjectResponse response)
@@ -69,6 +73,7 @@ namespace ServiceStack.Aws.S3
             ContentType = response.Headers.ContentType;
             FileLastModified = response.LastModified;
             ContentLength = response.Headers.ContentLength;
+            Etag = response.ETag;
             Stream = response.ResponseStream;
             return this;
         }
@@ -77,7 +82,12 @@ namespace ServiceStack.Aws.S3
         {
             if (Stream == null || !Stream.CanRead)
             {
-                Refresh();
+                var response = Client.GetObject(new GetObjectRequest
+                {
+                    Key = FilePath,
+                    BucketName = BucketName,
+                });
+                Init(response);
             }
 
             return Stream;
@@ -85,12 +95,21 @@ namespace ServiceStack.Aws.S3
 
         public override void Refresh()
         {
-            var response = Client.GetObject(new GetObjectRequest
+            try
             {
-                Key = FilePath,
-                BucketName = BucketName,
-            });
-            Init(response);
+                var response = Client.GetObject(new GetObjectRequest
+                {
+                    Key = FilePath,
+                    BucketName = BucketName,
+                    EtagToNotMatch = Etag,
+                });
+                Init(response);
+            }
+            catch (AmazonS3Exception ex)
+            {
+                if (ex.StatusCode != HttpStatusCode.NotModified)
+                    throw ex;
+            }
         }
     }
 }

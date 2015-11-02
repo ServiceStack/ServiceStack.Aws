@@ -155,6 +155,7 @@ namespace ServiceStack.Aws.S3
                     FilePath = filePath,
                     ContentLength = file.Size,
                     FileLastModified = file.LastModified,
+                    Etag = file.ETag,
                 };
             }
         }

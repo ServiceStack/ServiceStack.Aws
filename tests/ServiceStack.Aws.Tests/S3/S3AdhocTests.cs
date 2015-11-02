@@ -66,6 +66,8 @@ namespace ServiceStack.Aws.Tests.S3
         [Test]
         public void Get_File()
         {
+            AddTextFile("testfile.txt", "testfile");
+
             var response = client.GetObject(new GetObjectRequest
             {
                 BucketName = BucketName,
@@ -74,6 +76,17 @@ namespace ServiceStack.Aws.Tests.S3
 
             response.Key.Print();
             response.ResponseStream.ReadFully().FromUtf8Bytes().Print();
+
+            AddTextFile("testfile.txt", "testfile");
+
+            response = client.GetObject(new GetObjectRequest
+            {
+                BucketName = BucketName,
+                Key = "testfile.txt",
+                ModifiedSinceDate = response.LastModified,
+            });
+
+            response.Key.Print();
         }
     }
 }
