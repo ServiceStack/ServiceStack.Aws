@@ -15,7 +15,7 @@ namespace ServiceStack.Aws.DynamoDb
         where TUserAuth : class, IUserAuth
         where TUserAuthDetails : class, IUserAuthDetails
     {
-        private readonly IPocoDynamo db;
+        public IPocoDynamo Db { get; private set; }
 
         public bool LowerCaseUsernames { get; set; }
 
@@ -43,7 +43,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public DynamoDbAuthRepository(IPocoDynamo db)
         {
-            this.db = db;
+            this.Db = db;
         }
 
         private void ValidateNewUser(IUserAuth newUser, string password)
@@ -102,9 +102,9 @@ namespace ServiceStack.Aws.DynamoDb
             newUser.CreatedDate = DateTime.UtcNow;
             newUser.ModifiedDate = newUser.CreatedDate;
 
-            db.PutItem((TUserAuth)newUser);
+            Db.PutItem((TUserAuth)newUser);
 
-            newUser = Sanitize(db.GetItem<TUserAuth>(newUser.Id));
+            newUser = Sanitize(Db.GetItem<TUserAuth>(newUser.Id));
             return newUser;
         }
 
@@ -139,7 +139,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public virtual IUserAuth GetUserAuth(string userAuthId)
         {
-            return Sanitize(db.GetItem<TUserAuth>(int.Parse(userAuthId)));
+            return Sanitize(Db.GetItem<TUserAuth>(int.Parse(userAuthId)));
         }
 
         public void SaveUserAuth(IAuthSession authSession)
@@ -148,7 +148,7 @@ namespace ServiceStack.Aws.DynamoDb
                 throw new ArgumentNullException("authSession");
 
             var userAuth = !authSession.UserAuthId.IsNullOrEmpty()
-                ? db.GetItem<TUserAuth>(int.Parse(authSession.UserAuthId))
+                ? Db.GetItem<TUserAuth>(int.Parse(authSession.UserAuthId))
                 : authSession.ConvertTo<TUserAuth>();
 
             if (userAuth.Id == default(int) && !authSession.UserAuthId.IsNullOrEmpty())
@@ -158,7 +158,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (userAuth.CreatedDate == default(DateTime))
                 userAuth.CreatedDate = userAuth.ModifiedDate;
 
-            db.PutItem(userAuth);
+            Db.PutItem(userAuth);
         }
 
         public void SaveUserAuth(IUserAuth userAuth)
@@ -170,13 +170,13 @@ namespace ServiceStack.Aws.DynamoDb
             if (userAuth.CreatedDate == default(DateTime))
                 userAuth.CreatedDate = userAuth.ModifiedDate;
 
-            db.PutItem((TUserAuth)userAuth);
+            Db.PutItem((TUserAuth)userAuth);
         }
 
         public List<IUserAuthDetails> GetUserAuthDetails(string userAuthId)
         {
             var id = int.Parse(userAuthId);
-            return db.Query(db.FromQuery<TUserAuthDetails>(q => q.UserAuthId == id))
+            return Db.Query(Db.FromQuery<TUserAuthDetails>(q => q.UserAuthId == id))
                 .Cast<IUserAuthDetails>().ToList();
         }
 
@@ -188,7 +188,7 @@ namespace ServiceStack.Aws.DynamoDb
             TUserAuthDetails authDetails = null;
             var userAuthDetailsIndex = GetUserAuthByProviderUserId(tokens.Provider, tokens.UserId);
             if (userAuthDetailsIndex != null)
-                authDetails = db.GetItem<TUserAuthDetails>(userAuthDetailsIndex.Id);
+                authDetails = Db.GetItem<TUserAuthDetails>(userAuthDetailsIndex.Id);
 
             if (authDetails == null)
             {
@@ -204,7 +204,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (userAuth.CreatedDate == default(DateTime))
                 userAuth.CreatedDate = userAuth.ModifiedDate;
 
-            db.PutItem(userAuth);
+            Db.PutItem(userAuth);
 
             authDetails.UserAuthId = userAuth.Id;
 
@@ -212,7 +212,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (authDetails.CreatedDate == default(DateTime))
                 authDetails.CreatedDate = userAuth.ModifiedDate;
 
-            db.PutItem(authDetails);
+            Db.PutItem(authDetails);
 
             return authDetails;
         }
@@ -238,7 +238,7 @@ namespace ServiceStack.Aws.DynamoDb
             var authProviderIndex = GetUserAuthByProviderUserId(tokens.Provider, tokens.UserId);
             if (authProviderIndex != null)
             {
-                var userAuth = Sanitize(db.GetItem<TUserAuth>(authProviderIndex.UserAuthId));
+                var userAuth = Sanitize(Db.GetItem<TUserAuth>(authProviderIndex.UserAuthId));
                 return userAuth;
             }
             return null;
@@ -246,7 +246,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         private UserIdUserAuthDetailsIndex GetUserAuthByProviderUserId(string provider, string userId)
         {
-            var oAuthProvider = db.FromQueryIndex<UserIdUserAuthDetailsIndex>(
+            var oAuthProvider = Db.FromQueryIndex<UserIdUserAuthDetailsIndex>(
                     q => q.UserId == userId && q.Provider == provider)
                 .Exec()
                 .FirstOrDefault();
@@ -262,14 +262,14 @@ namespace ServiceStack.Aws.DynamoDb
             if (LowerCaseUsernames)
                 userNameOrEmail = userNameOrEmail.ToLower();
 
-            var index = db.FromQueryIndex<UsernameUserAuthIndex>(q => q.UserName == userNameOrEmail)
+            var index = Db.FromQueryIndex<UsernameUserAuthIndex>(q => q.UserName == userNameOrEmail)
                 .Exec().FirstOrDefault();
             if (index == null)
                 return null;
 
             var userAuthId = index.Id;
 
-            return Sanitize(db.GetItem<TUserAuth>(userAuthId));
+            return Sanitize(Db.GetItem<TUserAuth>(userAuthId));
         }
 
         public bool TryAuthenticate(string userName, string password, out IUserAuth userAuth)
@@ -339,7 +339,7 @@ namespace ServiceStack.Aws.DynamoDb
             newUser.CreatedDate = existingUser.CreatedDate;
             newUser.ModifiedDate = DateTime.UtcNow;
 
-            db.PutItem((TUserAuth)newUser);
+            Db.PutItem((TUserAuth)newUser);
 
             return newUser;
         }
@@ -348,30 +348,32 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var userId = int.Parse(userAuthId);
 
-            db.DeleteItem<TUserAuth>(userAuthId);
+            Db.DeleteItem<TUserAuth>(userAuthId);
 
-            var userAuthDetails = db.FromQuery<TUserAuthDetails>(x => x.UserAuthId == userId)
+            var userAuthDetails = Db.FromQuery<TUserAuthDetails>(x => x.UserAuthId == userId)
                 .Select(x => x.Id)
                 .Exec();
-            db.DeleteItems<TUserAuthDetails>(userAuthDetails.Map(x => x.Id));
+            Db.DeleteItems<TUserAuthDetails>(userAuthDetails.Map(x => x.Id));
 
-            var userAuthRoles = db.FromQuery<UserAuthRole>(x => x.UserAuthId == userId)
+            var userAuthRoles = Db.FromQuery<UserAuthRole>(x => x.UserAuthId == userId)
                 .Select(x => x.Id)
                 .Exec();
-            db.DeleteItems<UserAuthRole>(userAuthRoles.Map(x => x.Id));
+            Db.DeleteItems<UserAuthRole>(userAuthRoles.Map(x => x.Id));
         }
 
         public void Clear()
         {
-            db.DeleteTable<TUserAuth>();
-            db.DeleteTable<TUserAuthDetails>();
-            db.DeleteTable<UserAuthRole>();
+            Db.DeleteTable<TUserAuth>();
+            Db.DeleteTable<TUserAuthDetails>();
+            Db.DeleteTable<UserAuthRole>();
+
+            Db.InitSchema(); //re-create missing tables
         }
 
         public virtual ICollection<string> GetRoles(string userAuthId)
         {
             var authId = int.Parse(userAuthId);
-            return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
+            return Db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
                 .Filter(x => x.Role != null)
                 .Exec()
                 .Map(x => x.Role);
@@ -380,7 +382,7 @@ namespace ServiceStack.Aws.DynamoDb
         public virtual ICollection<string> GetPermissions(string userAuthId)
         {
             var authId = int.Parse(userAuthId);
-            return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
+            return Db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
                 .Filter(x => x.Permission != null)
                 .Exec()
                 .Map(x => x.Permission);
@@ -396,7 +398,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var authId = int.Parse(userAuthId);
 
-            return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
+            return Db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
                 .Filter(x => x.Role == role)
                 .Exec()
                 .Any();
@@ -412,7 +414,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var authId = int.Parse(userAuthId);
 
-            return db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
+            return Db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
                 .Filter(x => x.Permission == permission)
                 .Exec()
                 .Any();
@@ -423,7 +425,7 @@ namespace ServiceStack.Aws.DynamoDb
             var userAuth = GetUserAuth(userAuthId);
             var now = DateTime.UtcNow;
 
-            var userRoles = db.FromQuery<UserAuthRole>(q => q.UserAuthId == userAuth.Id)
+            var userRoles = Db.FromQuery<UserAuthRole>(q => q.UserAuthId == userAuth.Id)
                 .Exec().ToList();
 
             if (!roles.IsEmpty())
@@ -433,7 +435,7 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     if (!roleSet.Contains(role))
                     {
-                        db.PutRelatedItem(userAuth.Id, new UserAuthRole
+                        Db.PutRelatedItem(userAuth.Id, new UserAuthRole
                         {
                             Role = role,
                             CreatedDate = now,
@@ -450,7 +452,7 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     if (!permissionSet.Contains(permission))
                     {
-                        db.PutRelatedItem(userAuth.Id, new UserAuthRole
+                        Db.PutRelatedItem(userAuth.Id, new UserAuthRole
                         {
                             Permission = permission,
                             CreatedDate = now,
@@ -467,24 +469,24 @@ namespace ServiceStack.Aws.DynamoDb
 
             if (!roles.IsEmpty())
             {
-                var authRoleIds = db.FromQuery<UserAuthRole>(x => x.UserAuthId == userAuth.Id)
+                var authRoleIds = Db.FromQuery<UserAuthRole>(x => x.UserAuthId == userAuth.Id)
                     .Filter(x => roles.Contains(x.Role))
                     .Select(x => new { x.UserAuthId, x.Id })
                     .Exec()
                     .Map(x => new DynamoId(x.UserAuthId, x.Id));
 
-                db.DeleteItems<UserAuthRole>(authRoleIds);
+                Db.DeleteItems<UserAuthRole>(authRoleIds);
             }
 
             if (!permissions.IsEmpty())
             {
-                var authRoleIds = db.FromQuery<UserAuthRole>(x => x.UserAuthId == userAuth.Id)
+                var authRoleIds = Db.FromQuery<UserAuthRole>(x => x.UserAuthId == userAuth.Id)
                     .Filter(x => permissions.Contains(x.Permission))
                     .Select(x => new { x.UserAuthId, x.Id })
                     .Exec()
                     .Map(x => new DynamoId(x.UserAuthId, x.Id));
 
-                db.DeleteItems<UserAuthRole>(authRoleIds);
+                Db.DeleteItems<UserAuthRole>(authRoleIds);
             }
         }
 
@@ -500,20 +502,20 @@ namespace ServiceStack.Aws.DynamoDb
             typeof(TUserAuth).AddAttributes(
                 new ReferencesAttribute(typeof(UsernameUserAuthIndex)));
 
-            db.RegisterTable<TUserAuth>();
+            Db.RegisterTable<TUserAuth>();
 
             typeof(TUserAuthDetails).AddAttributes(
                 new ReferencesAttribute(typeof(UserIdUserAuthDetailsIndex)),
                 new CompositeKeyAttribute("UserAuthId", "Id"));
 
-            db.RegisterTable<TUserAuthDetails>();
+            Db.RegisterTable<TUserAuthDetails>();
 
             typeof(UserAuthRole).AddAttributes(
                 new CompositeKeyAttribute("UserAuthId", "Id"));
 
-            db.RegisterTable<UserAuthRole>();
+            Db.RegisterTable<UserAuthRole>();
 
-            db.InitSchema();
+            Db.InitSchema();
         }
     }
 

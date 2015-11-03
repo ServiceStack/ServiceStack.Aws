@@ -113,6 +113,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         public PocoDynamo(IAmazonDynamoDB dynamoDb)
         {
+            if (dynamoDb == null)
+                throw new ArgumentNullException("dynamoDb");
+
             this.DynamoDb = dynamoDb;
             this.Sequences = new DynamoDbSequenceSource(this);
             this.Converters = DynamoMetadata.Converters;
