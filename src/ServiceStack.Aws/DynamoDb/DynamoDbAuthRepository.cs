@@ -363,11 +363,13 @@ namespace ServiceStack.Aws.DynamoDb
 
         public void Clear()
         {
-            Db.DeleteTable<TUserAuth>();
-            Db.DeleteTable<TUserAuthDetails>();
-            Db.DeleteTable<UserAuthRole>();
+            Db.DeleteItems<TUserAuth>(Db.FromScan<TUserAuth>().ExecColumn(x => x.Id));
 
-            Db.InitSchema(); //re-create missing tables
+            var qDetails = Db.FromScan<TUserAuthDetails>().Select(x => new { x.UserAuthId, x.Id });
+            Db.DeleteItems<TUserAuthDetails>(qDetails.Exec().Map(x => new DynamoId(x.UserAuthId, x.Id)));
+
+            var qRoles = Db.FromScan<UserAuthRole>().Select(x => new { x.UserAuthId, x.Id });
+            Db.DeleteItems<UserAuthRole>(qRoles.Exec().Map(x => new DynamoId(x.UserAuthId, x.Id)));
         }
 
         public virtual ICollection<string> GetRoles(string userAuthId)

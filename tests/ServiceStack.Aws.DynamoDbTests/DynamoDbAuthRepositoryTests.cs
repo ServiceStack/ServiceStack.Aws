@@ -207,5 +207,41 @@ namespace ServiceStack.Aws.DynamoDbTests
             authRepo.UnAssignRoles(userAuth.Id, permissions: new[] { "ThePermission" });
             Assert.That(!authRepo.HasPermission(userAuth.Id, "ThePermission"));
         }
+
+        [Test]
+        public void Does_clear_all_roles()
+        {
+            var db = CreatePocoDynamo();
+            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
+
+            var userAuth = authRepo.CreateUserAuth(new UserAuth
+            {
+                DisplayName = "Credentials",
+                FirstName = "First",
+                LastName = "Last",
+                FullName = "First Last",
+                Email = "testrole@gmail.com",
+            }, "test");
+
+            authRepo.AssignRoles(userAuth.Id.ToString(),
+                roles: new[] { "TheRole" });
+
+            authRepo.AssignRoles(userAuth.Id.ToString(),
+                permissions: new[] { "ThePermission" });
+
+            var userAuths = db.ScanAll<UserAuth>().ToList();
+            Assert.That(userAuths.Count, Is.GreaterThan(0));
+
+            var userRoles = db.ScanAll<UserAuthRole>().ToList();
+            Assert.That(userRoles.Count, Is.GreaterThan(0));
+
+            authRepo.Clear();
+
+            userAuths = db.ScanAll<UserAuth>().ToList();
+            Assert.That(userAuths.Count, Is.EqualTo(0));
+
+            userRoles = db.ScanAll<UserAuthRole>().ToList();
+            Assert.That(userRoles.Count, Is.EqualTo(0));
+        }
     }
 }

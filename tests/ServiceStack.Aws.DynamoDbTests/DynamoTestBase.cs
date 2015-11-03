@@ -51,7 +51,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.RegisterTable<Poco>();
             db.InitSchema();
 
-            var items = count.Times(i => new Poco { Id = i, Title = "Name " + i });
+            var items = count.Times(i => new Poco { Id = i + 1, Title = "Name " + i + 1 });
 
             db.PutItems(items);
             return items;
