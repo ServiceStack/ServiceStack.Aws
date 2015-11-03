@@ -282,10 +282,14 @@ namespace ServiceStack.Aws.DynamoDb
             throw new NotImplementedException();
         }
 
-        public void Dispose()
+        public void Close()
         {
             if (db != null)
                 db.Close();
+        }
+
+        public void Dispose()
+        {
         }
     }
 
