@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDbTests
 {
@@ -62,6 +63,20 @@ namespace ServiceStack.Aws.DynamoDbTests
             var results = db.GetItems<Poco>(items.Map(x => x.Id));
 
             Assert.That(results.Count, Is.EqualTo(items.Count - deleteIds.Count));
+        }
+
+        [Test]
+        public void Can_select_just_field()
+        {
+            var db = CreatePocoDynamo();
+            PutPocoItems(db, count: 30);
+
+            var rows = db.FromScan<Poco>().Select(x => new { x.Id }).Exec().ToList();
+            Assert.That(rows.All(x => x.Id != default(int)));
+            Assert.That(rows.All(x => x.Title == null));
+
+            var ids = db.FromScan<Poco>().ExecColumn(x => x.Id);
+            Assert.That(ids.All(x => x != default(int)));
         }
 
         [Test]

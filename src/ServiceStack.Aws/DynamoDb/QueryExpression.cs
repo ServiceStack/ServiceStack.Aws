@@ -234,5 +234,18 @@ namespace ServiceStack.Aws.DynamoDb
         {
             return Db.Query<Into>(this.SelectInto<Into>(), limit:limit);
         }
+
+        public IEnumerable<TKey> ExecColumn<TKey>(Expression<Func<T, TKey>> fields)
+        {
+            var q = new PocoDynamoExpression(typeof(T)).Parse(fields);
+            var field = q.ReferencedFields[0];
+            this.ProjectionExpression = field;
+
+            foreach (var attrValue in Db.Query(this))
+            {
+                object value = Table.GetField(field).GetValue(attrValue);
+                yield return (TKey)value;
+            }
+        }
     }
 }

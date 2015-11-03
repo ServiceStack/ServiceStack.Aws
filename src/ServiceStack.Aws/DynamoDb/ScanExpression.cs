@@ -11,7 +11,7 @@ namespace ServiceStack.Aws.DynamoDb
     {
         protected IPocoDynamo Db { get; set; }
 
-        protected DynamoMetadataType Table { get;  set; }
+        protected DynamoMetadataType Table { get; set; }
 
         public ScanExpression SelectInto<TModel>()
         {
@@ -183,6 +183,19 @@ namespace ServiceStack.Aws.DynamoDb
         public List<Into> Exec<Into>(int limit)
         {
             return Db.Scan<Into>(this.SelectInto<Into>(), limit:limit);
+        }
+
+        public IEnumerable<TKey> ExecColumn<TKey>(Expression<Func<T, TKey>> fields)
+        {
+            var q = new PocoDynamoExpression(typeof(T)).Parse(fields);
+            var field = q.ReferencedFields[0];
+            this.ProjectionExpression = field;
+
+            foreach (var attrValue in Db.Scan(this))
+            {
+                object value = Table.GetField(field).GetValue(attrValue);
+                yield return (TKey)value;
+            }
         }
     }
 }
