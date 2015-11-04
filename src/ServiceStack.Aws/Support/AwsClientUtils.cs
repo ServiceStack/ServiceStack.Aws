@@ -1,6 +1,8 @@
-﻿using System;
+﻿// Copyright (c) Service Stack LLC. All Rights Reserved.
+// License: https://raw.github.com/ServiceStack/ServiceStack/master/license.txt
+
+using System;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using ServiceStack.Text;
 
@@ -19,17 +21,9 @@ namespace ServiceStack.Aws.Support
             }
         }
 
-        public class DummyDis : IDisposable
-        {
-            public void Dispose()
-            {
-            }
-        }
-
         internal static IDisposable __requestAccess()
         {
-            return new DummyDis();
-            //return LicenseUtils.RequestAccess(AccessToken.__accessToken, LicenseFeature.Client, LicenseFeature.Text);
+            return LicenseUtils.RequestAccess(AccessToken.__accessToken, LicenseFeature.Client, LicenseFeature.Text);
         }
 
         internal static T FromJson<T>(string json)

@@ -96,7 +96,7 @@
     <Compile Include="S3\S3VirtualDirectory.cs" />
     <Compile Include="S3\S3VirtualFile.cs" />
     <Compile Include="S3\S3VirtualPathProvider.cs" />
-    <Compile Include="Services\AwsConnectionFactory.cs" />
+    <Compile Include="Support\AwsConnectionFactory.cs" />
     <Compile Include="Sqs\IMqWorker.cs" />
     <Compile Include="Sqs\ISqsMqBufferFactory.cs" />
     <Compile Include="Sqs\ISqsMqBuffer.cs" />

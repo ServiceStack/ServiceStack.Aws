@@ -1,7 +1,7 @@
 ﻿using System;
 using Amazon;
 using Amazon.S3;
-using ServiceStack.Aws.Services;
+using ServiceStack.Aws.Support;
 
 namespace ServiceStack.Aws.FileStorage
 {

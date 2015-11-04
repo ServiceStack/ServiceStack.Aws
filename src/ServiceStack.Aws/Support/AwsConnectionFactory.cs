@@ -1,7 +1,6 @@
 ﻿using System;
-using ServiceStack.Aws.Support;
 
-namespace ServiceStack.Aws.Services
+namespace ServiceStack.Aws.Support
 {
     public abstract class AwsConnectionFactory<T>
     {
@@ -17,6 +16,5 @@ namespace ServiceStack.Aws.Services
         {
             return clientFactory();
         }
-
     }
 }
