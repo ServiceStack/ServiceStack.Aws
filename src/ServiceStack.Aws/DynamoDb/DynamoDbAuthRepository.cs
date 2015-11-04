@@ -88,13 +88,7 @@ namespace ServiceStack.Aws.DynamoDb
             string salt, hash;
             HostContext.Resolve<IHashProvider>().GetHashAndSaltString(password, out hash, out salt);
 
-            //DynamoDb does not allow null hash keys on Global Indexes
-            //Workaround by populating UserName with Email when null
-            if (newUser.UserName == null)
-                newUser.UserName = newUser.Email;
-
-            if (this.LowerCaseUsernames)
-                newUser.UserName = newUser.UserName.ToLower();
+            Sanitize(newUser);
 
             newUser.PasswordHash = hash;
             newUser.Salt = salt;
@@ -104,13 +98,22 @@ namespace ServiceStack.Aws.DynamoDb
 
             Db.PutItem((TUserAuth)newUser);
 
-            newUser = Sanitize(Db.GetItem<TUserAuth>(newUser.Id));
+            newUser = DeSanitize(Db.GetItem<TUserAuth>(newUser.Id));
             return newUser;
         }
 
         //DynamoDb does not allow null hash keys on Global Indexes
         //Workaround by populating UserName with Email when null
-        private IUserAuth Sanitize(TUserAuth userAuth)
+        private void Sanitize(IUserAuth userAuth)
+        {
+            if (userAuth.UserName == null)
+                userAuth.UserName = userAuth.Email;
+
+            if (this.LowerCaseUsernames)
+                userAuth.UserName = userAuth.UserName.ToLower();
+        }
+
+        private IUserAuth DeSanitize(TUserAuth userAuth)
         {
             if (userAuth.UserName != null && userAuth.UserName.Contains("@"))
             {
@@ -139,7 +142,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public virtual IUserAuth GetUserAuth(string userAuthId)
         {
-            return Sanitize(Db.GetItem<TUserAuth>(int.Parse(userAuthId)));
+            return DeSanitize(Db.GetItem<TUserAuth>(int.Parse(userAuthId)));
         }
 
         public void SaveUserAuth(IAuthSession authSession)
@@ -204,6 +207,8 @@ namespace ServiceStack.Aws.DynamoDb
             if (userAuth.CreatedDate == default(DateTime))
                 userAuth.CreatedDate = userAuth.ModifiedDate;
 
+            Sanitize(userAuth);
+
             Db.PutItem(userAuth);
 
             authDetails.UserAuthId = userAuth.Id;
@@ -238,7 +243,7 @@ namespace ServiceStack.Aws.DynamoDb
             var authProviderIndex = GetUserAuthByProviderUserId(tokens.Provider, tokens.UserId);
             if (authProviderIndex != null)
             {
-                var userAuth = Sanitize(Db.GetItem<TUserAuth>(authProviderIndex.UserAuthId));
+                var userAuth = DeSanitize(Db.GetItem<TUserAuth>(authProviderIndex.UserAuthId));
                 return userAuth;
             }
             return null;
@@ -269,7 +274,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var userAuthId = index.Id;
 
-            return Sanitize(Db.GetItem<TUserAuth>(userAuthId));
+            return DeSanitize(Db.GetItem<TUserAuth>(userAuthId));
         }
 
         public bool TryAuthenticate(string userName, string password, out IUserAuth userAuth)
