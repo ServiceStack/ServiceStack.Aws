@@ -1,10 +1,11 @@
-﻿using System;
+﻿// Copyright (c) Service Stack LLC. All Rights Reserved.
+// License: https://raw.github.com/ServiceStack/ServiceStack/master/license.txt
+
+using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
-using ServiceStack.Aws.DynamoDb;
 using ServiceStack.IO;
 using ServiceStack.VirtualPath;
 
