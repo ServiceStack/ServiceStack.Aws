@@ -24,22 +24,22 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var items = PutPocoItems(db);
 
-            var low5 = db.Scan<Poco>(q => q.Filter("Id < :Count", new Dictionary<string, object> { { "Count", 5 } }))
+            var low5 = db.Scan<Poco>(q => q.Filter("Id <= :Count", new Dictionary<string, object> { { "Count", 5 } }))
                 .ToList();
 
             low5.PrintDump();
 
-            var expected = items.Where(x => x.Id < 5).ToList();
+            var expected = items.Where(x => x.Id <= 5).ToList();
             Assert.That(low5.Count, Is.EqualTo(5));
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan<Poco>(q => q.Filter("Id < :Count", new { Count = 5 })).ToList();
+            low5 = db.Scan<Poco>(q => q.Filter("Id <= :Count", new { Count = 5 })).ToList();
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan<Poco>(q => q.Filter(x => x.Id < 5)).ToList();
+            low5 = db.Scan<Poco>(q => q.Filter(x => x.Id <= 5)).ToList();
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan(db.FromScan<Poco>(x => x.Id < 5)).ToList();
+            low5 = db.Scan(db.FromScan<Poco>(x => x.Id <= 5)).ToList();
             Assert.That(low5, Is.EquivalentTo(expected));
         }
 
@@ -49,21 +49,21 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo();
             var items = PutPocoItems(db);
 
-            var low5 = db.Scan<Poco>(q => q.Filter("Id < :Count", new Dictionary<string, object> { { "Count", 5 } }), limit: 5);
+            var low5 = db.Scan<Poco>(q => q.Filter("Id <= :Count", new Dictionary<string, object> { { "Count", 5 } }), limit: 5);
 
             low5.PrintDump();
 
-            var expected = items.Where(x => x.Id < 5).ToList();
+            var expected = items.Where(x => x.Id <= 5).ToList();
             Assert.That(low5.Count, Is.EqualTo(5));
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan<Poco>(q => q.Filter("Id < :Count", new { Count = 5 }), limit: 5);
+            low5 = db.Scan<Poco>(q => q.Filter("Id <= :Count", new { Count = 5 }), limit: 5);
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            low5 = db.Scan(db.FromScan<Poco>(x => x.Id < 5), limit: 5);
+            low5 = db.Scan(db.FromScan<Poco>(x => x.Id <= 5), limit: 5);
             Assert.That(low5, Is.EquivalentTo(expected));
 
-            var low3 = db.Scan<Poco>(q => q.Filter("Id < :Count", new { Count = 5 }), limit: 3);
+            var low3 = db.Scan<Poco>(q => q.Filter("Id <= :Count", new { Count = 5 }), limit: 3);
             Assert.That(low3.Count, Is.EqualTo(3));
 
             low3 = db.Scan(db.FromScan<Poco>(x => x.Id < 5), limit: 3);

@@ -220,7 +220,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 FirstName = "First",
                 LastName = "Last",
                 FullName = "First Last",
-                Email = "testrole@gmail.com",
+                Email = "testrole2@gmail.com",
             }, "test");
 
             authRepo.AssignRoles(userAuth.Id.ToString(),
