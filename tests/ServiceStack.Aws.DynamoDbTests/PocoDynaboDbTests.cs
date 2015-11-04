@@ -286,7 +286,8 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.RegisterTable<Collection>();
             db.InitSchema();
 
-            var row = new Collection {
+            var row = new Collection
+            {
                 Id = 1,
             }
             .InitStrings(10.Times(i => ((char)('A' + i)).ToString()).ToArray())
@@ -299,6 +300,20 @@ namespace ServiceStack.Aws.DynamoDbTests
             dbRow.PrintDump();
 
             Assert.That(dbRow, Is.EqualTo(row));
+        }
+
+        [Test]
+        public void Does_convert_empty_string_to_null()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Customer>();
+            db.InitSchema();
+
+            db.PutItem(new Customer { Id = 1, Name = "" });
+
+            var customer = db.GetItem<Customer>(1);
+
+            Assert.That(customer.Name, Is.Null);
         }
     }
 }

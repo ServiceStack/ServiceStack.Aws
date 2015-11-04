@@ -837,6 +837,11 @@ namespace ServiceStack.Aws.DynamoDb
 
             switch (dbType)
             {
+                case DynamoType.String:
+                    var str = value as string ?? value.ToString();
+                    return str == "" //DynamoDB throws on String.Empty
+                        ? new AttributeValue { NULL = true } 
+                        : new AttributeValue { S = str };
                 case DynamoType.Number:
                     return new AttributeValue { N = value.ToString() };
                 case DynamoType.Bool:

@@ -186,9 +186,9 @@ namespace ServiceStack.Aws.DynamoDb
                 ?? typeof(TUserAuth).CreateInstance<TUserAuth>();
 
             TUserAuthDetails authDetails = null;
-            var userAuthDetailsIndex = GetUserAuthByProviderUserId(tokens.Provider, tokens.UserId);
-            if (userAuthDetailsIndex != null)
-                authDetails = Db.GetItem<TUserAuthDetails>(userAuthDetailsIndex.Id);
+            var index = GetUserAuthByProviderUserId(tokens.Provider, tokens.UserId);
+            if (index != null)
+                authDetails = Db.GetItem<TUserAuthDetails>(index.UserAuthId, index.Id);
 
             if (authDetails == null)
             {
