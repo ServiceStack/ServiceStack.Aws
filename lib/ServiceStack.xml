@@ -5095,14 +5095,14 @@
             however it requires admin user privillages.
             </summary>
         </member>
-        <member name="P:ServiceStack.HostContext.VirtualFileSources">
-            <summary>
-            Cascading collection of virtual file sources, inc. Embedded Resources, File System, In Memory, S3
-            </summary>
-        </member>
         <member name="P:ServiceStack.HostContext.VirtualFiles">
             <summary>
             Read/Write Virtual FileSystem. Defaults to FileSystemVirtualPathProvider
+            </summary>
+        </member>
+        <member name="P:ServiceStack.HostContext.VirtualFileSources">
+            <summary>
+            Cascading collection of virtual file sources, inc. Embedded Resources, File System, In Memory, S3
             </summary>
         </member>
         <member name="M:ServiceStack.HostContext.CompleteRequest(ServiceStack.Web.IRequest)">
