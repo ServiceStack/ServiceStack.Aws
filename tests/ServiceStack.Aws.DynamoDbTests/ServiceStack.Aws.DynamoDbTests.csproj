@@ -60,6 +60,7 @@
       <HintPath>..\..\lib\ServiceStack.Text.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
@@ -71,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddHocPocoDynamoTests.cs" />
+    <Compile Include="DynamoDbAppSettingsTests.cs" />
     <Compile Include="DynamoDbAuthRepositoryCustomTests.cs" />
     <Compile Include="DynamoDbAuthRepositoryTests.cs" />
     <Compile Include="DynamoDbCacheClientTests.cs" />
@@ -88,6 +90,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RangeKeyTests.cs" />
     <Compile Include="SequenceGeneratorTests.cs" />
+    <Compile Include="Shared\AppSettingsTest.cs" />
     <Compile Include="Shared\CacheClientTestsBase.cs" />
     <Compile Include="Shared\DataModels.cs" />
   </ItemGroup>
