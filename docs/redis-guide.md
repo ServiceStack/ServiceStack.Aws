@@ -1,5 +1,8 @@
 # Getting started with AWS ElastiCache
 ## ServiceStack.Redis
+
+![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticache-redis-powered-by-aws.png)
+
 Amazon's 'ElastiCache' allows a simple way to create and manage cache instances that can be simply incorporated into your ServiceStack application stack using the ServiceStack Redis client, `ServiceStack.Redis`. 
 
 #### Creating an ElastiCache Cluster
@@ -20,7 +23,7 @@ So you're EC2 instance can access your Redis nodes, ensure you select a **VPC Se
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticcache-redis-adv.png)
 > If you haven't already setup a security group exposing this port, you'll need to create one by [managing your VPC security groups](https://console.aws.amazon.com/vpc/home#securityGroups:).
 
-One you have reviewed your settings are correct, click **Launch Replication Group**.
+To finish, reviewed your settings and click **Launch Replication Group**.
 
 ## Enable Caching with ServiceStack.Redis
 Now you're your Redis nodes are ready, your AppHost can be configured to use them when deployed. AWS **does not allow external access** to ElastiCache servers, so they can only be used when your ServiceStack application is deployed.
