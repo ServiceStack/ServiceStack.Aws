@@ -8,7 +8,7 @@ Amazon's 'ElastiCache' allows a simple way to create and manage cache instances 
 #### Creating an ElastiCache Cluster
 
 1. Login to the [AWS Web console](https://console.aws.amazon.com/console/home).
-2. Select ElastiCache from the **Services** from the top menu.
+2. Select [ElastiCache](https://console.aws.amazon.com/elasticache/home) from the **Services** from the top menu.
 ![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/aws-services-menu-elasticcache.png)
 3. Select **Get Started Now** or **ElasticCache Dashboard** and **Launch Cache Cluster**
 4. Select **Redis** for the cluster engine.
@@ -29,6 +29,8 @@ To finish, reviewed your settings and click **Launch Replication Group**.
 Now you're your Redis nodes are ready, your AppHost can be configured to use them when deployed. AWS **does not allow external access** to ElastiCache servers, so they can only be used when your ServiceStack application is deployed.
 
 First, you'll need to install `ServiceStack.Redis` NuGet package if your application doesn't already use it.
+
+![](https://github.com/ServiceStack/Assets/raw/master/img/aws/nuget-install-redis.png)
 
 In this example, we are going to use a `PooledRedisClientManager` for our `IRedisClientsManager`. This will be responsible for creating `ICacheClient`s that our `Service`s will use to connect to the ElastiCache nodes. We will need to provide our `PooledRedisClientManager` with the nodes we have create. For example, as shown above, we created a cluster of **1 Primary** and **2 Read Replicas**, these endpoint URLs can be accessed from the ElastiCache **Dashboard**.
 

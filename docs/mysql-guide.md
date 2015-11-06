@@ -10,7 +10,7 @@ To get started, first you will need to create your MySQL database via the AWS RD
 ## Creating a MySQL RDS Instance
 
 1. Login to the [AWS Web console](https://console.aws.amazon.com/console/home).
-2. Select RDS from the **Services** from the top menu.
+2. Select [RDS](https://console.aws.amazon.com/rds/home) from the **Services** from the top menu.
 ![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/aws-rds-menu.png)
 3. Select **Instances** from the **RDS Dashboard** and click **Launch DB Instance**.
 ![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/launch-db-dashboard.png)
