@@ -19,7 +19,8 @@ You can run your cache as a single Redis node or add multiple nodes for addition
 > To use the smaller instances like the `cache.t2.micro`, **Multi-AZ** must be disabled.
 
 
-So you're EC2 instance can access your Redis nodes, ensure you select a **VPC Security Group** that exposes the default port `6379`. 
+So you're EC2 instance can access your Redis nodes, ensure you select a **VPC Security Group** that exposes the default port `6379`.
+
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticcache-redis-adv.png)
 > If you haven't already setup a security group exposing this port, you'll need to create one by [managing your VPC security groups](https://console.aws.amazon.com/vpc/home#securityGroups:).
 

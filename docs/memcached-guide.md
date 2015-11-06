@@ -18,6 +18,7 @@ ElastiCache setup allows you to specify how many nodes you want in your cache cl
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticcache-memcached-config.png)
 
 So you're EC2 instance can access your Memcached cluster, ensure you select a **VPC Security Group** that exposes the default port `11211`. 
+
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticcache-memcached-adv.png)
 > If you haven't already setup a security group exposing this port, you'll need to create one by [managing your VPC security groups](https://console.aws.amazon.com/vpc/home#securityGroups:).
 
