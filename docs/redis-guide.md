@@ -27,23 +27,9 @@ Now you're your Redis nodes are ready, your AppHost can be configured to use the
 
 First, you'll need to install `ServiceStack.Redis` NuGet package if your application doesn't already use it.
 
-In this example, we are going to use a `PooledRedisClientManager` for our `IRedisClientsManager`. This will be responsible for creating `ICacheClient`s that our `Service`s will use to connect to the ElastiCache nodes. We will need to provide our `PooledRedisClientManager` with the nodes we have create. For example, as shown above, we created a cluster of **1 Primary** and **2 Read Replicas**, so we will initialize our `PooledRedisClientManager` with the following nodes.
+In this example, we are going to use a `PooledRedisClientManager` for our `IRedisClientsManager`. This will be responsible for creating `ICacheClient`s that our `Service`s will use to connect to the ElastiCache nodes. We will need to provide our `PooledRedisClientManager` with the nodes we have create. For example, as shown above, we created a cluster of **1 Primary** and **2 Read Replicas**, these endpoint URLs can be accessed from the ElastiCache **Dashboard**.
 
-``` CSharp
-container.Register<IRedisClientsManager>(c =>
-    new PooledRedisClientManager(
-        // Primary node
-        new [] {
-            "redis-cluster-001.jbnmsd.0001.apse2.cache.amazonaws.com"
-        },
-        // Read replicas
-        new [] {
-            "redis-cluster-002.jbnmsd.0001.apse2.cache.amazonaws.com",
-            "redis-cluster-003.jbnmsd.0001.apse2.cache.amazonaws.com"
-        }));
-
-container.Register<ICacheClient>(c => container.Resolve<IRedisClientsManager>().GetCacheClient());
-```
+![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticcache-redis-nodes.png)
 
 Below is a simple example of a configured self hosting AppHost that uses ElastiCache for caching when deployed and an in memory caching when developing locally.
 
@@ -57,14 +43,15 @@ public class AppHost : AppSelfHostBase
         if (AppSettings.GetString("Environment") == "Production")
         {
             container.Register<IRedisClientsManager>(c =>
-            new PooledRedisClientManager(
-                new[] {
-                    "redis-cluster-001.jbnmsd.0001.apse2.cache.amazonaws.com"
-                },
-                new[] {
-                    "redis-cluster-002.jbnmsd.0001.apse2.cache.amazonaws.com",
-                    "redis-cluster-003.jbnmsd.0001.apse2.cache.amazonaws.com"
-                }));
+                // Primary node
+		        new [] {
+		            "redis-cluster-001.jbnmsd.0001.apse2.cache.amazonaws.com"
+		        },
+		        // Read replicas
+		        new [] {
+		            "redis-cluster-002.jbnmsd.0001.apse2.cache.amazonaws.com",
+		            "redis-cluster-003.jbnmsd.0001.apse2.cache.amazonaws.com"
+		        }));
 
             container.Register<ICacheClient>(c =>
                 container.Resolve<IRedisClientsManager>().GetCacheClient());
