@@ -200,7 +200,7 @@ namespace ServiceStack.Aws.Sqs
                 ? null
                 : new SqsRedrivePolicy
                 {
-                    MaxReceiveCount = info.RetryCount,
+                    MaxReceiveCount = Math.Max(info.RetryCount, 1), //Valid Range 1-1000
                     DeadLetterTargetArn = redriveArn
                 };
 
@@ -250,7 +250,8 @@ namespace ServiceStack.Aws.Sqs
 
             if (redrivePolicy != null)
             {
-                request.Attributes.Add(QueueAttributeName.RedrivePolicy, AwsClientUtils.ToJson(redrivePolicy));
+                var json = AwsClientUtils.ToJson(redrivePolicy);
+                request.Attributes.Add(QueueAttributeName.RedrivePolicy, json);
             }
 
             try
