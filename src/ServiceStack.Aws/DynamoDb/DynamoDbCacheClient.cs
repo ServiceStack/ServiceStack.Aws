@@ -25,12 +25,15 @@ namespace ServiceStack.Aws.DynamoDb
         private Table schema;
         private readonly DynamoMetadataType metadata;
 
-        public DynamoDbCacheClient(IPocoDynamo db)
+        public DynamoDbCacheClient(IPocoDynamo db, bool initSchema = false)
         {
             this.db = db;
             this.PagingLimit = 1000;
             db.RegisterTable<CacheEntry>();
             metadata = db.GetTableMetadata<CacheEntry>();
+
+            if (initSchema)
+                InitSchema();
         }
 
         public void InitSchema()

@@ -11,7 +11,7 @@ namespace ServiceStack.Aws.DynamoDb
 {
     public class DynamoDbAuthRepository : DynamoDbAuthRepository<UserAuth, UserAuthDetails>, IUserAuthRepository
     {
-        public DynamoDbAuthRepository(IPocoDynamo db) : base(db) { }
+        public DynamoDbAuthRepository(IPocoDynamo db, bool initSchema = false) : base(db, initSchema) { }
     }
 
     public class DynamoDbAuthRepository<TUserAuth, TUserAuthDetails> : IUserAuthRepository, IManageRoles, IClearable, IRequiresSchema
@@ -44,9 +44,12 @@ namespace ServiceStack.Aws.DynamoDb
             public int Id { get; set; }
         }
 
-        public DynamoDbAuthRepository(IPocoDynamo db)
+        public DynamoDbAuthRepository(IPocoDynamo db, bool initSchema=false)
         {
             this.Db = db;
+
+            if (initSchema)
+                InitSchema();
         }
 
         private void ValidateNewUser(IUserAuth newUser, string password)

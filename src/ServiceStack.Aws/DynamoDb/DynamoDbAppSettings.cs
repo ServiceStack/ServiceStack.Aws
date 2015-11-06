@@ -24,9 +24,17 @@ namespace ServiceStack.Aws.DynamoDb
             get { return DbSettings.Db; }
         }
 
-        public DynamoDbAppSettings(IPocoDynamo db)
+        private readonly DynamoMetadataType metadata;
+
+        public DynamoDbAppSettings(IPocoDynamo db, bool initSchema = false)
             : base(new DynamoDbSettings(db))
-        { }
+        {
+            Db.RegisterTable<ConfigSetting>();
+            this.metadata = db.GetTableMetadata<ConfigSetting>();
+
+            if (initSchema)
+                InitSchema();
+        }
 
         class DynamoDbSettings : ISettingsWriter
         {
@@ -87,7 +95,6 @@ namespace ServiceStack.Aws.DynamoDb
 
         public void InitSchema()
         {
-            Db.RegisterTable<ConfigSetting>();
             Db.InitSchema();
         }
 
