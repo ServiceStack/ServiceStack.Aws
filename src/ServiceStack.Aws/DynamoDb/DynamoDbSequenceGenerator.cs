@@ -5,12 +5,6 @@ using System;
 
 namespace ServiceStack.Aws.DynamoDb
 {
-    public interface ISequenceSource : IRequiresSchema
-    {
-        long Increment(string key, int amount = 1);
-        void Reset(string key, int startingAt = 0);
-    }
-
     public class Seq
     {
         public string Id { get; set; }
