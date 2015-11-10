@@ -45,7 +45,7 @@ namespace ServiceStack.Aws.DynamoDb
         /// <summary>
         /// Calls 'ListTables' to return all Table Names in DynamoDB
         /// </summary>
-        List<string> GetTableNames();
+        IEnumerable<string> GetTableNames();
 
         /// <summary>
         /// Creates any tables missing in DynamoDB from the Tables registered with PocoDynamo

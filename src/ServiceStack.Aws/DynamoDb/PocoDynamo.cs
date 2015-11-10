@@ -103,10 +103,8 @@ namespace ServiceStack.Aws.DynamoDb
             return DynamoMetadata.TryGetTable(table) ?? DynamoMetadata.RegisterTable(table);
         }
 
-        public List<string> GetTableNames()
+        public IEnumerable<string> GetTableNames()
         {
-            var to = new List<string>();
-
             ListTablesResponse response = null;
             do
             {
@@ -114,10 +112,11 @@ namespace ServiceStack.Aws.DynamoDb
                     ? Exec(() => DynamoDb.ListTables())
                     : Exec(() => DynamoDb.ListTables(response.LastEvaluatedTableName));
 
-                to.AddRange(response.TableNames);
+                foreach (var tableName in response.TableNames)
+                {
+                    yield return tableName;
+                }
             } while (response.LastEvaluatedTableName != null);
-
-            return to;
         }
 
         readonly Type[] throwNotFoundExceptions = {

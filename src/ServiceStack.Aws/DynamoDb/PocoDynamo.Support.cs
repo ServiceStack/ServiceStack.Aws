@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using Amazon.DynamoDBv2;
@@ -127,7 +128,7 @@ namespace ServiceStack.Aws.DynamoDb
             var startAt = DateTime.UtcNow;
             do
             {
-                var existingTables = GetTableNames();
+                var existingTables = GetTableNames().ToList();
                 pendingTables.RemoveAll(x => !existingTables.Contains(x));
 
                 if (Log.IsDebugEnabled)
