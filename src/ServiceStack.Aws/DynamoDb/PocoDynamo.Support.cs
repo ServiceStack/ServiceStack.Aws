@@ -147,7 +147,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         private T ConvertGetItemResponse<T>(GetItemRequest request, DynamoMetadataType table)
         {
-            var response = Exec(() => DynamoDb.GetItem(request), throwNotFoundExceptions);
+            var response = Exec(() => DynamoDb.GetItem(request), rethrowExceptions:throwNotFoundExceptions);
 
             if (!response.IsItemSet)
                 return default(T);

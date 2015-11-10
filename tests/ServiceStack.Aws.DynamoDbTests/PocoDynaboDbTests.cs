@@ -315,5 +315,16 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             Assert.That(customer.Name, Is.Null);
         }
+
+        [Test]
+        public void Does_return_null_if_doesnt_exist()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Customer>();
+            db.InitSchema();
+
+            var customer = db.GetItem<Customer>(999);
+            Assert.That(customer, Is.Null);
+        }
     }
 }
