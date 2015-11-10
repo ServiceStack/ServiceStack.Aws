@@ -817,7 +817,7 @@ namespace ServiceStack.Aws.DynamoDb
             return field.SetValue(instance, nextId);
         }
 
-        private static bool IsNumberDefault(object value)
+        public static bool IsNumberDefault(object value)
         {
             return value == null || 0 == (long)Convert.ChangeType(value, typeof(long));
         }

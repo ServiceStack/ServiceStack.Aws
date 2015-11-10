@@ -432,6 +432,8 @@ namespace ServiceStack.Aws.DynamoDb
             var table = DynamoMetadata.GetTable<T>();
             var remaining = items.ToList();
 
+            PopulateMissingHashes(table, remaining);
+
             while (remaining.Count > 0)
             {
                 var batchSize = Math.Min(remaining.Count, MaxWriteBatchSize);
@@ -454,6 +456,31 @@ namespace ServiceStack.Aws.DynamoDb
 
                     if (response.UnprocessedItems.Count > 0)
                         i.SleepBackOffMultiplier();
+                }
+            }
+        }
+
+        private void PopulateMissingHashes<T>(DynamoMetadataType table, List<T> items)
+        {
+            var autoIncr = table.Fields.FirstOrDefault(x => x.IsAutoIncrement);
+            if (autoIncr != null)
+            {
+                var seqRequiredPos = new List<int>();
+                for (int i = 0; i < items.Count; i++)
+                {
+                    var item = items[i];
+                    var value = autoIncr.GetValue(item);
+                    if (DynamoConverters.IsNumberDefault(value))
+                        seqRequiredPos.Add(i);
+                }
+                if (seqRequiredPos.Count == 0)
+                    return;
+
+                var nextSequences = Sequences.GetNextSequences(table, seqRequiredPos.Count);
+                for (int i = 0; i < nextSequences.Length; i++)
+                {
+                    var pos = seqRequiredPos[i];
+                    autoIncr.SetValue(items[pos], nextSequences[i]);
                 }
             }
         }
