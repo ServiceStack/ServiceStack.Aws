@@ -262,5 +262,43 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
 
             Assert.That(db.GetItem<Todo>(1), Is.Null);
         }
+
+        [Test]
+        public void Can_Query_Content()
+        {
+            db.Sequences.Reset<Todo>();
+            var todos = 20.Times(i => new Todo { Content = "TODO " + i, Order = i });
+            db.PutItems(todos);
+
+            var response = db.Query<Todo>(q => q
+                    .KeyCondition(x => x.Id == 1)
+                    .Filter(x => x.Content.StartsWith("TODO")))
+                .ToList();
+
+            Assert.That(response, Is.Not.Null);
+
+            response = db.FromQuery<Todo>(x => x.Id == 1)
+                .Filter(x => x.Content.StartsWith("TODO"))
+                .Exec()
+                .ToList();
+
+            Assert.That(response, Is.Not.Null);
+
+            var isDone = db.FromQuery<Todo>(x => x.Id == 1)
+                .Filter(x => x.Done)
+                .Exec()
+                .FirstOrDefault();
+
+            Assert.That(isDone, Is.Null);
+
+            db.PutItem(new Todo { Id = 1, Content = "Updated", Done = true });
+
+            isDone = db.FromQuery<Todo>(x => x.Id == 1)
+                .Filter(x => x.Done)
+                .Exec()
+                .FirstOrDefault();
+
+            Assert.That(isDone, Is.Not.Null);
+        }
     }
 }

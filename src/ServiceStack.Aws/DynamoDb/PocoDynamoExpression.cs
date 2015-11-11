@@ -405,7 +405,7 @@ namespace ServiceStack.Aws.DynamoDb
                 if (m.Expression != null)
                 {
                     string r = VisitMemberAccess(m).ToString();
-                    return string.Format("{0}={1}", r, GetQuotedTrueValue());
+                    return string.Format("{0} = {1}", r, GetTrueParam());
                 }
 
             }
@@ -484,16 +484,6 @@ namespace ServiceStack.Aws.DynamoDb
             return memberName;
         }
 
-        protected object GetQuotedTrueValue()
-        {
-            return new PartialString("true");
-        }
-
-        protected object GetQuotedFalseValue()
-        {
-            return new PartialString("false");
-        }
-
         protected virtual object VisitConstant(ConstantExpression c)
         {
             if (c.Value == null)
@@ -511,14 +501,14 @@ namespace ServiceStack.Aws.DynamoDb
                 var m = b.Left as MemberExpression;
                 if (m != null && m.Expression != null
                     && m.Expression.NodeType == ExpressionType.Parameter)
-                    left = new PartialString("{0}={1}".Fmt(VisitMemberAccess(m), GetQuotedTrueValue()));
+                    left = new PartialString("{0}={1}".Fmt(VisitMemberAccess(m), GetTrueParam()));
                 else
                     left = Visit(b.Left);
 
                 m = b.Right as MemberExpression;
                 if (m != null && m.Expression != null
                     && m.Expression.NodeType == ExpressionType.Parameter)
-                    right = new PartialString("{0}={1}".Fmt(VisitMemberAccess(m), GetQuotedTrueValue()));
+                    right = new PartialString("{0}={1}".Fmt(VisitMemberAccess(m), GetTrueParam()));
                 else
                     right = Visit(b.Right);
 
@@ -648,6 +638,20 @@ namespace ServiceStack.Aws.DynamoDb
             return paramName;
         }
 
+        protected object GetTrueParam()
+        {
+            var paramName = ":true";
+            Params[paramName] = true;
+            return paramName;
+        }
+
+        protected object GetFalseParam()
+        {
+            var paramName = ":false";
+            Params[paramName] = false;
+            return paramName;
+        }
+
         public virtual object GetValue(object value, Type type)
         {
             if (SkipParameterizationForThisExpression)
@@ -701,12 +705,12 @@ namespace ServiceStack.Aws.DynamoDb
 
         protected object GetTrueExpression()
         {
-            return new PartialString(string.Format("({0}={1})", GetQuotedTrueValue(), GetQuotedTrueValue()));
+            return new PartialString(string.Format("({0} = {1})", GetTrueParam(), GetTrueParam()));
         }
 
         protected object GetFalseExpression()
         {
-            return new PartialString(string.Format("({0}={1})", GetQuotedTrueValue(), GetQuotedFalseValue()));
+            return new PartialString(string.Format("({0} = {1})", GetTrueParam(), GetFalseParam()));
         }
 
         protected virtual object VisitUnary(UnaryExpression u)
