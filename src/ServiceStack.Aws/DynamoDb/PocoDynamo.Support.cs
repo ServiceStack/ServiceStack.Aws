@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Aws.Support;
@@ -22,6 +23,17 @@ namespace ServiceStack.Aws.DynamoDb
                 fn();
                 return true;
             }, rethrowExceptions, retryOnErrorCodes);
+        }
+
+        public Task ExecAsync(Func<Task> fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
+        {
+            return Exec(fn, rethrowExceptions, retryOnErrorCodes);
+        }
+
+
+        public Task<T> ExecAsync<T>(Func<Task<T>> fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
+        {
+            return Exec(fn, rethrowExceptions, retryOnErrorCodes);
         }
 
         public T Exec<T>(Func<T> fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
@@ -147,7 +159,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         private T ConvertGetItemResponse<T>(GetItemRequest request, DynamoMetadataType table)
         {
-            var response = Exec(() => DynamoDb.GetItem(request), rethrowExceptions:throwNotFoundExceptions);
+            var response = Exec(() => DynamoDb.GetItem(request), rethrowExceptions: throwNotFoundExceptions);
 
             if (!response.IsItemSet)
                 return default(T);

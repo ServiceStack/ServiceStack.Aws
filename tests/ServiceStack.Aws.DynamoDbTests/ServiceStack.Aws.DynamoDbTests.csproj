@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="AddHocPocoDynamoTests.cs" />
     <Compile Include="DynamoDbAppSettingsTests.cs" />
+    <Compile Include="DynamoDbAsyncTests.cs" />
     <Compile Include="DynamoDbAuthRepositoryCustomTests.cs" />
     <Compile Include="DynamoDbAuthRepositoryTests.cs" />
     <Compile Include="DynamoDbCacheClientTests.cs" />

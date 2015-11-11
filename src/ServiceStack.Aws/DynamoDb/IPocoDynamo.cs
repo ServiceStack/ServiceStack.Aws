@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -10,7 +12,7 @@ namespace ServiceStack.Aws.DynamoDb
     /// <summary>
     /// Interface for the code-first PocoDynamo client for DynamoDB
     /// </summary>
-    public interface IPocoDynamo : IRequiresSchema
+    public interface IPocoDynamo : IPocoDynamoAsync, IRequiresSchema
     {
         /// <summary>
         /// Get the underlying AWS DynamoDB low-level client
@@ -58,6 +60,11 @@ namespace ServiceStack.Aws.DynamoDb
         bool CreateTables(IEnumerable<DynamoMetadataType> tables, TimeSpan? timeout = null);
 
         /// <summary>
+        /// Polls 'DescribeTable' until all Tables have an ACTIVE TableStatus
+        /// </summary>
+        bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
+
+        /// <summary>
         /// Deletes all DynamoDB Tables
         /// </summary>
         bool DeleteAllTables(TimeSpan? timeout = null);
@@ -66,6 +73,11 @@ namespace ServiceStack.Aws.DynamoDb
         /// Deletes the tables in DynamoDB with the specified table names
         /// </summary>
         bool DeleteTables(IEnumerable<string> tableNames, TimeSpan? timeout = null);
+
+        /// <summary>
+        /// Polls 'ListTables' until all specified tables have been deleted
+        /// </summary>
+        bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
 
         /// <summary>
         /// Gets the POCO instance with the specified hash
@@ -111,16 +123,6 @@ namespace ServiceStack.Aws.DynamoDb
         /// Calls 'UpdateItem' with ADD AttributeUpdate to atomically increment specific field numeric value
         /// </summary>
         long Increment<T>(object hash, string fieldName, long amount = 1);
-
-        /// <summary>
-        /// Polls 'DescribeTable' until all Tables have an ACTIVE TableStatus
-        /// </summary>
-        bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null);
-
-        /// <summary>
-        /// Polls 'ListTables' until all specified tables have been deleted
-        /// </summary>
-        bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null);
 
         /// <summary>
         /// Updates item Hash field with hash value then calls 'PutItem' to store the related instance
@@ -245,5 +247,17 @@ namespace ServiceStack.Aws.DynamoDb
         /// Disposes the underlying IAmazonDynamoDB client
         /// </summary>
         void Close();
+    }
+
+    /// <summary>
+    /// Available API's with Async equivalents
+    /// </summary>
+    public interface IPocoDynamoAsync
+    {
+        Task CreateMissingTablesAsync(IEnumerable<DynamoMetadataType> tables, CancellationToken token = default(CancellationToken));
+
+        Task WaitForTablesToBeReadyAsync(IEnumerable<string> tableNames, CancellationToken token = default(CancellationToken));
+
+        Task InitSchemaAsync();
     }
 }

@@ -95,6 +95,7 @@
     <Compile Include="DynamoDb\DynamoDbSequenceGenerator.cs" />
     <Compile Include="DynamoDb\PocoDynamo.cs" />
     <Compile Include="DynamoDb\PocoDynamoExpression.cs" />
+    <Compile Include="DynamoDb\PocoDynamo.Async.cs" />
     <Compile Include="S3\IS3Client.cs" />
     <Compile Include="S3\S3VirtualDirectory.cs" />
     <Compile Include="S3\S3VirtualFile.cs" />

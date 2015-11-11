@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -71,7 +73,6 @@ namespace ServiceStack.Aws.DynamoDb
         public void InitSchema()
         {
             CreateMissingTables(DynamoMetadata.GetTables());
-            Sequences.InitSchema();
         }
 
         public IPocoDynamo ClientWith(
@@ -147,7 +148,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (tablesList.Count == 0)
                 return true;
 
-            var existingTableNames = GetTableNames();
+            var existingTableNames = GetTableNames().ToList();
 
             foreach (var table in tablesList)
             {
@@ -281,7 +282,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public bool DeleteAllTables(TimeSpan? timeout = null)
         {
-            return DeleteTables(GetTableNames(), timeout);
+            return DeleteTables(GetTableNames().ToList(), timeout);
         }
 
         public bool DeleteTables(IEnumerable<string> tableNames, TimeSpan? timeout = null)
