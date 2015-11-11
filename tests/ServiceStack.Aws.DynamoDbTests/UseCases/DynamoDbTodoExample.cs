@@ -21,7 +21,6 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
         public bool Done { get; set; }
     }
 
-    [Explicit]
     [TestFixture]
     public class DynamoDbTodoExample : DynamoTestBase
     {
@@ -290,6 +289,12 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
                 .FirstOrDefault();
 
             Assert.That(isDone, Is.Null);
+
+            var q2 = db.FromQuery<Todo>(x => x.Id == 1);
+            q2.Filter(x => x.Done);
+            var todo1Done = db.Query(q2).FirstOrDefault();
+
+            Assert.That(todo1Done, Is.Null);
 
             db.PutItem(new Todo { Id = 1, Content = "Updated", Done = true });
 

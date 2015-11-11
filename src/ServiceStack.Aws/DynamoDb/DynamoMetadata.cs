@@ -105,6 +105,11 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
+        public static DynamoMetadataType RegisterTable<T>()
+        {
+            return RegisterTable(typeof (T));
+        }
+
         // Should only be called at StartUp
         public static DynamoMetadataType RegisterTable(Type type)
         {

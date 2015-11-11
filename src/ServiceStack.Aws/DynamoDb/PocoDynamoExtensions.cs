@@ -13,19 +13,22 @@ namespace ServiceStack.Aws.DynamoDb
 {
     public static class PocoDynamoExtensions
     {
-        public static DynamoMetadataType RegisterTable<T>(this IPocoDynamo db)
+        public static IPocoDynamo RegisterTable<T>(this IPocoDynamo db)
         {
-            return DynamoMetadata.RegisterTable(typeof(T));
+            DynamoMetadata.RegisterTable(typeof(T));
+            return db;
         }
 
-        public static DynamoMetadataType RegisterTable(this IPocoDynamo db, Type tableType)
+        public static IPocoDynamo RegisterTable(this IPocoDynamo db, Type tableType)
         {
-            return DynamoMetadata.RegisterTable(tableType);
+            DynamoMetadata.RegisterTable(tableType);
+            return db;
         }
 
-        public static void RegisterTables(this IPocoDynamo db, IEnumerable<Type> tableTypes)
+        public static IPocoDynamo RegisterTables(this IPocoDynamo db, IEnumerable<Type> tableTypes)
         {
             DynamoMetadata.RegisterTables(tableTypes);
+            return db;
         }
 
         public static void AddValueConverter(this IPocoDynamo db, Type type, IAttributeValueConverter valueConverter)

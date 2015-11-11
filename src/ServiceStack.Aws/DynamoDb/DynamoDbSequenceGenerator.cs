@@ -19,7 +19,7 @@ namespace ServiceStack.Aws.DynamoDb
         public DynamoDbSequenceSource(IPocoDynamo db)
         {
             this.db = db;
-            this.table = db.RegisterTable<Seq>();
+            this.table = DynamoMetadata.RegisterTable<Seq>();
         }
 
         public void InitSchema()
