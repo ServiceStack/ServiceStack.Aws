@@ -80,6 +80,7 @@
     <Compile Include="DynamoDb\DynamoDbAuthRepository.cs" />
     <Compile Include="DynamoDb\IDynamoCommonQuery.cs" />
     <Compile Include="DynamoDb\IPocoDynamo.cs" />
+    <Compile Include="DynamoDb\IPocoDynamoAsync.cs" />
     <Compile Include="DynamoDb\ScanExpression.cs" />
     <Compile Include="DynamoDb\QueryExpression.cs" />
     <Compile Include="DynamoDb\DynamoMetadata.cs" />

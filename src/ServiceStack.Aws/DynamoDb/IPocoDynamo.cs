@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -247,17 +245,5 @@ namespace ServiceStack.Aws.DynamoDb
         /// Disposes the underlying IAmazonDynamoDB client
         /// </summary>
         void Close();
-    }
-
-    /// <summary>
-    /// Available API's with Async equivalents
-    /// </summary>
-    public interface IPocoDynamoAsync
-    {
-        Task CreateMissingTablesAsync(IEnumerable<DynamoMetadataType> tables, CancellationToken token = default(CancellationToken));
-
-        Task WaitForTablesToBeReadyAsync(IEnumerable<string> tableNames, CancellationToken token = default(CancellationToken));
-
-        Task InitSchemaAsync();
     }
 }
