@@ -32,8 +32,8 @@ namespace ServiceStack.Aws.DynamoDbTests
 
         public static AmazonDynamoDBClient CreateDynamoDbClient()
         {
-            var accessKey = Environment.GetEnvironmentVariable("AWSAccessKey");
-            var secretKey = Environment.GetEnvironmentVariable("AWSSecretKey");
+            var accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY");
+            var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_KEY");
 
             var useLocalDb = UseLocalDb || 
                 string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey);

@@ -41,21 +41,21 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 Table = Table,
                 TableName = TableName,
-                AttributesToGet = AttributesToGet,
+                AttributesToGet = new List<string>(AttributesToGet),
                 ConditionalOperator = ConditionalOperator,
                 ConsistentRead = ConsistentRead,
-                ExclusiveStartKey = ExclusiveStartKey,
-                ExpressionAttributeNames = ExpressionAttributeNames,
-                ExpressionAttributeValues = ExpressionAttributeValues,
+                ExclusiveStartKey = new Dictionary<string, AttributeValue>(ExclusiveStartKey),
+                ExpressionAttributeNames = new Dictionary<string, string>(ExpressionAttributeNames),
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>(ExpressionAttributeValues),
                 FilterExpression = FilterExpression,
                 IndexName = IndexName,
                 KeyConditionExpression = KeyConditionExpression,
-                KeyConditions = KeyConditions,
+                KeyConditions = new Dictionary<string, Condition>(KeyConditions),
                 Limit = Limit,
                 ProjectionExpression = ProjectionExpression,
-                QueryFilter = QueryFilter,
+                QueryFilter = new Dictionary<string, Condition>(QueryFilter),
                 ReturnConsumedCapacity = ReturnConsumedCapacity,
-                ScanIndexForward = ScanIndexForward,                
+                ScanIndexForward = ScanIndexForward,                                
             }.SetSelect(base.Select);
 
             if (ReadWriteTimeoutInternal != null)
