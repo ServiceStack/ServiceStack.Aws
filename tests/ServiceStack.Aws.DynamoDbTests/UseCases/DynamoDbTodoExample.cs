@@ -269,10 +269,10 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
             var todos = 20.Times(i => new Todo { Content = "TODO " + i, Order = i });
             db.PutItems(todos);
 
-            var response = db.Query<Todo>(q => q
+            var response = db.FromQuery<Todo>()
                     .KeyCondition(x => x.Id == 1)
-                    .Filter(x => x.Content.StartsWith("TODO")))
-                .ToList();
+                    .Filter(x => x.Content.StartsWith("TODO"))
+                .Exec().ToList();
 
             Assert.That(response, Is.Not.Null);
 

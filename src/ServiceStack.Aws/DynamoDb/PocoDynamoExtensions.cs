@@ -124,16 +124,6 @@ namespace ServiceStack.Aws.DynamoDb
             db.DeleteItems<T>(ids.Map(x => (object)x));
         }
 
-        public static IEnumerable<T> Scan<T>(this IPocoDynamo db, Func<ScanExpression<T>, ScanExpression<T>> fn)
-        {
-            return db.Scan(fn(db.FromScan<T>()));
-        }
-
-        public static List<T> Scan<T>(this IPocoDynamo db, Func<ScanExpression<T>, ScanExpression<T>> fn, int limit)
-        {
-            return db.Scan(fn(db.FromScan<T>()), limit: limit);
-        }
-
         public static IEnumerable<T> ScanInto<T>(this IPocoDynamo db, ScanExpression request)
         {
             return db.Scan<T>(request.SelectInto<T>());
@@ -142,16 +132,6 @@ namespace ServiceStack.Aws.DynamoDb
         public static List<T> ScanInto<T>(this IPocoDynamo db, ScanExpression request, int limit)
         {
             return db.Scan<T>(request.SelectInto<T>(), limit:limit);
-        }
-
-        public static IEnumerable<T> Query<T>(this IPocoDynamo db, Func<QueryExpression<T>, QueryExpression<T>> fn)
-        {
-            return db.Query(fn(db.FromQuery<T>()));
-        }
-
-        public static List<T> Query<T>(this IPocoDynamo db, Func<QueryExpression<T>, QueryExpression<T>> fn, int limit)
-        {
-            return db.Query(fn(db.FromQuery<T>()), limit: limit);
         }
 
         public static IEnumerable<T> QueryInto<T>(this IPocoDynamo db, QueryExpression request)
