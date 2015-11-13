@@ -13,7 +13,7 @@ Amazon's 'ElastiCache' allows a simple way to create and manage cache instances 
 3. Select **Get Started Now** or **ElasticCache Dashboard** and **Launch Cache Cluster**
 4. Select **Redis** for the cluster engine.
 
-You can run your cache as a single Redis node or add multiple nodes for additional redundency. In this example, we will be using 3 nodes. One as a master node and 2 read only replicas. 
+You can run your cache as a single Redis node or add multiple nodes for additional redundency. In this example, we will be using 3 nodes. One as a primary (or master) node and 2 read only replicas (or slaves). 
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticcache-redis-config.png)
 > To use the smaller instances like the `cache.t2.micro`, **Multi-AZ** must be disabled.
@@ -33,7 +33,7 @@ First, you'll need to install `ServiceStack.Redis` NuGet package if your applica
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/nuget-install-redis.png)
 
-In this example, we are going to use a `PooledRedisClientManager` for our `IRedisClientsManager`. This will be responsible for creating `ICacheClient`s that our `Service`s will use to connect to the ElastiCache nodes. We will need to provide our `PooledRedisClientManager` with the nodes we have create. For example, as shown above, we created a cluster of **1 Primary** and **2 Read Replicas**, these endpoint URLs can be accessed from the ElastiCache **Dashboard**.
+In this example, we are going to use a `PooledRedisClientManager` for our `IRedisClientsManager`. This will be responsible for creating `ICacheClient`s that our `Service`s will use to connect to the ElastiCache nodes. We will need to provide our `PooledRedisClientManager` with the nodes we have create. For example, as shown above, we created a cluster of **1 Primary** (master) and **2 Read Replicas** (slaves), these endpoint URLs can be accessed from the ElastiCache **Dashboard**.
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticcache-redis-nodes.png)
 
@@ -50,12 +50,12 @@ public class AppHost : AppSelfHostBase
         {
             container.Register<IRedisClientsManager>(c =>
                 new PooledRedisClientManager(
-                    // Primary node
+                    // Primary node from AWS (master)
                     new[]
                     {
                         "redis-cluster-001.jbnmsd.0001.apse2.cache.amazonaws.com"
                     },
-                    // Read replicas
+                    // Read replicas nodes from AWS (slaves)
                     new[]
                     {
                         "redis-cluster-002.jbnmsd.0001.apse2.cache.amazonaws.com",
