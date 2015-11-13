@@ -1,6 +1,6 @@
-![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-sqlserver-powered-by-aws.png)
-
 ## Getting Started with AWS RDS SQL Server and OrmLite
+
+![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-sqlserver-powered-by-aws.png)
 
 ServiceStack.OrmLite library has support for use with a [Microsoft SQL Server](http://www.microsoft.com/en-au/server-cloud/products/sql-server/) database via the [`ServiceStack.OrmLite.SqlServer`](https://www.nuget.org/packages/ServiceStack.OrmLite.SqlServer/) NuGet package. This can be used in conjunction with Amazon's RDS service using SQL Server.
 
