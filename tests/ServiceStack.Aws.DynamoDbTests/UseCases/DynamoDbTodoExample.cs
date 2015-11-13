@@ -283,8 +283,11 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
 
             Assert.That(response, Is.Not.Null);
 
-            var isDone = db.FromQuery<Todo>(x => x.Id == 1)
-                .Filter(x => x.Done)
+            var q = db.FromQuery<Todo>()
+                .KeyCondition(x => x.Id == 1)
+                .Filter(x => x.Done);
+
+            var isDone = q
                 .Exec()
                 .FirstOrDefault();
 
@@ -298,8 +301,7 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
 
             db.PutItem(new Todo { Id = 1, Content = "Updated", Done = true });
 
-            isDone = db.FromQuery<Todo>(x => x.Id == 1)
-                .Filter(x => x.Done)
+            isDone = q
                 .Exec()
                 .FirstOrDefault();
 
