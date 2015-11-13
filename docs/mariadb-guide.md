@@ -1,7 +1,8 @@
 # Getting Started with AWS RDS and OrmLite
-## MariaDB
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-mariadb-powered-by-aws.png)
+
+## MariaDB
 
 ServiceStack.OrmLite library has support for use with a [MariaDB](https://mariadb.org/) database via the [`ServiceStack.OrmLite.MySql`](https://www.nuget.org/packages/ServiceStack.OrmLite.MySql/) NuGet package. This can be used in conjunction with Amazon's RDS service using MariaDB.
 > MariaDB is a "binary drop in replacement for MySQL" which is why the `ServiceStack.OrmLite.MySql` NuGet package can be used. For more information, see the [MariaDB documentation](https://mariadb.com/kb/en/mariadb/mariadb-vs-mysql-compatibility/).
