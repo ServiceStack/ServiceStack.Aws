@@ -112,6 +112,9 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var results = db.FromScan<Poco>(x => names.Contains(x.Title)).Exec();
             Assert.That(results, Is.EquivalentTo(expected));
+
+            results = db.FromScan<Poco>().Filter("Title in(:s1, :s2)", new { s1 = "Name 1", s2 = "Name 2" }).Exec();
+            Assert.That(results, Is.EquivalentTo(expected));
         }
 
         [Test]

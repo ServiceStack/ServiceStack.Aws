@@ -94,6 +94,7 @@
     <Compile Include="Shared\AppSettingsTest.cs" />
     <Compile Include="Shared\CacheClientTestsBase.cs" />
     <Compile Include="Shared\DataModels.cs" />
+    <Compile Include="UseCases\DynamoDbCustomerOrderExample.cs" />
     <Compile Include="UseCases\DynamoDbTodoExample.cs" />
   </ItemGroup>
   <ItemGroup>
