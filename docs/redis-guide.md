@@ -42,22 +42,25 @@ Below is a simple example of a configured self hosting AppHost that uses ElastiC
 ``` csharp
 public class AppHost : AppSelfHostBase
 {
-    public AppHost() : base("AWS ElastiCache Example", typeof(AppHost).Assembly) {}
+    public AppHost() : base("AWS ElastiCache Example", typeof(CustomerService).Assembly) {}
 
     public override void Configure(Container container)
     {
         if (AppSettings.GetString("Environment") == "Production")
         {
             container.Register<IRedisClientsManager>(c =>
-                // Primary node
-		        new [] {
-		            "redis-cluster-001.jbnmsd.0001.apse2.cache.amazonaws.com"
-		        },
-		        // Read replicas
-		        new [] {
-		            "redis-cluster-002.jbnmsd.0001.apse2.cache.amazonaws.com",
-		            "redis-cluster-003.jbnmsd.0001.apse2.cache.amazonaws.com"
-		        }));
+                new PooledRedisClientManager(
+                    // Primary node
+                    new[]
+                    {
+                        "redis-cluster-001.jbnmsd.0001.apse2.cache.amazonaws.com"
+                    },
+                    // Read replicas
+                    new[]
+                    {
+                        "redis-cluster-002.jbnmsd.0001.apse2.cache.amazonaws.com",
+                        "redis-cluster-003.jbnmsd.0001.apse2.cache.amazonaws.com"
+                    }));
 
             container.Register<ICacheClient>(c =>
                 container.Resolve<IRedisClientsManager>().GetCacheClient());
