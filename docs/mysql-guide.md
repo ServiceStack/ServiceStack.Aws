@@ -1,5 +1,4 @@
-# Getting Started with AWS RDS and OrmLite
-## MySQL
+## Getting Started with AWS RDS MySQL and OrmLite
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-mysql-powered-by-aws.png)
 
