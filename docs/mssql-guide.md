@@ -54,7 +54,7 @@ Once this dependency is installed, the `OrmLiteConnectionFactory` can be used wi
 ``` csharp
 public class AppHost : AppSelfHostBase
 {
-    public AppHost() : base("AWS MS SQL Customers", typeof(AppHost).Assembly) {}
+    public AppHost() : base("AWS SQL Server Customers", typeof(AppHost).Assembly) {}
 
     public override void Configure(Container container)
     {
