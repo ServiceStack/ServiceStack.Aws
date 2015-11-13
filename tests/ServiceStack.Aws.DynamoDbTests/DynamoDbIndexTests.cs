@@ -65,7 +65,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(string.Join(", ", table.Fields.Map(x => x.Name)), Is.EqualTo(expectedFields));
 
             var q = db.FromQueryIndex<RockstarAgeIndex>(x => x.Age == 27);
-            q.SelectInto<Rockstar>();
+            q.Projection<Rockstar>();
 
             q.ProjectionExpression.Print();
             Assert.That(q.ProjectionExpression, Is.EqualTo(expectedFields));

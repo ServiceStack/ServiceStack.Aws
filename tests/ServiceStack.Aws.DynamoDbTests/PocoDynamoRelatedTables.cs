@@ -109,7 +109,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             expensiveOrders = db.Query(q.Clone().Select(new[] { "Qty" })).ToList();
             Assert.That(expensiveOrders.All(x => x.Id == 0 && x.Qty > 0));
 
-            expensiveOrders = db.Query(q.Clone().SelectAll()).ToList();
+            expensiveOrders = db.Query(q.Clone().SelectTableFields()).ToList();
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.CustomerId > 0 && x.Qty > 0 && x.LineItem != null));
 
             expensiveOrders = db.Query(q.Clone().Select<OrderWithFieldIndex>()).ToList();

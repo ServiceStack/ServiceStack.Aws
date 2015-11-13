@@ -126,22 +126,22 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static IEnumerable<T> ScanInto<T>(this IPocoDynamo db, ScanExpression request)
         {
-            return db.Scan<T>(request.SelectInto<T>());
+            return db.Scan<T>(request.Projection<T>());
         }
 
         public static List<T> ScanInto<T>(this IPocoDynamo db, ScanExpression request, int limit)
         {
-            return db.Scan<T>(request.SelectInto<T>(), limit:limit);
+            return db.Scan<T>(request.Projection<T>(), limit:limit);
         }
 
         public static IEnumerable<T> QueryInto<T>(this IPocoDynamo db, QueryExpression request)
         {
-            return db.Query<T>(request.SelectInto<T>());
+            return db.Query<T>(request.Projection<T>());
         }
 
         public static List<T> QueryInto<T>(this IPocoDynamo db, QueryExpression request, int limit)
         {
-            return db.Query<T>(request.SelectInto<T>(), limit: limit);
+            return db.Query<T>(request.Projection<T>(), limit: limit);
         }
 
         static AttributeValue NullValue = new AttributeValue { NULL = true };

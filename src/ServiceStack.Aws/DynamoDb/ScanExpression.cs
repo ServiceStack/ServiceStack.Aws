@@ -16,7 +16,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         protected DynamoMetadataType Table { get; set; }
 
-        public ScanExpression SelectInto<TModel>()
+        public ScanExpression Projection<TModel>()
         {
             this.SelectFields(typeof(TModel).AllFields().Where(Table.HasField));
             return this;
@@ -147,7 +147,10 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
-        public ScanExpression<T> SelectAll()
+        /// <summary>
+        /// Select all table fields, useful when querying an index with only a partial field set
+        /// </summary>
+        public ScanExpression<T> SelectIndexedTableFields()
         {
             return Select(Table.Fields.Map(x => x.Name));
         }
@@ -180,12 +183,12 @@ namespace ServiceStack.Aws.DynamoDb
 
         public IEnumerable<Into> ExecInto<Into>()
         {
-            return Db.Scan<Into>(this.SelectInto<Into>());
+            return Db.Scan<Into>(this.Projection<Into>());
         }
 
         public List<Into> Exec<Into>(int limit)
         {
-            return Db.Scan<Into>(this.SelectInto<Into>(), limit:limit);
+            return Db.Scan<Into>(this.Projection<Into>(), limit:limit);
         }
 
         public IEnumerable<TKey> ExecColumn<TKey>(Expression<Func<T, TKey>> fields)
