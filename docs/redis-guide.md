@@ -55,7 +55,7 @@ public class AppHost : AppSelfHostBase
                     {
                         "redis-cluster-001.jbnmsd.0001.apse2.cache.amazonaws.com"
                     },
-                    // Read replicas nodes from AWS (slaves)
+                    // Read replica nodes from AWS (slaves)
                     new[]
                     {
                         "redis-cluster-002.jbnmsd.0001.apse2.cache.amazonaws.com",
