@@ -250,10 +250,6 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
                 .KeyCondition(x => x.CustomerId == 1)
                 .Exec().ToList();
 
-            expensiveOrders = db.FromQuery<Order>()
-                .KeyCondition(x => x.Cost > 10)
-                .Exec().ToList();
-
             expensiveOrders = db.FromScan<Order>().Filter(x => x.Cost > 10)
                 .Exec().ToList();
 
