@@ -16,21 +16,18 @@ namespace ServiceStack.Aws.DynamoDb
         public const string IdField = "Id";
         public const string DataField = "Data";
 
-        public int PagingLimit { get; set; }
-
         private static readonly ILog Log = LogManager.GetLogger(typeof(DynamoDbCacheClient));
 
-        private readonly IPocoDynamo db;
+        public IPocoDynamo Dynamo { get; private set; }
 
         private Table schema;
         private readonly DynamoMetadataType metadata;
 
-        public DynamoDbCacheClient(IPocoDynamo db, bool initSchema = false)
+        public DynamoDbCacheClient(IPocoDynamo dynamo, bool initSchema = false)
         {
-            this.db = db;
-            this.PagingLimit = 1000;
-            db.RegisterTable<CacheEntry>();
-            metadata = db.GetTableMetadata<CacheEntry>();
+            this.Dynamo = dynamo;
+            dynamo.RegisterTable<CacheEntry>();
+            metadata = dynamo.GetTableMetadata<CacheEntry>();
 
             if (initSchema)
                 InitSchema();
@@ -38,18 +35,18 @@ namespace ServiceStack.Aws.DynamoDb
 
         public void InitSchema()
         {
-            schema = db.GetTableSchema<CacheEntry>();
+            schema = Dynamo.GetTableSchema<CacheEntry>();
 
             if (schema == null)
             {
-                db.CreateTableIfMissing(metadata);
-                schema = db.GetTableSchema<CacheEntry>();
+                Dynamo.CreateTableIfMissing(metadata);
+                schema = Dynamo.GetTableSchema<CacheEntry>();
             }
         }
 
         private T GetValue<T>(string key)
         {
-            var entry = db.GetItem<CacheEntry>(key);
+            var entry = Dynamo.GetItem<CacheEntry>(key);
             if (entry == null)
                 return default(T);
 
@@ -98,28 +95,27 @@ namespace ServiceStack.Aws.DynamoDb
             Exception lastEx = null;
             var i = 0;
             var firstAttempt = DateTime.UtcNow;
-            while (DateTime.UtcNow - firstAttempt < db.MaxRetryOnExceptionTimeout)
+            while (DateTime.UtcNow - firstAttempt < Dynamo.MaxRetryOnExceptionTimeout)
             {
                 i++;
                 try
                 {
-                    db.PutItem(entry);
+                    Dynamo.PutItem(entry);
                     return true;
                 }
                 catch (ResourceNotFoundException ex)
                 {
                     lastEx = ex;
-                    //Table could temporarily not exist after a FlushAll()
-                    AwsClientUtils.SleepBackOffMultiplier(i);
+                    i.SleepBackOffMultiplier(); //Table could temporarily not exist after a FlushAll()
                 }
             }
 
-            throw new TimeoutException("Exceeded timeout of {0}".Fmt(db.MaxRetryOnExceptionTimeout), lastEx);
+            throw new TimeoutException("Exceeded timeout of {0}".Fmt(Dynamo.MaxRetryOnExceptionTimeout), lastEx);
         }
 
         private int UpdateCounterBy(string key, int amount)
         {
-            return (int) db.Increment<CacheEntry>(key, DataField, amount);
+            return (int) Dynamo.Increment<CacheEntry>(key, DataField, amount);
         }
 
         public bool Add<T>(string key, T value, TimeSpan expiresIn)
@@ -148,8 +144,8 @@ namespace ServiceStack.Aws.DynamoDb
         /// </summary>
         public void FlushAll()
         {
-            db.DeleteTable<CacheEntry>();
-            db.CreateTableIfMissing<CacheEntry>();
+            Dynamo.DeleteTable<CacheEntry>();
+            Dynamo.CreateTableIfMissing<CacheEntry>();
         }
 
         public T Get<T>(string key)
@@ -175,7 +171,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public bool Remove(string key)
         {
-            var existingItem = db.DeleteItem<CacheEntry>(key, ReturnItem.Old);
+            var existingItem = Dynamo.DeleteItem<CacheEntry>(key, ReturnItem.Old);
             return existingItem != null;
         }
 
@@ -183,14 +179,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             foreach (var key in keys)
             {
-                try
-                {
-                    Remove(key);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("Error trying to remove {0} from the cache".Fmt(key), ex);
-                }
+                Remove(key);
             }
         }
 
@@ -234,7 +223,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public TimeSpan? GetTimeToLive(string key)
         {
-            var entry = db.GetItem<CacheEntry>(key);
+            var entry = Dynamo.GetItem<CacheEntry>(key);
             if (entry == null)
                 return null;
 
@@ -247,34 +236,16 @@ namespace ServiceStack.Aws.DynamoDb
         public IEnumerable<string> GetKeysByPattern(string pattern)
         {
             if (pattern == "*")
-            {
-                var request = new ScanRequest
-                {
-                    Limit = PagingLimit,
-                    TableName = metadata.Name,
-                    AttributesToGet = new List<string> { IdField },
-                };
-                return db.Scan(request, r => r.ToStrings(IdField));
-            }
-            if (pattern.EndsWith("*"))
-            {
-                var beginWith = pattern.Substring(0, pattern.Length - 1);
-                if (beginWith.Contains("*"))
-                    throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
+                return Dynamo.FromScan<CacheEntry>().ExecColumn(x => x.Id);
 
-                var request = new ScanRequest
-                {
-                    Limit = PagingLimit,
-                    TableName = metadata.Name,
-                    ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
-                        { ":pattern", new AttributeValue { S = beginWith } }
-                    },
-                    FilterExpression = "begins_with({0},:pattern)".Fmt(IdField)
-                };
-                return db.Scan(request, r => r.ToStrings(IdField));
-            }
+            if (!pattern.EndsWith("*"))
+                throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
 
-            throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
+            var beginWith = pattern.Substring(0, pattern.Length - 1);
+            if (beginWith.Contains("*"))
+                throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
+
+            return Dynamo.FromScan<CacheEntry>(x => x.Id.StartsWith(beginWith)).ExecColumn(x => x.Id);
         }
 
         public void RemoveByPattern(string pattern)
@@ -290,18 +261,16 @@ namespace ServiceStack.Aws.DynamoDb
 
         public void Close()
         {
-            if (db != null)
-                db.Close();
-        }
-
-        public void Dispose()
-        {
+            if (Dynamo != null)
+                Dynamo.Close();
         }
 
         ~DynamoDbCacheClient()
         {
             Close();
         }
+
+        public void Dispose() { }
     }
 
     public class CacheEntry

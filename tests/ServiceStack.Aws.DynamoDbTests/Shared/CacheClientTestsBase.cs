@@ -305,7 +305,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             if (!(Cache is ICacheClientExtended))
                 return;
 
-            ((DynamoDbCacheClient)Cache).PagingLimit = 2;
+            ((PocoDynamo)((DynamoDbCacheClient)Cache).Dynamo).PagingLimit = 2;
 
             JsConfig.ExcludeTypeInfo = true;
 
