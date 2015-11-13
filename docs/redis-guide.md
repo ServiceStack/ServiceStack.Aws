@@ -104,3 +104,12 @@ public class CustomerService : Service
     }
 }
 ```
+
+> As this example uses the `Cache` property from the `Service` in a distributed cache environment, `Cache.Get<T>` values are coming from the read replica (slave) instances which will take time to replicate from a previous `Cache.Set<T>` call. To gaurentee a value is imediately available, reusing the same instance can be done by handling the creating from the `IRedisClientsManager` from within your `Service` method.
+> ``` csharp
+> using(var cacheClient = this.RedisClientManager.GetClient())
+> {
+>    //Your cacheClient code
+> }
+> ```
+
