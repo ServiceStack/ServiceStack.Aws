@@ -42,25 +42,21 @@ Below is a simple example of a configured self hosting AppHost that uses ElastiC
 ``` csharp
 public class AppHost : AppSelfHostBase
 {
-    public AppHost() : base("AWS ElastiCache Example", typeof(CustomerService).Assembly) {}
+    public AppHost() : base("AWS ElastiCache Example", typeof(MyServices).Assembly) { }
 
     public override void Configure(Container container)
     {
+		//Your DB initialization
+		...
+
         if (AppSettings.GetString("Environment") == "Production")
         {
             container.Register<IRedisClientsManager>(c =>
                 new PooledRedisClientManager(
                     // Primary node from AWS (master)
-                    new[]
-                    {
-                        "redis-cluster-001.jbnmsd.0001.apse2.cache.amazonaws.com"
-                    },
+                    AwsElastiCacheConfig.MasterNodes,
                     // Read replica nodes from AWS (slaves)
-                    new[]
-                    {
-                        "redis-cluster-002.jbnmsd.0001.apse2.cache.amazonaws.com",
-                        "redis-cluster-003.jbnmsd.0001.apse2.cache.amazonaws.com"
-                    }));
+                    AwsElastiCacheConfig.SlaveNodes));
 
             container.Register<ICacheClient>(c =>
                 container.Resolve<IRedisClientsManager>().GetCacheClient());
@@ -74,6 +70,15 @@ public class AppHost : AppSelfHostBase
 
 ```
 
+With configuration provided in your application config.
+``` xml
+<appSettings>
+  <add key="Environment" value="Production"/>
+  <add key="MasterNodes" value="{YourAWSPrimaryNodeAddress}"/>
+  <add key="SlaveNodes" value="{Your1stAWSReadReplicaNodeAddress},{AWSReadReplicaNodeAddress}"/>
+</appSettings>
+```
+
 Now that your caching is setup and connecting, you can cache your web servie responses easily by returning `Request.ToOptimizedResultUsingCache` from within a ServiceStack `Service`. For example, returning a full customers details might be an expensive database query. We can cache the result in the ElastiCache cluster for a faster response and invalidate the cache when the details are updated.
 
 ``` csharp
@@ -81,23 +86,26 @@ public class CustomerService : Service
 {
     private static string CacheKey = "customer_details_{0}";
 
-    public object Get(GetCustomerDetails request)
+    public object Get(GetCustomer request)
     {
         return this.Request.ToOptimizedResultUsingCache(this.Cache,
-            CacheKey.Fmt(request.CustomerId), 
-                () => new GetCustomerDetailsResponse {
-                    Result = this.Db.LoadSingleById<CustomerDetails>(request.CustomerId)
-        });
+            CacheKey.Fmt(request.Id), () => {
+                Thread.Sleep(500); //Long request
+                return new GetCustomerResponse
+                {
+                    Result = this.Db.LoadSingleById<Customer>(request.Id)
+                };
+            });
     }
 
-    public object Put(UpdateCustomerDetails request)
+    public object Put(UpdateCustomer request)
     {
-        var customer = this.Db.LoadSingleById<CustomerDetails>(request.CustomerId);
-        customer = request.ConvertTo<CustomerDetails>().PopulateWith(customer);
+        var customer = this.Db.LoadSingleById<Customer>(request.Id);
+        customer = customer.PopulateWith(request.ConvertTo<Customer>());
         this.Db.Update(customer);
         //Invalidate customer details cache
-        this.Cache.ClearCaches(CacheKey.Fmt(request.CustomerId));
-        return new UpdateCustomerDetailsResponse()
+        this.Cache.ClearCaches(CacheKey.Fmt(request.Id));
+        return new UpdateCustomerResponse()
         {
             Result = customer
         };
