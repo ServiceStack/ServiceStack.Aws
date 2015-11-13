@@ -12,7 +12,6 @@ using Amazon.DynamoDBv2.Model;
 using ServiceStack.Aws.Support;
 using ServiceStack.DataAnnotations;
 using ServiceStack.Text;
-using ServiceStack.Text.Common;
 
 namespace ServiceStack.Aws.DynamoDb
 {
