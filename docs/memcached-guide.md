@@ -2,7 +2,7 @@
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticache-memcached-powered-by-aws.png)
 
-## ServiceStack.Caching.Memcached
+### ServiceStack.Caching.Memcached
 
 Amazon's 'ElastiCache' allows a simple way to create and manage Memcached instances that can be simply incorporated into your ServiceStack application stack using the ServiceStack NuGet package, `ServiceStack.Caching.Memcached`. 
 
