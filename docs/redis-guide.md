@@ -1,7 +1,8 @@
 # Getting started with AWS ElastiCache
-## ServiceStack.Redis
 
 ![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticache-redis-powered-by-aws.png)
+
+## ServiceStack.Redis
 
 Amazon's 'ElastiCache' allows a simple way to create and manage cache instances that can be simply incorporated into your ServiceStack application stack using the ServiceStack Redis client, `ServiceStack.Redis`. 
 
