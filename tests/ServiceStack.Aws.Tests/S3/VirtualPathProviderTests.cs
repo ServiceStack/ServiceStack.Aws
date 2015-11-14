@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Amazon.S3;
@@ -27,6 +28,22 @@ namespace ServiceStack.Aws.Tests.S3
         public override IVirtualPathProvider GetPathProvider()
         {
             return new InMemoryVirtualPathProvider(appHost);
+        }
+    }
+
+    public class FileSystemVirtualPathProviderTests : VirtualPathProviderTests
+    {
+        private static string RootDir = "~/App_Data".MapProjectPath();
+
+        public FileSystemVirtualPathProviderTests()
+        {
+            if (!Directory.Exists(RootDir))
+                Directory.CreateDirectory(RootDir);
+        }
+
+        public override IVirtualPathProvider GetPathProvider()
+        {
+            return new FileSystemVirtualPathProvider(appHost, RootDir);
         }
     }
 
