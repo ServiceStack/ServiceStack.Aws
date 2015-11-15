@@ -114,3 +114,5 @@ public class CustomerService : Service
 ```
 
 See the [OrmLite GitHub](https://github.com/ServiceStack/ServiceStack.OrmLite#api-examples) page for more info on working with OrmLite API.
+
+An example solution of this guide can be found in the [ServiceStack AWS Getting Started repository](https://github.com/ServiceStackApps/AwsGettingStarted/tree/master/src/SqlServer).

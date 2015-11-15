@@ -112,3 +112,5 @@ public class CustomerService : Service
     }
 }
 ```
+
+An example solution of this guide can be found in the [ServiceStack AWS Getting Started repository](https://github.com/ServiceStackApps/AwsGettingStarted/tree/master/src/Memcached).
