@@ -43,13 +43,15 @@ Below is a simple example of a configured self hosting AppHost that uses ElastiC
 ``` csharp
 public class AppHost : AppSelfHostBase
 {
-    public AppHost() : base("AWS ElastiCache Example", typeof(MyServices).Assembly) { }
+    public AppHost() : base("AWS Redis ElastiCache Example", typeof(MyServices).Assembly) { }
 
     public override void Configure(Container container)
     {
 		//Your DB initialization
 		...
 
+        // AWS ElastiCache servers are NOT accessible from outside AWS
+        // Use MemoryCacheClient locally
         if (AppSettings.GetString("Environment") == "Production")
         {
             container.Register<IRedisClientsManager>(c =>
