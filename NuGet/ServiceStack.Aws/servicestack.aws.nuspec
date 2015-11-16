@@ -20,7 +20,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="..\..\lib\**\*.*" target="lib" />
     <file src="..\..\src\ServiceStack.Aws\**\*.cs" target="src" />
   </files>
 </package>
