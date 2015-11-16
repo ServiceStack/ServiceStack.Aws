@@ -6,12 +6,12 @@
     <authors>ServiceStack</authors> 
     <owners>ServiceStack</owners>
     <description>
-        ServiceStack integration for AWS Infrastructure Services
+        ServiceStack integration for Amazon Web Services (AWS)
     </description> 
     <projectUrl>https://github.com/ServiceStack/ServiceStack</projectUrl>
     <licenseUrl>https://servicestack.net/terms</licenseUrl>
     <iconUrl>https://servicestack.net/img/logo-32.png</iconUrl>
-    <tags>ServiceStack Caching AwsDynamoDb Amazon WebServices AWS DynamoDb Cache CacheClient</tags>
+    <tags>ServiceStack AWS Amazon WebServices DynamoDb S3 SQS Cache CacheClient</tags>
     <language>en-US</language> 
     <copyright>ServiceStack 2015 and Contributors</copyright>
     <dependencies>
@@ -22,6 +22,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="..\..\src\ServiceStack.Aws\**\*.cs" target="src" />
+      <file src="lib\**\*.*" target="lib" />
+      <file src="..\..\src\ServiceStack.Aws\**\*.cs" target="src" />
   </files>
 </package>
