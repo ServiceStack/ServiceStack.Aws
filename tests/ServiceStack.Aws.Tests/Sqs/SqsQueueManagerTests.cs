@@ -98,7 +98,7 @@ namespace ServiceStack.Aws.Tests.Sqs
         {
             var qd = sqsQueueManager.CreateQueue(GetNewId());
 
-            Assert.IsNotNullOrEmpty(sqsQueueManager.GetQueueUrl(qd.QueueName));
+            Assert.That(sqsQueueManager.GetQueueUrl(qd.QueueName), Is.Not.Null.Or.Empty);
         }
 
         [Test]
@@ -115,7 +115,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.IsTrue(sqsQueueManager.QueueNameMap.TryRemove(qd.QueueName, out removedQd));
             Assert.IsTrue(ReferenceEquals(qd, removedQd));
 
-            Assert.IsNotNullOrEmpty(sqsQueueManager.GetQueueUrl(qd.QueueName));
+            Assert.That(sqsQueueManager.GetQueueUrl(qd.QueueName), Is.Not.Null.Or.Empty);
         }
 
         [Test]
@@ -140,7 +140,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.IsTrue(sqsQueueManager.QueueNameMap.ContainsKey(qd.QueueName));
 
             // should still return true when not forced, false when forced
-            Assert.IsNotNullOrEmpty(sqsQueueManager.GetQueueUrl(qd.QueueName));
+            Assert.That(sqsQueueManager.GetQueueUrl(qd.QueueName), Is.Not.Null.Or.Empty);
             Assert.Throws<QueueDoesNotExistException>(() => sqsQueueManager.GetQueueUrl(qd.QueueName, forceRecheck: true));
         }
 

@@ -308,7 +308,7 @@ namespace ServiceStack.Aws.Tests.Sqs
                 });
 
                 Assert.IsNotNull(message, "Receive message is null");
-                Assert.IsNotNullOrEmpty(message.ReceiptHandle, "ReceiptHandle is null or empty");
+                Assert.That(message.ReceiptHandle, Is.Not.Null.Or.Empty, "ReceiptHandle is null or empty");
 
                 buffer.ChangeVisibility(new ChangeMessageVisibilityRequest
                 {
@@ -368,7 +368,7 @@ namespace ServiceStack.Aws.Tests.Sqs
                 });
 
                 Assert.IsNotNull(message, "Receive message is null");
-                Assert.IsNotNullOrEmpty(message.ReceiptHandle, "ReceiptHandle is null or empty");
+                Assert.That(message.ReceiptHandle, Is.Not.Null.Or.Empty, "ReceiptHandle is null or empty");
 
                 buffer.Delete(new DeleteMessageRequest
                 {

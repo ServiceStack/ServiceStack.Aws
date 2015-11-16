@@ -156,7 +156,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             var createResponse = client.CreateQueue(createRequest);
 
             Assert.IsNotNull(createResponse);
-            Assert.IsNotNullOrEmpty(createResponse.QueueUrl);
+            Assert.That(createResponse.QueueUrl, Is.Not.Null.Or.Empty);
 
             return createResponse.QueueUrl;
         }

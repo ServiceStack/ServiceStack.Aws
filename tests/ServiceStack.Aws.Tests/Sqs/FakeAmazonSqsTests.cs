@@ -58,7 +58,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             foreach (var validName in validNames)
             {
                 var createResponse = client.CreateQueue(validName);
-                Assert.IsNotNullOrEmpty(createResponse.QueueUrl);
+                Assert.That(createResponse.QueueUrl, Is.Not.Null.Or.Empty);
             }
         }
 
@@ -77,7 +77,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             
             var createResponse = client.CreateQueue(createRequest);
 
-            Assert.IsNotNullOrEmpty(createResponse.QueueUrl);
+            Assert.That(createResponse.QueueUrl, Is.Not.Null.Or.Empty);
 
             var attrResponse = client.GetQueueAttributes(createResponse.QueueUrl, new List<string>
             {
