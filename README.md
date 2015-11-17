@@ -1,3 +1,10 @@
+## .NET before Cloud Services
+
+One thing we've missed from being based on .NET is its predisposition towards Windows-only technologies, missing out on
+all the industrial strength server solutions that are being primarily developed for hosting on Linux. This puts .NET 
+at a disadvantage to other platforms which have first-class support for using the best technologies at their discretion, 
+which outside of .NET, are primarily running on Linux servers. 
+
 ## AWS's servicified platform and polyglot ecosystem
 
 By building their managed platform behind platform-agnostic web services, Amazon have largely eroded this barrier. We
