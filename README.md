@@ -1,6 +1,3 @@
-ServiceStack.AmazonWebServices
-==============================
-
 ## AWS's servicified platform and polyglot ecosystem
 
 By building their managed platform behind platform-agnostic web services, Amazon have largely eroded this barrier. We
