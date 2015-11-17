@@ -494,7 +494,7 @@ reliability with automatic retries of temporary errors, using an exponential bac
 
 PocoDynamo API's are a lightweight layer modeled after DynamoDB API's making it predictable the DynamoDB operations 
 each API calls under the hood, retaining your existing knowledge investment in DynamoDB. 
-When more flexibility is needed you can access the low-level `AmazonDynamoDBclient from the `IPocoDynamo.DynamoDb` 
+When more flexibility is needed you can access the low-level `AmazonDynamoDBclient` from the `IPocoDynamo.DynamoDb` 
 property and talk with it directly.
 
 Whilst PocoDynamo doesn't save you for needing to learn DynamoDB, its deep integration with .NET and rich support for 
