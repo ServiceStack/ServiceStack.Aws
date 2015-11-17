@@ -1,3 +1,5 @@
+![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/servicestack-aws-banner-420.png)
+
 ## .NET before Cloud Services
 
 One thing we've missed from being based on .NET is its predisposition towards Windows-only technologies, missing out on
