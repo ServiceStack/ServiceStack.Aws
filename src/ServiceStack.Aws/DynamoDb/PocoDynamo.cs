@@ -10,6 +10,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Aws.Support;
 using ServiceStack.Logging;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDb
 {
@@ -66,6 +67,8 @@ namespace ServiceStack.Aws.DynamoDb
                 "LimitExceededException",
                 "ResourceInUseException",
             };
+
+            JsConfig.InitStatics();
         }
 
         public void InitSchema()
