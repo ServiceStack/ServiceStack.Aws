@@ -5201,6 +5201,26 @@
             Add Response Filters for MQ/TCP Responses
             </summary>
         </member>
+        <member name="M:ServiceStack.IAppHost.RegisterTypedRequestFilter``1(System.Action{ServiceStack.Web.IRequest,ServiceStack.Web.IResponse,``0})">
+            <summary>
+            Add Request Filter for a specific Request DTO Type
+            </summary>
+        </member>
+        <member name="M:ServiceStack.IAppHost.RegisterTypedResponseFilter``1(System.Action{ServiceStack.Web.IRequest,ServiceStack.Web.IResponse,``0})">
+            <summary>
+            Add Request Filter for a specific Response DTO Type
+            </summary>
+        </member>
+        <member name="M:ServiceStack.IAppHost.RegisterTypedMessageRequestFilter``1(System.Action{ServiceStack.Web.IRequest,ServiceStack.Web.IResponse,``0})">
+            <summary>
+            Add Request Filter for a specific MQ Request DTO Type
+            </summary>
+        </member>
+        <member name="M:ServiceStack.IAppHost.RegisterTypedMessageResponseFilter``1(System.Action{ServiceStack.Web.IRequest,ServiceStack.Web.IResponse,``0})">
+            <summary>
+            Add Request Filter for a specific MQ Response DTO Type
+            </summary>
+        </member>
         <member name="P:ServiceStack.IAppHost.ViewEngines">
             <summary>
             Add alternative HTML View Engines
