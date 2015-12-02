@@ -76,6 +76,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DynamoDb\DynamoConfig.cs" />
     <Compile Include="DynamoDb\DynamoDbAppSettings.cs" />
     <Compile Include="DynamoDb\DynamoDbAuthRepository.cs" />
     <Compile Include="DynamoDb\IDynamoCommonQuery.cs" />
