@@ -138,6 +138,17 @@ namespace ServiceStack.Aws.DynamoDb
         public int WriteCapacityUnits { get; set; }
     }
 
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class ProjectionTypeAttribute : AttributeBase
+    {
+        public string ProjectionType { get; private set; }
+
+        public ProjectionTypeAttribute(string projectionType)
+        {
+            ProjectionType = projectionType;
+        }
+    }
+
     public class DynamoId
     {
         public DynamoId() {}

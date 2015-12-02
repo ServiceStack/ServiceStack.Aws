@@ -9,6 +9,7 @@ namespace ServiceStack.Aws.DynamoDbTests
     //Poco Data Model for OrmLite + SeedData 
     [Route("/rockstars", "POST")]
     [References(typeof(RockstarAgeIndex))]
+    [References(typeof(RockstarAgeAllIndex))]
     public class Rockstar
     {
         [AutoIncrement]
@@ -43,6 +44,20 @@ namespace ServiceStack.Aws.DynamoDbTests
         public int Id { get; set; }
     }
 
+    [ProjectionType(DynamoProjectionType.All)]
+    public class RockstarAgeAllIndex : IGlobalIndex<Rockstar>
+    {
+        [HashKey]
+        public int Age { get; set; }
+
+        [RangeKey]
+        public int Id { get; set; }
+
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public bool Alive { get; set; }
+    }
+
     [TestFixture]
     public class DynamoDbIndexTests : DynamoTestBase
     {
@@ -65,6 +80,24 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(string.Join(", ", table.Fields.Map(x => x.Name)), Is.EqualTo(expectedFields));
 
             var q = db.FromQueryIndex<RockstarAgeIndex>(x => x.Age == 27);
+            q.Projection<Rockstar>();
+
+            q.ProjectionExpression.Print();
+            Assert.That(q.ProjectionExpression, Is.EqualTo(expectedFields));
+        }
+
+        [Test]
+        public void Does_Create_Index_with_ALL_KEYS_projection()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Rockstar>();
+            db.InitSchema();
+
+            var expectedFields = "Id, FirstName, LastName, Age, Alive";
+            var table = db.GetTableMetadata<Rockstar>();
+            Assert.That(string.Join(", ", table.Fields.Map(x => x.Name)), Is.EqualTo(expectedFields));
+
+            var q = db.FromQueryIndex<RockstarAgeAllIndex>(x => x.Age == 27);
             q.Projection<Rockstar>();
 
             q.ProjectionExpression.Print();

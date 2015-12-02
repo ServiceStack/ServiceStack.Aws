@@ -217,14 +217,20 @@ namespace ServiceStack.Aws.DynamoDb
             var hashField = metadata.HashKey.Name;
 
             metadata.LocalIndexes = props.Where(x => x.HasAttribute<IndexAttribute>()).Map(x =>
-                new DynamoLocalIndex
+            {
+                var indexProjection = x.FirstAttribute<ProjectionTypeAttribute>();
+                var projectionType = (indexProjection != null ? indexProjection.ProjectionType : null) ?? DynamoProjectionType.Include;
+                return new DynamoLocalIndex
                 {
                     Name = "{0}{1}Index".Fmt(metadata.Name, x.Name),
                     HashKey = metadata.HashKey,
                     RangeKey = metadata.GetField(x.Name),
-                    ProjectionType = DynamoProjectionType.Include,
-                    ProjectedFields = new[] { x.Name },
-                });
+                    ProjectionType = projectionType,
+                    ProjectedFields = projectionType == DynamoProjectionType.Include 
+                        ? new[] { x.Name } 
+                        : new string[0],
+                };
+            });
 
             metadata.GlobalIndexes = new List<DynamoGlobalIndex>();
 
@@ -257,14 +263,19 @@ namespace ServiceStack.Aws.DynamoDb
             if (rangeKey == null)
                 throw new ArgumentException("Range Key '{0}' was not found on Table '{1}'".Fmt(indexProp.Name, type.Name));
 
+            var indexProjection = indexType.FirstAttribute<ProjectionTypeAttribute>();
+            var projectionType = (indexProjection != null ? indexProjection.ProjectionType : null) ?? DynamoProjectionType.Include;
+
             return new DynamoLocalIndex
             {
                 IndexType = indexType,
                 Name = indexAlias != null ? indexAlias.Name : indexType.Name,
                 HashKey = metadata.HashKey,
                 RangeKey = rangeKey,
-                ProjectionType = DynamoProjectionType.Include,
-                ProjectedFields = indexProps.Where(x => x.Name != hashField).Select(x => x.Name).ToArray(),
+                ProjectionType = projectionType,
+                ProjectedFields = projectionType == DynamoProjectionType.Include 
+                    ? indexProps.Where(x => x.Name != hashField).Select(x => x.Name).ToArray()
+                    : new string[0],
             };
         }
 
@@ -293,14 +304,19 @@ namespace ServiceStack.Aws.DynamoDb
 
             var indexProvision = indexType.FirstAttribute<ProvisionedThroughputAttribute>();
 
+            var indexProjection = indexType.FirstAttribute<ProjectionTypeAttribute>();
+            var projectionType = (indexProjection != null ? indexProjection.ProjectionType : null) ?? DynamoProjectionType.Include;
+
             return new DynamoGlobalIndex
             {
                 IndexType = indexType,
                 Name = indexAlias != null ? indexAlias.Name : indexType.Name,
                 HashKey = hashKey,
                 RangeKey = rangeKey,
-                ProjectionType = DynamoProjectionType.Include,
-                ProjectedFields = indexProps.Where(x => x.Name != indexHash.Name).Select(x => x.Name).ToArray(),
+                ProjectionType = projectionType,
+                ProjectedFields = projectionType == DynamoProjectionType.Include
+                    ? indexProps.Where(x => x.Name != indexHash.Name).Select(x => x.Name).ToArray()
+                    : new string[0],
                 ReadCapacityUnits = indexProvision != null ? indexProvision.ReadCapacityUnits : metadata.ReadCapacityUnits,
                 WriteCapacityUnits = indexProvision != null ? indexProvision.WriteCapacityUnits : metadata.WriteCapacityUnits,
             };
