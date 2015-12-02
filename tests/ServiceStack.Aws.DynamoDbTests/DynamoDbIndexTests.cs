@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.DataAnnotations;
@@ -58,6 +59,15 @@ namespace ServiceStack.Aws.DynamoDbTests
         public bool Alive { get; set; }
     }
 
+    public class SparseLocalIndex
+    {
+        public string HashKey { get; set; }
+        public int RangeKey { get; set; }
+
+        [Index]
+        public string LocalIndex { get; set; }
+    }
+
     [TestFixture]
     public class DynamoDbIndexTests : DynamoTestBase
     {
@@ -102,6 +112,32 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             q.ProjectionExpression.Print();
             Assert.That(q.ProjectionExpression, Is.EqualTo(expectedFields));
+        }
+
+        [Test]
+        public void Can_Insert_Sparse_Index()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<SparseLocalIndex>();
+            db.InitSchema();
+
+            db.PutItem(new SparseLocalIndex { HashKey = "A", RangeKey = 1, LocalIndex = "Foo" });
+
+            var result = db.FromQuery<SparseLocalIndex>(x => x.HashKey == "A")
+                .LocalIndex(x => x.LocalIndex == "Foo")
+                .Exec()
+                .First();
+
+            Assert.That(result.RangeKey, Is.EqualTo(1));
+
+            db.PutItem(new SparseLocalIndex { HashKey = "A", RangeKey = 2, LocalIndex = null });
+
+            result = db.FromQuery<SparseLocalIndex>(x => x.HashKey == "A")
+                .Filter(x => Dynamo.AttributeNotExists(x.LocalIndex))
+                .Exec()
+                .First();
+
+            Assert.That(result.RangeKey, Is.EqualTo(2));
         }
     }
 }

@@ -4,6 +4,8 @@ namespace ServiceStack.Aws.DynamoDb
 {
     public static class DynamoConfig
     {
+        public static bool ExcludeNullValues { get; set; }
+
         public static bool IsReservedWord(string word)
         {
             return ReservedWords.Contains(word.ToUpper());

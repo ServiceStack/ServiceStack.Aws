@@ -149,6 +149,9 @@ namespace ServiceStack.Aws.DynamoDb
         }
     }
 
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class ExcludeNullValueAttribute : AttributeBase {}
+
     public class DynamoId
     {
         public DynamoId() {}

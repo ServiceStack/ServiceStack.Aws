@@ -203,6 +203,7 @@ namespace ServiceStack.Aws.DynamoDb
                     DbType = Converters.GetFieldType(p.PropertyType),
                     IsHashKey = p == hash,
                     IsRangeKey = p == range,
+                    ExcludeNullValue = p.HasAttribute<IndexAttribute>() || p.HasAttribute<ExcludeNullValueAttribute>(),
                     IsAutoIncrement = p.HasAttribute<AutoIncrementAttribute>(),
                     SetValueFn = p.GetPropertySetterFn(),
                     GetValueFn = p.GetPropertyGetterFn(),
@@ -388,6 +389,8 @@ namespace ServiceStack.Aws.DynamoDb
         public bool IsRangeKey { get; set; }
 
         public bool IsAutoIncrement { get; set; }
+
+        public bool ExcludeNullValue { get; set; }
 
         public PropertyGetterDelegate GetValueFn { get; set; }
 
