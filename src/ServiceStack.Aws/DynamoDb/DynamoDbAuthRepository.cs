@@ -87,7 +87,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public IUserAuth CreateUserAuth(IUserAuth newUser, string password)
         {
-            ValidateNewUser(newUser, password);
+            newUser.ValidateNewUser(password);
 
             AssertNoExistingUser(newUser);
 
@@ -101,6 +101,26 @@ namespace ServiceStack.Aws.DynamoDb
             newUser.DigestHa1Hash = new DigestAuthFunctions().CreateHa1(newUser.UserName, DigestAuthProvider.Realm, password);
             newUser.CreatedDate = DateTime.UtcNow;
             newUser.ModifiedDate = newUser.CreatedDate;
+
+            Db.PutItem((TUserAuth)newUser);
+
+            newUser = DeSanitize(Db.GetItem<TUserAuth>(newUser.Id));
+            return newUser;
+        }
+
+        public IUserAuth UpdateUserAuth(IUserAuth existingUser, IUserAuth newUser)
+        {
+            newUser.ValidateNewUser();
+
+            AssertNoExistingUser(newUser);
+
+            Sanitize(newUser);
+
+            newUser.PasswordHash = existingUser.PasswordHash;
+            newUser.Salt = existingUser.Salt;
+            newUser.DigestHa1Hash = existingUser.DigestHa1Hash;
+            newUser.CreatedDate = existingUser.CreatedDate;
+            newUser.ModifiedDate = DateTime.UtcNow;
 
             Db.PutItem((TUserAuth)newUser);
 
