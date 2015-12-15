@@ -64,22 +64,45 @@ namespace ServiceStack.Aws.Sqs
 
         public void Publish(string queueName, IMessage message)
         {
+            var queueDefinition = sqsQueueManager.GetOrCreate(queueName);
+            var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
+
+            sqsBuffer.Send(CreateSendMessageRequest(message, queueDefinition));
+
+            if (OnPublishedCallback != null)
+            {
+                OnPublishedCallback();
+            }
+        }
+
+        public SendMessageRequest CreateSendMessageRequest(IMessage message, string queueName)
+        {
+            var queueDefinition = sqsQueueManager.GetOrCreate(queueName);
+            return CreateSendMessageRequest(message, queueDefinition);
+        }
+
+        public static SendMessageRequest CreateSendMessageRequest(IMessage message, SqsQueueDefinition queueDefinition)
+        {
             using (AwsClientUtils.__requestAccess())
             {
-                var queueDefinition = sqsQueueManager.GetOrCreate(queueName);
-
-                var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
-
-                sqsBuffer.Send(new SendMessageRequest
+                return new SendMessageRequest
                 {
                     QueueUrl = queueDefinition.QueueUrl,
                     MessageBody = AwsClientUtils.ToJson(message)
-                });
+                };
+            }
+        }
 
-                if (OnPublishedCallback != null)
-                {
-                    OnPublishedCallback();
-                }
+        public void Publish(string queueName, SendMessageRequest msgRequest)
+        {
+            var queueDefinition = sqsQueueManager.GetOrCreate(queueName);
+            var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
+
+            sqsBuffer.Send(msgRequest);
+
+            if (OnPublishedCallback != null)
+            {
+                OnPublishedCallback();
             }
         }
 
