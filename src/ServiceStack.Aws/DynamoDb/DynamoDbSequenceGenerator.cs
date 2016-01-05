@@ -25,13 +25,13 @@ namespace ServiceStack.Aws.DynamoDb
             db.CreateTableIfMissing(table);
         }
 
-        public long Increment(string tableName, int amount = 1)
+        public long Increment(string tableName, long amount = 1)
         {
             var newCounter = db.IncrementById<Seq>(tableName, x => x.Counter, amount);
             return newCounter;
         }
 
-        public void Reset(string tableName, int startingAt = 0)
+        public void Reset(string tableName, long startingAt = 0)
         {
             db.PutItem(new Seq { Id = tableName, Counter = startingAt });
         }
