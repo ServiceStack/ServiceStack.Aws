@@ -616,7 +616,7 @@ and connect to them with ServiceStack's typed .NET clients.
 
 [![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-aurora-powered-by-aws.png)](https://github.com/ServiceStackApps/AwsGettingStarted/blob/master/docs/aurora-guide.md)
 
-### [AWS RDS MySQL and OrmLite](https://github.com/ServiceStackApps/AwsGettingStarted/blob/master/docs/mssql-guide.md)
+### [AWS RDS MySQL and OrmLite](https://github.com/ServiceStackApps/AwsGettingStarted/blob/master/docs/mysql-guide.md)
 
 [![](https://github.com/ServiceStack/Assets/raw/master/img/aws/rds-mysql-powered-by-aws.png)](https://github.com/ServiceStackApps/AwsGettingStarted/blob/master/docs/mssql-guide.md)
 
