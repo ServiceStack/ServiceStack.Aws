@@ -428,6 +428,13 @@ namespace ServiceStack.Aws.DynamoDb
 
             var member = Expression.Convert(m, typeof(object));
             var lambda = Expression.Lambda<Func<object>>(member);
+
+            // TODO
+            // NOTE: It looks like the lambda fails compile here when trying to access a member within a subtype
+            // Tried to find a way to do this but I didn't want to keep going down the expression tree building rabbit hole
+//            var parameter = Expression.Parameter(m.Expression.Type);
+//            var lambda = Expression.Lambda<Func<object>>(Expression.PropertyOrField(parameter, m.Member.Name), parameter);
+
             var getter = lambda.Compile();
             return getter();
         }

@@ -249,6 +249,93 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(dto, Is.EqualTo(row));
         }
 
+        private static IPocoDynamo RegisterTypeGenerically<T>()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable(typeof(AllTypes<T>));
+            db.InitSchema();
+
+            return db;
+        }
+
+        [Test]
+        public void Can_Create_and_put_populated_AllTypes_WithGenericTypeDefinition()
+        {
+            var db = RegisterTypeGenerically<Poco>();
+            db = RegisterTypeGenerically<Node>();
+            db = RegisterTypeGenerically<Country>();
+
+            var dto = new AllTypes<Poco>
+            {
+                Id = 1,
+                NullableId = 2,
+                Byte = 3,
+                Short = 4,
+                Int = 5,
+                Long = 6,
+                UShort = 7,
+                UInt = 8,
+                ULong = 9,
+                Float = 1.1f,
+                Double = 2.2,
+                Decimal = 3.3M,
+                String = "String",
+                DateTime = new DateTime(2001, 01, 01),
+                TimeSpan = new TimeSpan(1, 1, 1, 1, 1),
+                DateTimeOffset = new DateTimeOffset(new DateTime(2001, 01, 01)),
+                Guid = new Guid("DC8837C3-84FB-401B-AB59-CE799FF99142"),
+                Char = 'A',
+                NullableDateTime = new DateTime(2001, 01, 01),
+                NullableTimeSpan = new TimeSpan(1, 1, 1, 1, 1),
+                StringList = new[] { "A", "B", "C" }.ToList(),
+                StringArray = new[] { "D", "E", "F" },
+                StringMap = new Dictionary<string, string>
+                {
+                    {"A","1"},
+                    {"B","2"},
+                    {"C","3"},
+                },
+                IntStringMap = new Dictionary<int, string>
+                {
+                    { 1, "A" },
+                    { 2, "B" },
+                    { 3, "C" },
+                },
+                SubType = new SubType
+                {
+                    Id = 1,
+                    Name = "Name"
+                },
+                GenericType = new Poco()
+                {
+                    Id = 1,
+                    Title = "GenericType"
+                }
+            };
+
+            db.PutItem(dto);
+
+            var row = db.GetItem<AllTypes<Poco>>(1);
+
+            Assert.That(dto, Is.EqualTo(row));
+
+            // This works!
+            var results = db.FromScan<AllTypes<Poco>>(x => x.Id == 1).Exec();
+            Assert.That(dto, Is.EqualTo(results.First()));
+
+            // This works too!
+            results = db.FromQuery<AllTypes<Poco>>(x => x.Id == 1).Exec();
+            Assert.That(dto, Is.EqualTo(results.First()));
+
+            // TODO: this fails. It loks like you can't access the members of subtypes due to the lambda expression failing to compile (see PocoDynamoExpression.cs)
+            //            results = db.FromQuery<AllTypes<Poco>>().Filter(x => x.GenericType.Title == "GenericType").Exec();
+            //            Assert.That(dto, Is.EqualTo(results.First()));
+
+            // TODO: this fails. It loks like you can't access the members of subtypes due to the lambda expression failing to compile (see PocoDynamoExpression.cs)
+            //            results = db.FromQuery<AllTypes<Poco>>().Filter(x => x.SubType.Name == "Name").Exec();
+            //            Assert.That(dto, Is.EqualTo(results.First()));
+        }
+
         [Test]
         public void Can_Create_and_put_empty_AllTypes()
         {
