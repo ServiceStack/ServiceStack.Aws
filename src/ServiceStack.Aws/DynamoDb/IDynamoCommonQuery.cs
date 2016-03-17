@@ -3,18 +3,22 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Amazon.DynamoDBv2.Model;
 
 namespace ServiceStack.Aws.DynamoDb
 {
     public interface IDynamoCommonQuery
     {
+        string FilterExpression { get; set; }
         string ProjectionExpression { get; set; }
         Dictionary<string, string> ExpressionAttributeNames { get; }
+
+        void AddArguments(Dictionary<string, object> args);
     }
 
-    internal static class DynamoCommonQueryExtensions
+    public static class DynamoQueryUtils
     {
-        internal static void SelectFields(this IDynamoCommonQuery q, IEnumerable<string> fields)
+        public static void SelectFields(this IDynamoCommonQuery q, IEnumerable<string> fields)
         {
             var fieldLabels = fields.Select(field => GetFieldLabel(q, field)).ToArray();
             q.ProjectionExpression = fieldLabels.Length > 0
@@ -22,7 +26,7 @@ namespace ServiceStack.Aws.DynamoDb
                 : null;
         }
 
-        internal static string GetFieldLabel(IDynamoCommonQuery q, string field)
+        public static string GetFieldLabel(this IDynamoCommonQuery q, string field)
         {
             if (!DynamoConfig.IsReservedWord(field))
                 return field;
@@ -44,6 +48,16 @@ namespace ServiceStack.Aws.DynamoDb
 
             q.ExpressionAttributeNames[alias] = field;
             return alias;
+        }
+
+        public static void AddFilter(this IDynamoCommonQuery q, string filterExpression, Dictionary<string, object> args)
+        {
+            if (q.FilterExpression == null)
+                q.FilterExpression = filterExpression;
+            else
+                q.FilterExpression += " AND " + filterExpression;
+
+            q.AddArguments(args);
         }
     }
 }

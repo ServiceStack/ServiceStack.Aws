@@ -21,6 +21,15 @@ namespace ServiceStack.Aws.DynamoDb
             this.SelectFields(typeof(TModel).AllFields().Where(Table.HasField));
             return this;
         }
+
+        public void AddArguments(Dictionary<string, object> args)
+        {
+            if (args != null)
+            {
+                Db.ToExpressionAttributeValues(args).Each(x =>
+                    ExpressionAttributeValues[x.Key] = x.Value);
+            }
+        }
     }
 
     public class ScanExpression<T> : ScanExpression

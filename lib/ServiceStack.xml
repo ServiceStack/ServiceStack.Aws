@@ -14,6 +14,111 @@
             Default redirct URL if Required Role or Permission attributes doesn't permit access.
             </summary>
         </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.ServiceBaseUrl">
+            <summary>
+            The BaseUrl of the ServiceStack instance (inferred)
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.ServiceName">
+            <summary>
+            Name of the ServiceStack Instance (inferred)
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.ServiceDescription">
+            <summary>
+            Textual description of the AutoQuery Services (shown in Home Services list)
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.ServiceIconUrl">
+            <summary>
+            Icon for this ServiceStack Instance (shown in Home Services list)
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.Formats">
+            <summary>
+            The different Content Type formats to display
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.MaxLimit">
+            <summary>
+            The configured MaxLimit for AutoQuery
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.IsPublic">
+            <summary>
+            Whether to publish this Service to the public Services registry
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.OnlyShowAnnotatedServices">
+            <summary>
+            Only show AutoQuery Services attributed with [AutoQueryViewer]
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.ImplicitConventions">
+            <summary>
+            List of different Search Filters available
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.DefaultSearchField">
+            <summary>
+            The Column which should be selected by default
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.DefaultSearchType">
+            <summary>
+            The Query Type filter which should be selected by default
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.DefaultSearchText">
+            <summary>
+            The search text which should be populated by default
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.BrandUrl">
+            <summary>
+            Link to your website users can click to find out more about you
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.BrandImageUrl">
+            <summary>
+            A custom logo or image that users can click on to visit your site
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.TextColor">
+            <summary>
+            The default color of text
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.LinkColor">
+            <summary>
+            The default color of links
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.BackgroundColor">
+            <summary>
+            The default background color of each screen
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.BackgroundImageUrl">
+            <summary>
+            The default background image of each screen anchored to the bottom left
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerConfig.IconUrl">
+            <summary>
+            The default icon for each of your AutoQuery Services
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerUserInfo.IsAuthenticated">
+            <summary>
+            Returns true if the User Is Authenticated
+            </summary>
+        </member>
+        <member name="P:ServiceStack.AutoQuery.AutoQueryViewerUserInfo.QueryCount">
+            <summary>
+            How many queries are available to this user
+            </summary>
+        </member>
         <member name="M:ServiceStack.FluentValidation.Internal.CollectionPropertyRule`1.Create``1(System.Linq.Expressions.Expression{System.Func{``0,System.Collections.Generic.IEnumerable{`0}}},System.Func{ServiceStack.FluentValidation.CascadeMode})">
             <summary>
             Creates a new property rule from a lambda expression.

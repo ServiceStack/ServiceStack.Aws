@@ -21,6 +21,15 @@ namespace ServiceStack.Aws.DynamoDb
             this.SelectFields(typeof(TModel).AllFields().Where(Table.HasField));
             return this;
         }
+
+        public void AddArguments(Dictionary<string, object> args)
+        {
+            if (args != null)
+            {
+                Db.ToExpressionAttributeValues(args).Each(x =>
+                    ExpressionAttributeValues[x.Key] = x.Value);
+            }
+        }
     }
 
     public class QueryExpression<T> : QueryExpression
@@ -136,6 +145,11 @@ namespace ServiceStack.Aws.DynamoDb
             AddExpressionNamesAndValues(q.Params, q.Aliases);
 
             return this;
+        }
+
+        public void AddFilter(string filterExpression, Dictionary<string, object> args)
+        {
+            Filter(filterExpression, args);
         }
 
         public QueryExpression<T> Filter(string filterExpression, Dictionary<string, object> args = null, Dictionary<string,string> aliases = null)
