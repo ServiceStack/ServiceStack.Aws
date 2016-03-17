@@ -186,11 +186,21 @@ namespace ServiceStack.Aws.DynamoDb
 
             var provision = type.FirstAttribute<ProvisionedThroughputAttribute>();
 
+            // If its a generic type, the type name will contain illegal characters (not accepted as DynamoDB table name)
+            // so, remove the Tilde and make the type name unique to the runtime type of the generic
+            string genericTypeNameAlias = null;
+            if (type.IsGenericType())
+            {
+                var indexOfTilde = type.Name.IndexOf("`");
+                indexOfTilde = indexOfTilde < 1 ? type.Name.Length - 1 : indexOfTilde;
+                genericTypeNameAlias = type.Name.Substring(0, indexOfTilde) + type.GetGenericArguments().Select(t => t.Name).Join();
+            }
+
             var metadata = new DynamoMetadataType
             {
                 Type = type,
                 IsTable = true,
-                Name = alias != null ? alias.Name : type.Name,
+                Name = alias != null ? alias.Name : genericTypeNameAlias ?? type.Name,
                 ReadCapacityUnits = provision != null ? provision.ReadCapacityUnits : (int?)null,
                 WriteCapacityUnits = provision != null ? provision.WriteCapacityUnits : (int?)null,
             };
