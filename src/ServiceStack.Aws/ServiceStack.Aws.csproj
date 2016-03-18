@@ -79,6 +79,7 @@
     <Compile Include="DynamoDb\DynamoConfig.cs" />
     <Compile Include="DynamoDb\DynamoDbAppSettings.cs" />
     <Compile Include="DynamoDb\DynamoDbAuthRepository.cs" />
+    <Compile Include="DynamoDb\DynamoDbQueryDataSource.cs" />
     <Compile Include="DynamoDb\IDynamoCommonQuery.cs" />
     <Compile Include="DynamoDb\IPocoDynamo.cs" />
     <Compile Include="DynamoDb\IPocoDynamoAsync.cs" />
