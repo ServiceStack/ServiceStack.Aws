@@ -63,14 +63,16 @@ namespace ServiceStack.Aws.DynamoDb
 
     public class DynamoDbQueryDataSource<T> : QueryDataSource<T>
     {
-        private readonly IPocoDynamo db;
-        private readonly DynamoMetadataType modelDef;
+        protected readonly IPocoDynamo db;
+        protected readonly DynamoMetadataType modelDef;
+        protected bool isGlobalIndex;
 
         public DynamoDbQueryDataSource(QueryDataContext context, IPocoDynamo dynamo)
             : base(context)
         {
             this.db = dynamo;
             this.modelDef = db.GetTableMetadata<T>();
+            isGlobalIndex = typeof(T).IsGlobalIndex();
         }
 
         private IEnumerable<T> cache;
@@ -86,7 +88,7 @@ namespace ServiceStack.Aws.DynamoDb
             return source; //ignore, limits added in GetResults();
         }
 
-        public IEnumerable<T> GetResults(ScanExpression scanExpr, int? skip = null, int? take = null)
+        public virtual IEnumerable<T> GetResults(ScanExpression scanExpr, int? skip = null, int? take = null)
         {
             var results = db.Scan(scanExpr, r =>
             {
@@ -104,7 +106,7 @@ namespace ServiceStack.Aws.DynamoDb
             return results.ToList();
         }
 
-        public IEnumerable<T> GetResults(QueryExpression queryExpr, int? skip = null, int? take = null)
+        public virtual IEnumerable<T> GetResults(QueryExpression queryExpr, int? skip = null, int? take = null)
         {
             var results = db.Query(queryExpr, r =>
             {
@@ -133,7 +135,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             if (keyCondition == null)
             {
-                var scanExpr = db.FromScan<T>();
+                var scanExpr = CreateScanExpresion();
                 AddConditions(scanExpr, q);
                 return cache = GetResults(scanExpr, q.Offset, q.Rows);
             }
@@ -146,7 +148,7 @@ namespace ServiceStack.Aws.DynamoDb
                 ? modelDef.RangeKey.Name
                 : null;
 
-            var queryExpr = db.FromQuery<T>();
+            var queryExpr = CreateQueryExpression();
 
             var args = new Dictionary<string, object>();
             var hashFmt = DynamoQueryConditions.GetExpressionFormat(keyCondition.QueryCondition.Alias);
@@ -197,7 +199,21 @@ namespace ServiceStack.Aws.DynamoDb
             return cache = GetResults(queryExpr, q.Offset, q.Rows);
         }
 
-        public void AddConditions(IDynamoCommonQuery dynamoQ, IDataQuery q)
+        public virtual QueryExpression<T> CreateQueryExpression()
+        {
+            return !isGlobalIndex
+                ? db.FromQuery<T>()
+                : db.FromQueryIndex<T>();
+        }
+
+        public virtual ScanExpression<T> CreateScanExpresion()
+        {
+            return !isGlobalIndex
+                ? db.FromScan<T>()
+                : db.FromScanIndex<T>();
+        }
+
+        public virtual void AddConditions(IDynamoCommonQuery dynamoQ, IDataQuery q)
         {
             if (q.Conditions.Count == 0)
                 return;
@@ -247,7 +263,7 @@ namespace ServiceStack.Aws.DynamoDb
             q.Conditions.RemoveAll(dbConditions.Contains);
         }
 
-        private string GetMultiConditionExpression(IDynamoCommonQuery dynamoQ, ConditionExpression condition, string multiFmt, Dictionary<string, object> args, string argPrefix = "p")
+        public virtual string GetMultiConditionExpression(IDynamoCommonQuery dynamoQ, ConditionExpression condition, string multiFmt, Dictionary<string, object> args, string argPrefix = "p")
         {
             if (multiFmt == null)
                 return null;
