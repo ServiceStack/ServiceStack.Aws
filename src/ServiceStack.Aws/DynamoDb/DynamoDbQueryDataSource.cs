@@ -19,8 +19,8 @@ namespace ServiceStack.Aws.DynamoDb
 
     internal class DynamoExpression
     {
-        public string Expression;
-        public Dictionary<string, object> Args;
+        internal string Expression;
+        internal Dictionary<string, object> Args;
     }
 
     internal static class DynamoQueryConditions
@@ -60,7 +60,7 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
     }
-
+    
     public class DynamoDbQueryDataSource<T> : QueryDataSource<T>
     {
         protected readonly IPocoDynamo db;
@@ -75,8 +75,8 @@ namespace ServiceStack.Aws.DynamoDb
             isGlobalIndex = typeof(T).IsGlobalIndex();
         }
 
-        private IEnumerable<T> cache;
-        private int? total;
+        protected IEnumerable<T> cache;
+        protected int? total;
 
         public override int Count(IDataQuery q)
         {
