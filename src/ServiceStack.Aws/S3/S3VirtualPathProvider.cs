@@ -105,6 +105,16 @@ namespace ServiceStack.Aws.S3
             this.CopyFrom(files, toPath);
         }
 
+        public void AppendFile(string filePath, string textContents)
+        {
+            throw new NotImplementedException("S3 doesn't support appending to files");
+        }
+
+        public void AppendFile(string filePath, Stream stream)
+        {
+            throw new NotImplementedException("S3 doesn't support appending to files");
+        }
+
         public void DeleteFile(string filePath)
         {
             filePath = SanitizePath(filePath);
