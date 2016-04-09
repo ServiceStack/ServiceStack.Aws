@@ -404,6 +404,25 @@ namespace ServiceStack.Aws.DynamoDb
             return Converters.FromAttributeValues<T>(table, response.Attributes);
         }
 
+        public T UpdateItemNonDefaults<T>(T value, bool returnOld = false)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new UpdateItemRequest
+            {
+                TableName = table.Name,
+                Key = Converters.ToAttributeKey(this, table, value),
+                AttributeUpdates = Converters.ToNonDefaultAttributeValueUpdates(this, value, table),
+                ReturnValues = returnOld ? ReturnValue.ALL_OLD : ReturnValue.NONE,
+            };
+
+            var response = Exec(() => DynamoDb.UpdateItem(request));
+
+            if (response.Attributes.IsEmpty())
+                return default(T);
+
+            return Converters.FromAttributeValues<T>(table, response.Attributes);
+        }
+
         public void PutRelatedItem<T>(object hash, T item)
         {
             var table = DynamoMetadata.GetTable<T>();

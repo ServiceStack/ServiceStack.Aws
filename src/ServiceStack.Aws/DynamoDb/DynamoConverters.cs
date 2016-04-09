@@ -192,6 +192,25 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
+        public virtual Dictionary<string, AttributeValue> ToAttributeKey(IPocoDynamo db, DynamoMetadataType table, object instance)
+        {
+            using (AwsClientUtils.GetJsScope())
+            {
+                var field = table.HashKey;
+                var to = new Dictionary<string, AttributeValue> {
+                    { field.Name, ToAttributeValue(db, field.Type, field.DbType, field.GetValue(instance)) },
+                };
+
+                if (table.RangeKey != null)
+                {
+                    field = table.RangeKey;
+                    to[field.Name] = ToAttributeValue(db, field.Type, field.DbType, field.GetValue(instance));
+                }
+
+                return to;
+            }
+        }
+
         public virtual Dictionary<string, AttributeValue> ToAttributeValues(IPocoDynamo db, object instance, DynamoMetadataType table)
         {
             if (ToAttributeValuesFn != null)
@@ -220,6 +239,28 @@ namespace ServiceStack.Aws.DynamoDb
                     to[field.Name] = ToAttributeValue(db, field.Type, field.DbType, value);
                 }
 
+                return to;
+            }
+        }
+
+        public virtual Dictionary<string, AttributeValueUpdate> ToNonDefaultAttributeValueUpdates(IPocoDynamo db, object instance, DynamoMetadataType table)
+        {
+            using (AwsClientUtils.GetJsScope())
+            {
+                var to = new Dictionary<string, AttributeValueUpdate>();
+                foreach (var field in table.Fields)
+                {
+                    if (field.IsHashKey)
+                        continue;
+
+                    var value = field.GetValue(instance);
+                    value = ApplyFieldBehavior(db, table, field, instance, value);
+
+                    if (value == null)
+                        continue;
+
+                    to[field.Name] = new AttributeValueUpdate(ToAttributeValue(db, field.Type, field.DbType, value), DynamoUpdateActions.Put);
+                }
                 return to;
             }
         }

@@ -122,6 +122,12 @@ namespace ServiceStack.Aws.DynamoDb
         public const string AlreadyExists = "ResourceInUseException";
     }
 
+    public static class DynamoUpdateActions
+    {
+        public const string Put = "PUT";
+        public const string Delete = "DELETE";
+        public const string Add = "ADD";
+    }
 
     public interface IDynamoIndex { }
     public interface IDynamoIndex<T> : IDynamoIndex { }

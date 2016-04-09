@@ -12,6 +12,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         [AutoIncrement]
         public int Id { get; set; }
         public string Name { get; set; }
+        public int? Age { get; set; }
 
         public CustomerAddress PrimaryAddress { get; set; }
 

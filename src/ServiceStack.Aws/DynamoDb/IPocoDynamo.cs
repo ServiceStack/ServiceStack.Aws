@@ -101,6 +101,11 @@ namespace ServiceStack.Aws.DynamoDb
         T PutItem<T>(T value, bool returnOld = false);
 
         /// <summary>
+        /// Calls 'PutItem' to store non null or default values from instance into DynamoDB
+        /// </summary>
+        T UpdateItemNonDefaults<T>(T value, bool returnOld = false);
+
+        /// <summary>
         /// Calls 'BatchWriteItem' to efficiently store items in min number of batched requests
         /// </summary>
         void PutItems<T>(IEnumerable<T> items);
