@@ -26,7 +26,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
                 && Age == other.Age 
                 && string.Equals(Nationality, other.Nationality) 
                 && Equals(PrimaryAddress, other.PrimaryAddress) 
-                && Equals(Orders, other.Orders);
+                && Orders.EquivalentTo(other.Orders);
         }
 
         public override bool Equals(object obj)
