@@ -185,10 +185,14 @@ namespace ServiceStack.Aws.DynamoDb
         {
             using (AwsClientUtils.GetJsScope())
             {
-                return new Dictionary<string, AttributeValue> {
+                var to = new Dictionary<string, AttributeValue> {
                     { table.HashKey.Name, ToAttributeValue(db, table.HashKey.Type, table.HashKey.DbType, hash) },
-                    { table.RangeKey.Name, ToAttributeValue(db, table.RangeKey.Type, table.RangeKey.DbType, range) },
                 };
+
+                if (range != null)
+                    to[table.RangeKey.Name] = ToAttributeValue(db, table.RangeKey.Type, table.RangeKey.DbType, range);
+
+                return to;
             }
         }
 
@@ -254,12 +258,11 @@ namespace ServiceStack.Aws.DynamoDb
                         continue;
 
                     var value = field.GetValue(instance);
-                    value = ApplyFieldBehavior(db, table, field, instance, value);
 
                     if (value == null)
                         continue;
 
-                    to[field.Name] = new AttributeValueUpdate(ToAttributeValue(db, field.Type, field.DbType, value), DynamoUpdateActions.Put);
+                    to[field.Name] = new AttributeValueUpdate(ToAttributeValue(db, field.Type, field.DbType, value), DynamoAttributeAction.Put);
                 }
                 return to;
             }

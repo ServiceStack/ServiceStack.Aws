@@ -12,7 +12,7 @@ namespace ServiceStack.Aws.DynamoDbTests
     [TestFixture]
     public class PocoDynaboDbTests : DynamoTestBase
     {
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void TestFixtureSetUp()
         {
             var db = CreatePocoDynamo();
@@ -325,54 +325,6 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var customer = db.GetItem<Customer>(999);
             Assert.That(customer, Is.Null);
-        }
-
-        [Test]
-        public void Can_Update_Partial_Customer()
-        {
-            var db = CreatePocoDynamo()
-                .RegisterTable<Customer>();
-            db.InitSchema();
-
-            var customer = new Customer
-            {
-                Name = "Foo",
-                Age = 27,
-                Orders = new List<Order>
-                {
-                    new Order
-                    {
-                        LineItem = "Item 1",
-                        Qty = 3,
-                        Cost = 2,
-                    },
-                    new Order
-                    {
-                        LineItem = "Item 2",
-                        Qty = 4,
-                        Cost = 3,
-                    },
-                },
-                PrimaryAddress = new CustomerAddress
-                {
-                    AddressLine1 = "Line 1",
-                    AddressLine2 = "Line 2",
-                    City = "Darwin",
-                    State = "NT",
-                    Country = "AU",
-                }
-            };
-
-            db.PutItem(customer);
-
-            db.UpdateItemNonDefaults(new Customer { Id = customer.Id, Age = 42 });
-
-            var updatedCustomer = db.GetItem<Customer>(customer.Id);
-
-            Assert.That(updatedCustomer.Age, Is.EqualTo(42));
-            Assert.That(updatedCustomer.Name, Is.EqualTo(customer.Name));
-            Assert.That(updatedCustomer.PrimaryAddress, Is.EqualTo(customer.PrimaryAddress));
-            Assert.That(updatedCustomer.Orders, Is.EquivalentTo(customer.Orders));
         }
     }
 }

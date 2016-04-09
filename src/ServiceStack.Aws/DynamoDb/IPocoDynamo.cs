@@ -101,7 +101,12 @@ namespace ServiceStack.Aws.DynamoDb
         T PutItem<T>(T value, bool returnOld = false);
 
         /// <summary>
-        /// Calls 'PutItem' to store non null or default values from instance into DynamoDB
+        /// Calls 'UpdateItem' to ADD, PUT or DELETE item fields in DynamoDB
+        /// </summary>
+        void UpdateItem<T>(DynamoUpdateItem update);
+
+        /// <summary>
+        /// Calls 'UpdateItem' to PUT non null or default values from instance into DynamoDB
         /// </summary>
         T UpdateItemNonDefaults<T>(T value, bool returnOld = false);
 

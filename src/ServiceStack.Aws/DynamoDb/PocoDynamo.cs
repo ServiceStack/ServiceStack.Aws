@@ -404,6 +404,58 @@ namespace ServiceStack.Aws.DynamoDb
             return Converters.FromAttributeValues<T>(table, response.Attributes);
         }
 
+        public void UpdateItem<T>(DynamoUpdateItem update)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new UpdateItemRequest
+            {
+                TableName = table.Name,
+                Key = Converters.ToAttributeKeyValue(this, table, update.Hash, update.Range),
+                AttributeUpdates = new Dictionary<string, AttributeValueUpdate>(),
+                ReturnValues = ReturnValue.NONE,
+            };
+
+            if (update.Put != null)
+            {
+                foreach (var entry in update.Put)
+                {
+                    var field = table.GetField(entry.Key);
+                    if (field == null)
+                        continue;
+
+                    request.AttributeUpdates[field.Name] = new AttributeValueUpdate(
+                        Converters.ToAttributeValue(this, field.Type, field.DbType, entry.Value), DynamoAttributeAction.Put);
+                }
+            }
+
+            if (update.Add != null)
+            {
+                foreach (var entry in update.Add)
+                {
+                    var field = table.GetField(entry.Key);
+                    if (field == null)
+                        continue;
+
+                    request.AttributeUpdates[field.Name] = new AttributeValueUpdate(
+                        Converters.ToAttributeValue(this, field.Type, field.DbType, entry.Value), DynamoAttributeAction.Add);
+                }
+            }
+
+            if (update.Delete != null)
+            {
+                foreach (var key in update.Delete)
+                {
+                    var field = table.GetField(key);
+                    if (field == null)
+                        continue;
+
+                    request.AttributeUpdates[field.Name] = new AttributeValueUpdate(null, DynamoAttributeAction.Delete);
+                }
+            }
+
+            Exec(() => DynamoDb.UpdateItem(request));
+        }
+
         public T UpdateItemNonDefaults<T>(T value, bool returnOld = false)
         {
             var table = DynamoMetadata.GetTable<T>();

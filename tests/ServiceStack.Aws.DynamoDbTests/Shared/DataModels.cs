@@ -13,6 +13,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public int Id { get; set; }
         public string Name { get; set; }
         public int? Age { get; set; }
+        public string Nationality { get; set; }
 
         public CustomerAddress PrimaryAddress { get; set; }
 
@@ -20,10 +21,12 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
 
         protected bool Equals(Customer other)
         {
-            return Id == other.Id &&
-                string.Equals(Name, other.Name) &&
-                Equals(PrimaryAddress, other.PrimaryAddress) &&
-                Orders.EquivalentTo(other.Orders);
+            return Id == other.Id 
+                && string.Equals(Name, other.Name) 
+                && Age == other.Age 
+                && string.Equals(Nationality, other.Nationality) 
+                && Equals(PrimaryAddress, other.PrimaryAddress) 
+                && Equals(Orders, other.Orders);
         }
 
         public override bool Equals(object obj)
@@ -31,7 +34,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((Customer)obj);
+            return Equals((Customer) obj);
         }
 
         public override int GetHashCode()
@@ -39,9 +42,11 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             unchecked
             {
                 var hashCode = Id;
-                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (PrimaryAddress != null ? PrimaryAddress.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Orders != null ? Orders.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ Age.GetHashCode();
+                hashCode = (hashCode*397) ^ (Nationality != null ? Nationality.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (PrimaryAddress != null ? PrimaryAddress.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (Orders != null ? Orders.GetHashCode() : 0);
                 return hashCode;
             }
         }

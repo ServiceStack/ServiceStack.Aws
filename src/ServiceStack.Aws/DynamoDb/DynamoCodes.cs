@@ -2,6 +2,7 @@
 // License: https://raw.github.com/ServiceStack/ServiceStack/master/license.txt
 
 using System;
+using System.Collections.Generic;
 
 namespace ServiceStack.Aws.DynamoDb
 {
@@ -122,7 +123,7 @@ namespace ServiceStack.Aws.DynamoDb
         public const string AlreadyExists = "ResourceInUseException";
     }
 
-    public static class DynamoUpdateActions
+    public static class DynamoAttributeAction
     {
         public const string Put = "PUT";
         public const string Delete = "DELETE";
@@ -191,5 +192,15 @@ namespace ServiceStack.Aws.DynamoDb
                 return ((Hash != null ? Hash.GetHashCode() : 0)*397) ^ (Range != null ? Range.GetHashCode() : 0);
             }
         }
+    }
+
+    public class DynamoUpdateItem
+    {
+        public object Hash { get; set; }
+        public object Range { get; set; }
+
+        public Dictionary<string, object> Put { get; set; } 
+        public Dictionary<string, object> Add { get; set; } 
+        public string[] Delete { get; set; } 
     }
 }
