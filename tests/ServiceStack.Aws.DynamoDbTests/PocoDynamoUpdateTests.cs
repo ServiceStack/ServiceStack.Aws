@@ -102,5 +102,32 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(updatedCustomer.PrimaryAddress, Is.EqualTo(customer.PrimaryAddress));
             Assert.That(updatedCustomer.Orders, Is.Null);
         }
+
+        [Test]
+        public void TypedApi_does_populate_DynamoUpdateItem()
+        {
+            var db = CreatePocoDynamo()
+                .RegisterTable<Customer>();
+
+            db.DeleteTable<Customer>();
+            db.InitSchema();
+
+            var customer = CreateCustomer();
+
+            db.PutItem(customer);
+
+            db.UpdateItem<Customer>(customer.Id, 
+                put: x => x.Nationality = "Australian",
+                add: x => x.Age = -1,
+                delete: x => new { x.Name, x.Orders });
+
+            var updatedCustomer = db.GetItem<Customer>(customer.Id);
+
+            Assert.That(updatedCustomer.Age, Is.EqualTo(customer.Age - 1));
+            Assert.That(updatedCustomer.Name, Is.Null);
+            Assert.That(updatedCustomer.Nationality, Is.EqualTo("Australian"));
+            Assert.That(updatedCustomer.PrimaryAddress, Is.EqualTo(customer.PrimaryAddress));
+            Assert.That(updatedCustomer.Orders, Is.Null);
+        }
     }
 }

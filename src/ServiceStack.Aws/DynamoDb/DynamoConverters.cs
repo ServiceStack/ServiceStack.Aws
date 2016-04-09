@@ -254,7 +254,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var to = new Dictionary<string, AttributeValueUpdate>();
                 foreach (var field in table.Fields)
                 {
-                    if (field.IsHashKey)
+                    if (field.IsHashKey || field.IsRangeKey)
                         continue;
 
                     var value = field.GetValue(instance);

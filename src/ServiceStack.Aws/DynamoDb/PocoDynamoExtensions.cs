@@ -124,6 +124,51 @@ namespace ServiceStack.Aws.DynamoDb
             db.DeleteItems<T>(ids.Map(x => (object)x));
         }
 
+        public static void UpdateItem<T>(this IPocoDynamo db, object hash, object range = null,
+            Func<T, object> put = null,
+            Func<T, object> add = null,
+            Func<T, object> delete = null)
+        {
+            db.UpdateItem<T>(new DynamoUpdateItem
+            {
+                Hash = hash,
+                Range = range,
+                Put = put.AssignedValue(),
+                Add = add.AssignedValue(),
+                Delete = delete.ToObjectKeys().ToArray(),
+            });
+        }
+
+        public static Dictionary<string, object> AssignedValue<T>(this Func<T, object> fn)
+        {
+            if (fn == null)
+                return null;
+
+            var instance = typeof(T).CreateInstance<T>();
+            var result = fn(instance);
+            if (result == null || result.Equals(result.GetType().GetDefaultValue()))
+                throw new ArgumentException("Cannot use Assinged Value Expression on null or default values");
+
+            foreach (var entry in instance.ToObjectDictionary())
+            {
+                if (result.Equals(entry.Value))
+                    return new Dictionary<string, object> { { entry.Key, entry.Value } };
+            }
+
+            throw new ArgumentException("Could not find AssignedValue");
+        }
+
+        public static IEnumerable<string> ToObjectKeys<T>(this Func<T, object> fn)
+        {
+            if (fn == null)
+                return null;
+
+            var instance = typeof(T).CreateInstance<T>();
+            var result = fn(instance);
+
+            return result.ToObjectDictionary().Keys;
+        }
+
         public static IEnumerable<T> ScanInto<T>(this IPocoDynamo db, ScanExpression request)
         {
             return db.Scan<T>(request.Projection<T>());
@@ -131,7 +176,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static List<T> ScanInto<T>(this IPocoDynamo db, ScanExpression request, int limit)
         {
-            return db.Scan<T>(request.Projection<T>(), limit:limit);
+            return db.Scan<T>(request.Projection<T>(), limit: limit);
         }
 
         public static IEnumerable<T> QueryInto<T>(this IPocoDynamo db, QueryExpression request)
