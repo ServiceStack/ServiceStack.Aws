@@ -119,6 +119,96 @@
             How many queries are available to this user
             </summary>
         </member>
+        <member name="P:ServiceStack.CacheInfo.CacheKey">
+            <summary>
+            The CacheKey to be use store the response against
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.KeyBase">
+            <summary>
+            The base Cache Key used to cache the Service response
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.KeyModifiers">
+            <summary>
+            Additional CacheKey Modifiers used to cache different outputs for a single Service Response
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.ExpiresIn">
+            <summary>
+            How long to cache the resource for. Fallsback to HttpCacheFeature.DefaultExpiresIn
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.ETag">
+            <summary>
+            The unique ETag returned for this resource clients can use to determine whether their local version has changed
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.Age">
+            <summary>
+            The Age for this resource returned to clients
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.MaxAge">
+            <summary>
+            The MaxAge returned to clients to indicate how long they can use their local cache before re-validating
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.LastModified">
+            <summary>
+            The LastModified date to use for the Cache and HTTP Header 
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.CacheControl">
+            <summary>
+            Cache-Control HTTP Headers
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.VaryByUser">
+            <summary>
+            Create unique cache per user
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheInfo.LocalCache">
+            <summary>
+            Use HostContext.LocalCache or HostContext.Cache
+            </summary>
+        </member>
+        <member name="T:ServiceStack.CacheResponseAttribute">
+            <summary>
+            Cache the Response of a Service
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheResponseAttribute.Duration">
+            <summary>
+            Cache expiry in seconds
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheResponseAttribute.MaxAge">
+            <summary>
+            MaxAge in seconds
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheResponseAttribute.CacheControl">
+            <summary>
+            Cache-Control HTTP Headers
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheResponseAttribute.VaryByUser">
+            <summary>
+            Vary cache per user
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheResponseAttribute.VaryByRoles">
+            <summary>
+            Vary cache for users in these roles
+            </summary>
+        </member>
+        <member name="P:ServiceStack.CacheResponseAttribute.LocalCache">
+            <summary>
+            Use HostContext.LocalCache or HostContext.Cache
+            </summary>
+        </member>
         <member name="M:ServiceStack.FluentValidation.Internal.CollectionPropertyRule`1.Create``1(System.Linq.Expressions.Expression{System.Func{``0,System.Collections.Generic.IEnumerable{`0}}},System.Func{ServiceStack.FluentValidation.CascadeMode})">
             <summary>
             Creates a new property rule from a lambda expression.
