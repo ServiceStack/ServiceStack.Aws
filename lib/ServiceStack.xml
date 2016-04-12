@@ -1984,11 +1984,6 @@
             Execute using empty RequestContext
             </summary>
         </member>
-        <member name="M:ServiceStack.Host.ServiceController.Execute(System.Object,ServiceStack.Web.IRequest)">
-            <summary>
-            Execute HTTP
-            </summary>
-        </member>
         <member name="M:ServiceStack.Host.XsdMetadata.GetBaseTypeWithTheSameName(System.Type)">
             <summary>
             Gets the name of the base most type in the heirachy tree with the same.
