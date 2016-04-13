@@ -125,16 +125,16 @@ namespace ServiceStack.Aws.DynamoDb
         }
 
         public static void UpdateItem<T>(this IPocoDynamo db, object hash, object range = null,
-            Func<T, object> put = null,
-            Func<T, object> add = null,
+            Expression<Func<T>> put = null,
+            Expression<Func<T>> add = null,
             Func<T, object> delete = null)
         {
             db.UpdateItem<T>(new DynamoUpdateItem
             {
                 Hash = hash,
                 Range = range,
-                Put = put.AssignedValue(),
-                Add = add.AssignedValue(),
+                Put = put.AssignedValues(),
+                Add = add.AssignedValues(),
                 Delete = delete.ToObjectKeys().ToArray(),
             });
         }
@@ -156,6 +156,23 @@ namespace ServiceStack.Aws.DynamoDb
             }
 
             throw new ArgumentException("Could not find AssignedValue");
+        }
+
+        public static Dictionary<string, object> AssignedValues<T>(this Expression<Func<T>> expr)
+        {
+            if (expr == null)
+                return null;
+
+            var initExpr = expr.Body as MemberInitExpression;
+            if (initExpr == null)
+                return null;
+
+            var to = new Dictionary<string, object>();
+            foreach (MemberBinding binding in initExpr.Bindings)
+            {
+                to[binding.Member.Name] = binding.GetValue();
+            }
+            return to;
         }
 
         public static IEnumerable<string> ToObjectKeys<T>(this Func<T, object> fn)

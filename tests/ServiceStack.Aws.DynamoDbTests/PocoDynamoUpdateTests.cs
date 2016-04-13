@@ -116,10 +116,16 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             db.PutItem(customer);
 
-            db.UpdateItem<Customer>(customer.Id, 
-                put: x => x.Nationality = "Australian",
-                add: x => x.Age = -1,
+            var decrBy = -1;
+            db.UpdateItem(customer.Id, 
+                put: () => new Customer {
+                    Nationality = "Australian"
+                },
+                add: () => new Customer {
+                    Age = decrBy
+                },
                 delete: x => new { x.Name, x.Orders });
+
 
             var updatedCustomer = db.GetItem<Customer>(customer.Id);
 
