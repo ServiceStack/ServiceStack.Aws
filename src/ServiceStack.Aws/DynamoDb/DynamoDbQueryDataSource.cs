@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -8,12 +9,12 @@ namespace ServiceStack.Aws.DynamoDb
 {
     public static class DynamoQueryDataSourceExtensions
     {
-        public static QueryDataSource<T> DynamoDbSource<T>(this QueryDataContext ctx, IPocoDynamo dynamo = null)
+        public static QueryDataSource<T> DynamoDbSource<T>(this QueryDataContext ctx, IPocoDynamo dynamo = null, bool allowScans = true)
         {
             if (dynamo == null)
                 dynamo = HostContext.TryResolve<IPocoDynamo>();
 
-            return new DynamoDbQueryDataSource<T>(ctx, dynamo);
+            return new DynamoDbQueryDataSource<T>(ctx, dynamo, allowScans);
         }
     }
 
@@ -66,13 +67,15 @@ namespace ServiceStack.Aws.DynamoDb
         protected readonly IPocoDynamo db;
         protected readonly DynamoMetadataType modelDef;
         protected bool isGlobalIndex;
+        protected bool allowScans;
 
-        public DynamoDbQueryDataSource(QueryDataContext context, IPocoDynamo dynamo)
+        public DynamoDbQueryDataSource(QueryDataContext context, IPocoDynamo dynamo, bool allowScans=true)
             : base(context)
         {
             this.db = dynamo;
             this.modelDef = db.GetTableMetadata<T>();
             isGlobalIndex = typeof(T).IsGlobalIndex();
+            this.allowScans = allowScans;
         }
 
         protected IEnumerable<T> cache;
@@ -208,6 +211,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         public virtual ScanExpression<T> CreateScanExpresion()
         {
+            if (!allowScans)
+                throw new InvalidOperationException("AutoQuery SCAN is not permitted on '{0}' DynamoDB Table".Fmt(modelDef.Name));
+
             return !isGlobalIndex
                 ? db.FromScan<T>()
                 : db.FromScanIndex<T>();
