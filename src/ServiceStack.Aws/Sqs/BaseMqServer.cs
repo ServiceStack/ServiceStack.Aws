@@ -384,29 +384,36 @@ namespace ServiceStack.Aws.Sqs
                         switch (op)
                         {
                             case WorkerOperation.Stop:
-                                log.Debug("Stop Command Issued");
+                                if (log.IsDebugEnabled)
+                                    log.Debug("Stop Command Issued");
 
+                                Interlocked.CompareExchange(ref status, WorkerStatus.Stopping, WorkerStatus.Started);
                                 try
                                 {
                                     StopWorkerThreads();
                                 }
-                                finally 
+                                finally
                                 {
-                                    if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
-                                        Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping);
+                                    Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping);
                                 }
 
                                 return;
 
                             case WorkerOperation.Restart:
-                                log.Debug("Restart Command Issued");
+                                if (log.IsDebugEnabled)
+                                    log.Debug("Restart Command Issued");
 
-                                if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
+                                Interlocked.CompareExchange(ref status, WorkerStatus.Stopping, WorkerStatus.Started);
+                                try
+                                {
+                                    StopWorkerThreads();
+                                }
+                                finally
+                                {
                                     Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping);
+                                }
 
-                                StopWorkerThreads();
                                 StartWorkerThreads();
-
                                 Interlocked.CompareExchange(ref status, WorkerStatus.Started, WorkerStatus.Stopped);
 
                                 break;
