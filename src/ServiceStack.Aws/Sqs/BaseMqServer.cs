@@ -295,7 +295,7 @@ namespace ServiceStack.Aws.Sqs
             }
         }
 
-        private void StartWorkerThreads()
+        public virtual void StartWorkerThreads()
         {
             log.Debug("Starting all SQS MQ Server worker threads...");
             foreach (var worker in workers)
@@ -314,7 +314,7 @@ namespace ServiceStack.Aws.Sqs
             }
         }
 
-        private void StopWorkerThreads()
+        public virtual void StopWorkerThreads()
         {
             log.Debug("Stopping all " + typeName + " MQ Server worker threads...");
             foreach (var worker in workers)
