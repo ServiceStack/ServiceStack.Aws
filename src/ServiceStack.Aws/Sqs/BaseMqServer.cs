@@ -15,7 +15,6 @@ namespace ServiceStack.Aws.Sqs
         protected readonly ILog log;
         protected readonly string typeName;
         private readonly object msgLock = new object();
-        private readonly object statusLock = new object();
 
         protected int status;
         protected List<TWorker> workers;
@@ -63,10 +62,7 @@ namespace ServiceStack.Aws.Sqs
 
         public string GetStatus()
         {
-            lock (statusLock)
-            {
-                return WorkerStatus.ToString(status);
-            }
+            return WorkerStatus.ToString(Interlocked.CompareExchange(ref status, 0, 0));
         }
 
         public string GetStatsDescription()
@@ -189,9 +185,7 @@ namespace ServiceStack.Aws.Sqs
             Stop();
 
             if (Interlocked.CompareExchange(ref status, WorkerStatus.Disposed, WorkerStatus.Stopped) != WorkerStatus.Stopped)
-            {
                 Interlocked.CompareExchange(ref status, WorkerStatus.Disposed, WorkerStatus.Stopping);
-            }
 
             try
             {
@@ -295,6 +289,13 @@ namespace ServiceStack.Aws.Sqs
             }
         }
 
+        public virtual void WaitForWorkersToStop(TimeSpan? timeout = null)
+        {
+            ExecExtensions.RetryUntilTrue(
+                () => Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Stopped,
+                timeout);
+        }
+
         public virtual void StartWorkerThreads()
         {
             log.Debug("Starting all SQS MQ Server worker threads...");
@@ -385,21 +386,23 @@ namespace ServiceStack.Aws.Sqs
                             case WorkerOperation.Stop:
                                 log.Debug("Stop Command Issued");
 
-                                if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
+                                try
                                 {
-                                    Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping);
+                                    StopWorkerThreads();
+                                }
+                                finally 
+                                {
+                                    if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
+                                        Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping);
                                 }
 
-                                StopWorkerThreads();
                                 return;
 
                             case WorkerOperation.Restart:
                                 log.Debug("Restart Command Issued");
 
                                 if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Started) != WorkerStatus.Started)
-                                {
                                     Interlocked.CompareExchange(ref status, WorkerStatus.Stopped, WorkerStatus.Stopping);
-                                }
 
                                 StopWorkerThreads();
                                 StartWorkerThreads();
