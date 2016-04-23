@@ -274,13 +274,9 @@ namespace ServiceStack.Aws.Sqs
             catch (Exception ex)
             {
                 if (this.ErrorHandler != null)
-                {
                     this.ErrorHandler(ex);
-                }
                 else
-                {
                     throw;
-                }
             }
         }
 
@@ -297,13 +293,11 @@ namespace ServiceStack.Aws.Sqs
                     Monitor.Pulse(msgLock);
                 }
             }
-
         }
 
         private void StartWorkerThreads()
         {
             log.Debug("Starting all SQS MQ Server worker threads...");
-
             foreach (var worker in workers)
             {
                 try
@@ -313,19 +307,16 @@ namespace ServiceStack.Aws.Sqs
                 catch (Exception ex)
                 {
                     if (this.ErrorHandler != null)
-                    {
                         this.ErrorHandler(ex);
-                    }
 
-                    log.Warn(string.Concat("Could not START SQS MQ worker thread: ", ex.Message));
+                    log.Warn("Could not START SQS MQ worker thread: " + ex.Message);
                 }
             }
         }
 
         private void StopWorkerThreads()
         {
-            log.Debug(string.Concat("Stopping all ", typeName, " MQ Server worker threads..."));
-
+            log.Debug("Stopping all " + typeName + " MQ Server worker threads...");
             foreach (var worker in workers)
             {
                 try
@@ -335,11 +326,9 @@ namespace ServiceStack.Aws.Sqs
                 catch (Exception ex)
                 {
                     if (this.ErrorHandler != null)
-                    {
                         this.ErrorHandler(ex);
-                    }
 
-                    log.Warn(string.Concat("Could not STOP ", typeName, " MQ worker thread: ", ex.Message));
+                    log.Warn("Could not STOP " + typeName + " MQ worker thread: " + ex.Message);
                 }
             }
         }
@@ -355,17 +344,16 @@ namespace ServiceStack.Aws.Sqs
             {
                 if (!bgThread.Join(500))
                 {
-                    log.Warn(string.Concat("Interrupting previous Background Thread: ", bgThread.Name));
+                    log.Warn("Interrupting previous Background Thread: " + bgThread.Name);
 
                     bgThread.Interrupt();
 
                     if (!bgThread.Join(TimeSpan.FromSeconds(3)))
                     {
-                        log.Warn(string.Concat(bgThread.Name, " just wont die, so we're now aborting it..."));
+                        log.Warn(bgThread.Name + " just wont die, so we're now aborting it...");
                         bgThread.Abort();
                     }
                 }
-
             }
             finally
             {
