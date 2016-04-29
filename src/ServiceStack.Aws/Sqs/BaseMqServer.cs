@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using ServiceStack.Logging;
 using ServiceStack.Messaging;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Sqs
 {
@@ -69,7 +70,8 @@ namespace ServiceStack.Aws.Sqs
         {
             lock (workers)
             {
-                var sb = new StringBuilder("#MQ SERVER STATS:\n");
+                var sb = StringBuilderCache.Allocate()
+                    .Append("#MQ SERVER STATS:\n");
                 sb.AppendLine("===============");
                 sb.AppendLine("Current Status: " + GetStatus());
                 sb.AppendLine("Listening On: " + string.Join(", ", workers.Select(x => x.QueueName).ToArray()));
@@ -85,7 +87,7 @@ namespace ServiceStack.Aws.Sqs
                     sb.AppendLine("---------------\n");
                 }
 
-                return sb.ToString();
+                return StringBuilderCache.ReturnAndFree(sb);
             }
         }
 

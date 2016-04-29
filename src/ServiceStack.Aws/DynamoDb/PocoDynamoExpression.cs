@@ -9,6 +9,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDb
 {
@@ -323,7 +324,7 @@ namespace ServiceStack.Aws.DynamoDb
             catch (InvalidOperationException)
             { // FieldName ?
                 var exprs = VisitExpressionList(nex.Arguments);
-                var r = new StringBuilder();
+                var r = StringBuilderCache.Allocate();
                 foreach (object e in exprs)
                 {
                     if (r.Length > 0)
@@ -331,7 +332,7 @@ namespace ServiceStack.Aws.DynamoDb
 
                     r.Append(e);
                 }
-                return r.ToString();
+                return StringBuilderCache.ReturnAndFree(r);
             }
         }
 
@@ -384,12 +385,12 @@ namespace ServiceStack.Aws.DynamoDb
         protected virtual object VisitNewArray(NewArrayExpression na)
         {
             var exprs = VisitExpressionList(na.Expressions);
-            var sb = new StringBuilder();
+            var sb = StringBuilderCache.Allocate();
             foreach (var e in exprs)
             {
                 sb.Append(sb.Length > 0 ? "," + e : e);
             }
-            return sb.ToString();
+            return StringBuilderCache.ReturnAndFree(sb);
         }
 
         protected virtual object VisitMemberInit(MemberInitExpression exp)

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDb
 {
@@ -226,7 +227,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var dbConditions = new List<ConditionExpression>();
             var args = new Dictionary<string, object>();
-            var sb = new StringBuilder();
+            var sb = StringBuilderCache.Allocate();
             var isMultipleWithOrTerm = q.Conditions.Any(x => x.Term == QueryTerm.Or)
                 && q.Conditions.Count > 1;
 
@@ -261,9 +262,10 @@ namespace ServiceStack.Aws.DynamoDb
                 }
             }
 
-            if (sb.Length > 0)
+            var filter = StringBuilderCache.ReturnAndFree(sb);
+            if (filter.Length > 0)
             {
-                dynamoQ.AddFilter(sb.ToString(), args);
+                dynamoQ.AddFilter(filter, args);
             }
 
             q.Conditions.RemoveAll(dbConditions.Contains);
@@ -290,7 +292,7 @@ namespace ServiceStack.Aws.DynamoDb
             else
             {
                 var values = (IEnumerable)condition.Value;
-                var sbIn = new StringBuilder();
+                var sbIn = StringBuilderCache.Allocate();
                 foreach (var value in values)
                 {
                     if (sbIn.Length > 0)
@@ -302,7 +304,9 @@ namespace ServiceStack.Aws.DynamoDb
                     sbIn.Append(":" + pArg);
                 }
 
-                return string.Format(multiFmt, dynamoQ.GetFieldLabel(condition.Field.Name), sbIn);
+                return string.Format(multiFmt, 
+                    dynamoQ.GetFieldLabel(condition.Field.Name), 
+                    StringBuilderCache.ReturnAndFree(sbIn));
             }
         }
     }
