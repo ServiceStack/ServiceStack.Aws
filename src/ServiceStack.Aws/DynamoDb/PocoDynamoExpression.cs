@@ -353,7 +353,7 @@ namespace ServiceStack.Aws.DynamoDb
             var quotedColName = Visit(m.Object);
             var statement = "";
 
-            var wildcardArg = args.Count > 0 ? EscapeWildcards(args[0].ToString()) : "";
+            var wildcardArg = args.Count > 0 ? args[0].ToString() : "";
             switch (m.Method.Name)
             {
                 case "StartsWith":
@@ -368,18 +368,6 @@ namespace ServiceStack.Aws.DynamoDb
                     throw new NotSupportedException();
             }
             return new PartialString(statement);
-        }
-
-        public virtual string EscapeWildcards(string value)
-        {
-            if (value == null)
-                return null;
-
-            return value
-                .Replace("^", @"^^")
-                .Replace(@"\", @"^\")
-                .Replace("_", @"^_")
-                .Replace("%", @"^%");
         }
 
         protected virtual object VisitNewArray(NewArrayExpression na)

@@ -86,6 +86,36 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
+        public void Can_Scan_special_chars_with_begins_with()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<Poco>();
+            db.InitSchema();
+
+            var items = new[]
+            {
+                new Poco { Id = 1, Title = "has ^" },
+                new Poco { Id = 2, Title = "has \"" },
+                new Poco { Id = 3, Title = "has _" },
+                new Poco { Id = 4, Title = "has %" },
+            };
+
+            db.PutItems(items);
+
+            var results = db.FromScan<Poco>(x => x.Title.StartsWith("has ^")).Exec().ToList();
+            Assert.That(results.Count, Is.EqualTo(1));
+
+            results = db.FromScan<Poco>(x => x.Title.StartsWith("has \"")).Exec().ToList();
+            Assert.That(results.Count, Is.EqualTo(1));
+
+            results = db.FromScan<Poco>(x => x.Title.StartsWith("has _")).Exec().ToList();
+            Assert.That(results.Count, Is.EqualTo(1));
+
+            results = db.FromScan<Poco>(x => x.Title.StartsWith("has %")).Exec().ToList();
+            Assert.That(results.Count, Is.EqualTo(1));
+        }
+
+        [Test]
         public void Can_Scan_with_contains_string()
         {
             var db = CreatePocoDynamo();
