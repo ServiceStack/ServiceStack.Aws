@@ -76,12 +76,12 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static long IncrementById<T>(this IPocoDynamo db, object id, Expression<Func<T, object>> fieldExpr, long amount = 1)
         {
-            return db.Increment<T>(id, AwsClientUtils.GetMemberName(fieldExpr), amount);
+            return db.Increment<T>(id, ExpressionUtils.GetMemberName(fieldExpr), amount);
         }
 
         public static long DecrementById<T>(this IPocoDynamo db, object id, Expression<Func<T, object>> fieldExpr, long amount = 1)
         {
-            return db.Increment<T>(id, AwsClientUtils.GetMemberName(fieldExpr), amount * -1);
+            return db.Increment<T>(id, ExpressionUtils.GetMemberName(fieldExpr), amount * -1);
         }
 
         public static List<T> GetAll<T>(this IPocoDynamo db)
