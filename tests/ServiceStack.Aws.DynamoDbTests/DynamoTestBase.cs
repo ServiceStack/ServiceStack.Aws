@@ -57,6 +57,24 @@ namespace ServiceStack.Aws.DynamoDbTests
             return items;
         }
 
+        public static List<RangeTest> PutRangeTests(IPocoDynamo db, int count = 10)
+        {
+            db.RegisterTable<RangeTest>();
+            db.InitSchema();
+
+            var items =
+                count.Times(
+                    i =>
+                        new RangeTest
+                        {
+                            CreatedDate = DateTime.UtcNow,
+                            Data = "Test Range",                            
+                            Id = (i + 1).ToString()
+                        });
+            db.PutItems(items);
+            return items;
+        } 
+
         protected void AssertIndex(DynamoIndex index, string indexName, string hashField, string rangeField = null)
         {
             Assert.That(index.Name, Is.EqualTo(indexName));
