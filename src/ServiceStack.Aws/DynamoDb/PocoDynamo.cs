@@ -332,13 +332,14 @@ namespace ServiceStack.Aws.DynamoDb
 
         const int MaxReadBatchSize = 100;
 
+        
         public List<T> GetItems<T>(IEnumerable<object> hashes)
         {
             var to = new List<T>();
 
             var table = DynamoMetadata.GetTable<T>();
-            var remainingIds = hashes.ToList();
-
+            var remainingIds = hashes.ToList();            
+            
             while (remainingIds.Count > 0)
             {
                 var batchSize = Math.Min(remainingIds.Count, MaxReadBatchSize);
@@ -350,7 +351,16 @@ namespace ServiceStack.Aws.DynamoDb
                     ConsistentRead = ConsistentRead,
                 };
                 nextBatch.Each(id =>
-                    getItems.Keys.Add(Converters.ToAttributeKeyValue(this, table.HashKey, id)));
+                {
+                    if (id is DynamoId)
+                    {
+                        getItems.Keys.Add(Converters.ToAttributeKeyValue(this, table, (DynamoId) id));
+                    }
+                    else
+                    {
+                        getItems.Keys.Add(Converters.ToAttributeKeyValue(this, table.HashKey, id));
+                    }
+                });
 
                 to.AddRange(ConvertBatchGetItemResponse<T>(table, getItems));
             }

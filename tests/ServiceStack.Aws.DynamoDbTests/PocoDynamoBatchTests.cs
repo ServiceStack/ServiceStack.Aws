@@ -40,6 +40,15 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
+        public void Does_Batch_PutItems_and_GetItems_With_Range()
+        {
+            var db = CreatePocoDynamo();
+            var items = PutRangeTests(db);
+            var results = db.GetItems<RangeTest>(items.Map(x => new DynamoId {Hash = x.Id, Range = x.CreatedDate}));
+            Assert.That(results.OrderBy(r => r.Id), Is.EquivalentTo(items.OrderBy(i => i.Id)));
+        }
+
+        [Test]
         public void Does_Batch_PutItems_and_GetItems_handles_multiple_batches()
         {
             var db = CreatePocoDynamo();
@@ -49,6 +58,16 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             Assert.That(results, Is.EquivalentTo(items));
         }
+
+        [Test]
+        public void Does_Batch_PutItems_and_GetItems_With_Range_handles_multiple_batches()
+        {
+            var db = CreatePocoDynamo();
+            var items = PutRangeTests(db, 110);
+            var results = db.GetItems<RangeTest>(items.Map(x => new DynamoId { Hash = x.Id, Range = x.CreatedDate }));
+            Assert.That(results.OrderBy(r => r.Id), Is.EquivalentTo(items.OrderBy(i => i.Id)));
+        }
+
 
         [Test]
         public void Does_Batch_DeleteItems()

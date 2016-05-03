@@ -15,6 +15,29 @@ namespace ServiceStack.Aws.DynamoDbTests
 
         public string Data { get; set; }
         public DateTime? ExpiryDate { get; set; }
+
+        protected bool Equals(RangeTest other)
+        {
+            
+            var datesCloseEnough = Math.Abs(CreatedDate.Subtract(other.CreatedDate).TotalSeconds) < 1;
+            return Id == other.Id && datesCloseEnough && string.Equals(Data, other.Data);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((RangeTest)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Id.GetHashCode() * 397) ^ (CreatedDate != null ? CreatedDate.GetHashCode() : 0);
+            }
+        }
     }
 
     public class RangeKeyTests : DynamoTestBase
