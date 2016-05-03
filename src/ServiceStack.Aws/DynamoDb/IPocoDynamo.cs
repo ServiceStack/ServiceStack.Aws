@@ -96,6 +96,11 @@ namespace ServiceStack.Aws.DynamoDb
         List<T> GetItems<T>(IEnumerable<object> hashes);
 
         /// <summary>
+        /// Calls 'BatchGetItem' in the min number of batch requests to return POCOs with the specified hash and ranges 
+        /// </summary>
+        List<T> GetItems<T>(IEnumerable<DynamoId> ids);
+
+        /// <summary>
         /// Calls 'PutItem' to store instance in DynamoDB
         /// </summary>
         T PutItem<T>(T value, bool returnOld = false);
@@ -128,7 +133,7 @@ namespace ServiceStack.Aws.DynamoDb
         /// <summary>
         /// Calls 'BatchWriteItem' to efficiently delete all items with the specified hash and range pairs
         /// </summary>
-        void DeleteItems<T>(IEnumerable<DynamoId> hashes);
+        void DeleteItems<T>(IEnumerable<DynamoId> ids);
 
         /// <summary>
         /// Calls 'UpdateItem' with ADD AttributeUpdate to atomically increment specific field numeric value
