@@ -317,6 +317,13 @@ namespace ServiceStack.Aws.DynamoDb
             return ConvertGetItemResponse<T>(request, table);
         }
 
+        public T GetItem<T>(DynamoId id)
+        {
+            return id.Range != null
+                ? GetItem<T>(id.Hash, id.Range)
+                : GetItem<T>(id.Hash);
+        }
+
         public T GetItem<T>(object hash, object range)
         {
             var table = DynamoMetadata.GetTable<T>();
@@ -591,6 +598,31 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 TableName = table.Name,
                 Key = Converters.ToAttributeKeyValue(this, table.HashKey, hash),
+                ReturnValues = returnItem.ToReturnValue(),
+            };
+
+            var response = Exec(() => DynamoDb.DeleteItem(request));
+
+            if (response.Attributes.IsEmpty())
+                return default(T);
+
+            return Converters.FromAttributeValues<T>(table, response.Attributes);
+        }
+
+        public T DeleteItem<T>(DynamoId id, ReturnItem returnItem = ReturnItem.None)
+        {
+            return id.Range != null
+                ? DeleteItem<T>(id.Hash, id.Range, returnItem)
+                : DeleteItem<T>(id.Hash, returnItem);
+        }
+
+        public T DeleteItem<T>(object hash, object range, ReturnItem returnItem = ReturnItem.None)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new DeleteItemRequest
+            {
+                TableName = table.Name,
+                Key = Converters.ToAttributeKeyValue(this, table, hash, range),
                 ReturnValues = returnItem.ToReturnValue(),
             };
 

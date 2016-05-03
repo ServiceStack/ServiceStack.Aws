@@ -88,6 +88,11 @@ namespace ServiceStack.Aws.DynamoDb
         /// <summary>
         /// Gets the POCO instance with the specified hash and range value
         /// </summary>
+        T GetItem<T>(DynamoId id);
+
+        /// <summary>
+        /// Gets the POCO instance with the specified hash and range value
+        /// </summary>
         T GetItem<T>(object hash, object range);
 
         /// <summary>
@@ -124,6 +129,16 @@ namespace ServiceStack.Aws.DynamoDb
         /// Deletes the instance at the specified hash
         /// </summary>
         T DeleteItem<T>(object hash, ReturnItem returnItem = ReturnItem.None);
+
+        /// <summary>
+        /// Deletes the instance at the specified hash and range values
+        /// </summary>
+        T DeleteItem<T>(DynamoId id, ReturnItem returnItem = ReturnItem.None);
+
+        /// <summary>
+        /// Deletes the instance at the specified hash and range values
+        /// </summary>
+        T DeleteItem<T>(object hash, object range, ReturnItem returnItem = ReturnItem.None);
 
         /// <summary>
         /// Calls 'BatchWriteItem' to efficiently delete all items with the specified hashes
