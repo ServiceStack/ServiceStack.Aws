@@ -58,7 +58,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             Cache.FlushAll();
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TestFixtureTearDown()
         {
             Cache.Dispose();

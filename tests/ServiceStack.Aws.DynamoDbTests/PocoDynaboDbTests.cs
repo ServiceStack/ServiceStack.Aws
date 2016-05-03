@@ -13,7 +13,7 @@ namespace ServiceStack.Aws.DynamoDbTests
     public class PocoDynaboDbTests : DynamoTestBase
     {
         [OneTimeSetUp]
-        public void TestFixtureSetUp()
+        public void OneTimeSetUp()
         {
             var db = CreatePocoDynamo();
             db.DeleteAllTables(TimeSpan.FromMinutes(1));

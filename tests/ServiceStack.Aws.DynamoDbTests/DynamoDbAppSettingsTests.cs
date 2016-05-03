@@ -16,8 +16,8 @@ namespace ServiceStack.Aws.DynamoDbTests
             get { return settings.Db;  }
         }
 
-        [TestFixtureSetUp]
-        public void TestFixtureSetUp()
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
         {
             settings = new DynamoDbAppSettings(DynamoTestBase.CreatePocoDynamo());
             settings.InitSchema();

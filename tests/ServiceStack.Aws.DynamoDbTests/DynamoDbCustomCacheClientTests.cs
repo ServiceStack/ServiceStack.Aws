@@ -12,8 +12,8 @@ namespace ServiceStack.Aws.DynamoDbTests
     {
         private ICacheClient cacheClient;
 
-        [TestFixtureSetUp]
-        public void OnTestFixtureSetup()
+        [OneTimeSetUp]
+        public void OnOneTimeSetUp()
         {   
             this.cacheClient = CreateCacheClient();
         }

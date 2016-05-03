@@ -91,7 +91,7 @@ namespace ServiceStack.Aws.DynamoDb
             return base.GetNullableString(name);
         }
 
-        public void Set<T>(string key, T value)
+        public override void Set<T>(string key, T value)
         {
             DbSettings.Set(key, value);
         }

@@ -54,14 +54,14 @@ namespace ServiceStack.Aws.Tests.S3
 
         protected ServiceStackHost appHost;
 
-        [TestFixtureSetUp]
-        public void TestFixtureSetUp()
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
         {
             appHost = new BasicAppHost()
                 .Init();
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TestFixtureTearDown()
         {
             appHost.Dispose();

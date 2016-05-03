@@ -6,7 +6,7 @@ namespace ServiceStack.Aws.Tests.FileStorage
     [TestFixture]
     public class InMemoryStorageProviderTests : FileStorageProviderCommonTests
     {
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void FixtureSetup()
         {
             providerFactory = () => InMemoryFileStorageProvider.Instance;

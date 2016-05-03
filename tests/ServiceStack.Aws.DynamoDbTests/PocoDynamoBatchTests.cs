@@ -10,8 +10,8 @@ namespace ServiceStack.Aws.DynamoDbTests
     [TestFixture]
     public class PocoDynamoBatchTests : DynamoTestBase
     {
-        [TestFixtureSetUp]
-        public void TestFixtureSetUp()
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
         {
             var db = CreatePocoDynamo();
             db.DeleteAllTables(TimeSpan.FromMinutes(1));

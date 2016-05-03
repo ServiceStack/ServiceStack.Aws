@@ -22,8 +22,8 @@ namespace ServiceStack.Aws.DynamoDbTests
     {
         private ServiceStackHost appHost;
 
-        [TestFixtureSetUp]
-        public void TestFixtureSetUp()
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
         {
             DynamoMetadata.Reset();
             var db = CreatePocoDynamo();
@@ -33,7 +33,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 .Init();
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TestFixtureTearDown()
         {
             appHost.Dispose();

@@ -9,7 +9,7 @@ namespace ServiceStack.Aws.Tests.FileStorage
     public class S3FileStorageProviderTests : FileStorageProviderCommonTests
     {
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void FixtureSetup()
         {
             //// In order to test with a real S3 instance, enter the appropriate auth information below and run these tests explicitly

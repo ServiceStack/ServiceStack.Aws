@@ -15,14 +15,14 @@ namespace ServiceStack.Aws.Tests.Sqs
         private SqsQueueManager sqsQueueManager;
         private SqsMqBufferFactory sqsMqBufferFactory;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void FixtureSetup()
         {
             sqsQueueManager = new SqsQueueManager(SqsTestClientFactory.GetConnectionFactory());
             sqsMqBufferFactory = new SqsMqBufferFactory(SqsTestClientFactory.GetConnectionFactory());
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void FixtureTeardown()
         {
             if (SqsTestAssert.IsFakeClient)

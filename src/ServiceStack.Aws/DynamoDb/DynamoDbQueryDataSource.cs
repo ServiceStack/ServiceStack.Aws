@@ -19,12 +19,6 @@ namespace ServiceStack.Aws.DynamoDb
         }
     }
 
-    internal class DynamoExpression
-    {
-        internal string Expression;
-        internal Dictionary<string, object> Args;
-    }
-
     internal static class DynamoQueryConditions
     {
         internal static string GetExpressionFormat(string operand)

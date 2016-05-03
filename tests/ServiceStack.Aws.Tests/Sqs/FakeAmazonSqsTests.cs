@@ -17,7 +17,7 @@ namespace ServiceStack.Aws.Tests.Sqs
         private IAmazonSQS client;
         private FakeSqsClientHelper helper;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void FixtureSetup()
         {
             //_client = SqsTestClientFactory.GetClient();

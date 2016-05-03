@@ -205,7 +205,7 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
-        public QueryExpression<T> Select(IEnumerable<string> fields)
+        public new QueryExpression<T> Select(IEnumerable<string> fields)
         {
             this.SelectFields(fields);
             return this;
@@ -219,12 +219,12 @@ namespace ServiceStack.Aws.DynamoDb
             return Select(Table.Fields.Map(x => x.Name));
         }
 
-        public QueryExpression<T> Select<TModel>()
+        public new QueryExpression<T> Select<TModel>()
         {
             return Select(typeof(TModel).AllFields().Where(Table.HasField));
         }
 
-        public QueryExpression<T> Select(Func<T, object> fields)
+        public new QueryExpression<T> Select(Func<T, object> fields)
         {
             return Select(fields(typeof(T).CreateInstance<T>()).GetType().AllFields());
         }

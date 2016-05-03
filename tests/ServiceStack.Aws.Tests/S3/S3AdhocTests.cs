@@ -12,8 +12,8 @@ namespace ServiceStack.Aws.Tests.S3
         IAmazonS3 client;
         private const string BucketName = "ss-ci-test";
 
-        [TestFixtureSetUp]
-        public void TestFixtureSetUp()
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
         {
             client = AwsConfig.CreateAmazonS3Client();
         }

@@ -23,7 +23,7 @@ namespace ServiceStack.Aws.Tests.FileStorage
             provider.CreateFolder(baseFolderName);
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void FixtureTeardown()
         {
             var provider = providerFactory();

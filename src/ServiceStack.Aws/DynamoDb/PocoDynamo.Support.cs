@@ -42,8 +42,6 @@ namespace ServiceStack.Aws.DynamoDb
             Exception originalEx = null;
             var firstAttempt = DateTime.UtcNow;
 
-            bool retry = false;
-
             if (retryOnErrorCodes == null)
                 retryOnErrorCodes = RetryOnErrorCodes;
 
