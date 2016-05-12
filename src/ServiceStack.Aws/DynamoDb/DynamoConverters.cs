@@ -140,7 +140,8 @@ namespace ServiceStack.Aws.DynamoDb
                 else
                 {
                     //Otherwise set the Id as the hash key if hash key is not explicitly defined
-                    hash = GetPrimaryKey(props) ?? props[0];
+                    hash = GetPrimaryKey(props);
+                    if(hash == null) throw new ArgumentException("Could not determine which property should be the Hash Key. Please refer to https://github.com/ServiceStack/PocoDynamo#table-definition for details on defining hash and range keys.");
                 }
             }
         }
