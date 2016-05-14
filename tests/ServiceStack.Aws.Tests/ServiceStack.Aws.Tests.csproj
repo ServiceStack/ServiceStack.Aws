@@ -92,6 +92,7 @@
     <Compile Include="Sqs\FakeAmazonSqsTests.cs" />
     <Compile Include="Sqs\FakeSqsClientHelper.cs" />
     <Compile Include="Sqs\SqsMqBufferTests.cs" />
+    <Compile Include="Sqs\SqsMqRequestReplyTests.cs" />
     <Compile Include="Sqs\SqsMqServerTests.cs" />
     <Compile Include="Sqs\SqsQueueDefinitionTests.cs" />
     <Compile Include="Sqs\SqsQueueManagerTests.cs" />
