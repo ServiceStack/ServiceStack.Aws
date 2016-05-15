@@ -15,7 +15,7 @@ namespace ServiceStack.Aws.Tests.Sqs
     public class SqsMqServerTests
     {
         private SqsQueueManager sqsQueueManager;
-        
+
         [OneTimeSetUp]
         public void FixtureSetUp()
         {
@@ -41,6 +41,52 @@ namespace ServiceStack.Aws.Tests.Sqs
                 }
                 catch { }
             }
+
+            try
+            {
+                sqsQueueManager.PurgeQueues(QueueNames<Reverse>.AllQueueNames);
+            }
+            catch { }
+            try
+            {
+                sqsQueueManager.PurgeQueues(QueueNames<Rot13>.AllQueueNames);
+            }
+            catch { }
+            try
+            {
+                sqsQueueManager.PurgeQueues(QueueNames<AlwaysThrows>.AllQueueNames);
+            }
+            catch { }
+            try
+            {
+                sqsQueueManager.PurgeQueues(QueueNames<Incr2>.AllQueueNames);
+            }
+            catch { }
+            try
+            {
+                sqsQueueManager.PurgeQueues(QueueNames<Wait>.AllQueueNames);
+            }
+            catch { }
+            try
+            {
+                sqsQueueManager.PurgeQueues(QueueNames<Hello>.AllQueueNames);
+            }
+            catch { }
+            try
+            {
+                sqsQueueManager.PurgeQueues(QueueNames<HelloResponse>.AllQueueNames);
+            }
+            catch { }
+            try
+            {
+                sqsQueueManager.PurgeQueues(QueueNames<HelloOut>.AllQueueNames);
+            }
+            catch { }
+            try
+            {
+                sqsQueueManager.PurgeQueues(QueueNames<HelloReply>.AllQueueNames);
+            }
+            catch { }
         }
 
         private class Reverse
@@ -138,7 +184,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             mqHost.Start();
 
             SqsTestAssert.WaitUntilTrueOrTimeout(() => reverseCalled >= 4, timeoutSeconds: 3);
-            
+
             Assert.That(mqHost.GetStats().TotalMessagesProcessed, Is.EqualTo(4));
             Assert.That(reverseCalled, Is.EqualTo(4));
 
@@ -149,9 +195,6 @@ namespace ServiceStack.Aws.Tests.Sqs
         public void Does_process_all_messages_and_Starts_Stops_correctly_with_multiple_threads_racing()
         {
             var mqHost = CreateMqServer();
-
-            sqsQueueManager.PurgeQueues(QueueNames<Reverse>.AllQueueNames);
-            sqsQueueManager.PurgeQueues(QueueNames<Rot13>.AllQueueNames);
 
             var reverseCalled = 0;
             var rot13Called = 0;
@@ -186,7 +229,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             mqHost.Start();
 
             SqsTestAssert.WaitUntilTrueOrTimeout(() => reverseCalled >= 2 && rot13Called >= 1, timeoutSeconds: 4);
-            
+
             Assert.That(mqHost.GetStatus(), Is.EqualTo("Started"));
             Assert.That(mqHost.GetStats().TotalMessagesProcessed, Is.EqualTo(3));
 
@@ -219,7 +262,7 @@ namespace ServiceStack.Aws.Tests.Sqs
                                                      var status = mqHost.GetStatus();
                                                      return reverseCalled >= 3 && rot13Called >= 2 && status != null && status.Equals("Started");
                                                  }, timeoutSeconds: 4);
-            
+
             Assert.That(mqHost.GetStatus(), Is.EqualTo("Started"));
 
             Debug.WriteLine("\n" + mqHost.GetStats());
@@ -320,10 +363,6 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             var mqHost = CreateMqServer(retryCount);
 
-            sqsQueueManager.PurgeQueues(QueueNames<Reverse>.AllQueueNames);
-            sqsQueueManager.PurgeQueues(QueueNames<Rot13>.AllQueueNames);
-            sqsQueueManager.PurgeQueues(QueueNames<AlwaysThrows>.AllQueueNames);
-
             var reverseCalled = 0;
             var rot13Called = 0;
             var alwaysThrowsCalled = 0;
@@ -388,7 +427,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             });
 
             SqsTestAssert.WaitUntilTrueOrTimeout(() => reverseCalled >= 4 && rot13Called >= 2 && alwaysThrowsCalled >= 6, timeoutSeconds: 5);
-            
+
             Debug.WriteLine(mqHost.GetStatsDescription());
 
             Assert.That(mqHost.GetStats().TotalMessagesFailed, Is.EqualTo((1 + 5) * totalRetries));
@@ -398,7 +437,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.That(rot13Called, Is.EqualTo(1 + 1));
         }
 
-        public class Incr
+        public class Incr2
         {
             public int Value { get; set; }
         }
@@ -409,14 +448,12 @@ namespace ServiceStack.Aws.Tests.Sqs
             var called = 0;
             var mqHost = CreateMqServer();
 
-            sqsQueueManager.PurgeQueues(QueueNames<Incr>.AllQueueNames);
-
-            mqHost.RegisterHandler<Incr>(m =>
+            mqHost.RegisterHandler<Incr2>(m =>
             {
                 Debug.WriteLine("In Incr #" + m.GetBody().Value);
                 called++;
                 return m.GetBody().Value > 0
-                    ? new Incr { Value = m.GetBody().Value - 1 }
+                    ? new Incr2 { Value = m.GetBody().Value - 1 }
                     : null;
             });
 
@@ -424,14 +461,14 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             var mqClient = mqHost.MessageFactory.CreateMessageQueueClient();
 
-            var incr = new Incr
+            var incr = new Incr2
             {
                 Value = 5
             };
             mqClient.Publish(incr);
 
             SqsTestAssert.WaitUntilTrueOrTimeout(() => called >= incr.Value + 1);
-            
+
             Assert.That(called, Is.EqualTo(1 + incr.Value));
         }
 
@@ -449,9 +486,6 @@ namespace ServiceStack.Aws.Tests.Sqs
         public void Can_receive_and_process_standard_request_reply_combo()
         {
             var mqHost = CreateMqServer();
-
-            sqsQueueManager.PurgeQueues(QueueNames<Hello>.AllQueueNames);
-            sqsQueueManager.PurgeQueues(QueueNames<HelloResponse>.AllQueueNames);
 
             string messageReceived = null;
 
@@ -479,7 +513,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             SqsTestAssert.WaitUntilTrueOrTimeout(() => messageReceived != null &&
                                          messageReceived.Equals("Hello, ServiceStack"),
                                    timeoutSeconds: 12);
-            
+
             Assert.That(messageReceived, Is.EqualTo("Hello, ServiceStack"));
         }
 
@@ -505,13 +539,11 @@ namespace ServiceStack.Aws.Tests.Sqs
         {
             RunHandlerOnMultipleThreads(noOfThreads: 4, msgs: 10);
         }
-        
+
         private void RunHandlerOnMultipleThreads(int noOfThreads, int msgs)
         {
             var timesCalled = 0;
             var mqHost = CreateMqServer();
-
-            sqsQueueManager.PurgeQueues(QueueNames<Wait>.AllQueueNames);
 
             mqHost.RegisterHandler<Wait>(m =>
             {
@@ -565,9 +597,8 @@ namespace ServiceStack.Aws.Tests.Sqs
         [Test]
         public void Messages_with_null_Response_is_published_to_OutMQ()
         {
-            sqsQueueManager.PurgeQueues(QueueNames<HelloOut>.AllQueueNames);
             var msgsReceived = 0;
-            
+
             using (var mqServer = CreateMqServer())
             {
                 mqServer.RegisterHandler<HelloOut>(m =>
@@ -608,9 +639,8 @@ namespace ServiceStack.Aws.Tests.Sqs
         [Test]
         public void Messages_with_null_Response_is_published_to_ReplyMQ()
         {
-            sqsQueueManager.PurgeQueues(QueueNames<HelloReply>.AllQueueNames);
             var msgsReceived = 0;
-            
+
             using (var mqServer = CreateMqServer())
             {
                 mqServer.RegisterHandler<HelloReply>(m =>

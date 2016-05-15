@@ -9,7 +9,7 @@ namespace ServiceStack.Aws.Tests.Sqs
     {
         //This applies to all tests.
         public static IAmazonSQS GetClient()
-        {   
+        {
             //Uncomment line below to test against Fake instance. 
             return FakeAmazonSqs.Instance;
 

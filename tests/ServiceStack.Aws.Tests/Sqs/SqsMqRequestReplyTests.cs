@@ -31,7 +31,6 @@ namespace ServiceStack.Aws.Tests.Sqs
             }
 
             var queueNamesToDelete = new List<string>(sqsQueueManager.QueueNameMap.Keys);
-
             foreach (var queueName in queueNamesToDelete)
             {
                 try
