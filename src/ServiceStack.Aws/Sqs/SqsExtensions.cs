@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -85,18 +86,129 @@ namespace ServiceStack.Aws.Sqs
             };
         }
 
-        public static Message<T> ToMessage<T>(this Message sqsMessage, string queueName)
+        public static Message<T> FromSqsMessage<T>(this Message sqsMessage, string queueName)
         {
             if (sqsMessage == null)
                 return null;
 
             Guard.AgainstNullArgument(queueName, "queueName");
 
-            var message = AwsClientUtils.FromJson<Message<T>>(sqsMessage.Body);
+            using (AwsClientUtils.__requestAccess())
+            {
+                var body = sqsMessage.Body.FromJson<T>();
+                var message = new Message<T>(body) {
+                    Tag = SqsMessageTag.CreateTag(queueName, sqsMessage.ReceiptHandle)
+                };
 
-            message.Tag = SqsMessageTag.CreateTag(queueName, sqsMessage.ReceiptHandle);
+                if (sqsMessage.MessageAttributes != null)
+                {
+                    foreach (var entry in sqsMessage.MessageAttributes)
+                    {
+                        if (entry.Value == null || string.IsNullOrEmpty(entry.Value.StringValue))
+                            continue;
 
-            return message;
+                        var strValue = entry.Value.StringValue;
+
+                        switch (entry.Key)
+                        {
+                            case "CreatedDate":
+                                message.CreatedDate = strValue.FromJson<DateTime>();
+                                break;
+                            case "Options":
+                                message.Options = int.Parse(strValue);
+                                break;
+                            case "Priority":
+                                message.Priority = long.Parse(strValue);
+                                break;
+                            case "RetryAttempts":
+                                message.RetryAttempts = int.Parse(strValue);
+                                break;
+                            case "Error":
+                                message.Error = strValue.FromJson<ResponseStatus>();
+                                break;
+                            case "ReplyId":
+                                message.ReplyId = strValue.FromJson<Guid>();
+                                break;
+                            case "ReplyTo":
+                                message.ReplyTo = strValue;
+                                break;
+                            case "Meta":
+                                message.Meta = strValue.FromJson<Dictionary<string, string>>();
+                                break;
+                        }
+                    }
+                }
+
+                return message;
+            }
+        }
+
+        public static SendMessageRequest ToSqsSendMessageRequest(this IMessage message, SqsQueueDefinition queueDefinition)
+        {
+            using (AwsClientUtils.__requestAccess())
+            {
+                var to = new SendMessageRequest
+                {
+                    QueueUrl = queueDefinition.QueueUrl,
+                    MessageBody = message.Body.ToJson(),
+                    MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                    {
+                        { "CreatedDate", message.CreatedDate.AsMessageAttributeValue() },
+                        { "Options", message.Options.AsMessageAttributeValue() },
+                        { "Priority", message.Priority.AsMessageAttributeValue() },
+                        { "RetryAttempts", message.RetryAttempts.AsMessageAttributeValue() },
+                    }
+                };
+
+                if (message.Tag != null)
+                    to.MessageAttributes["Tag"] = message.Tag.AsMessageAttributeValue();
+                if (message.Error != null)
+                    to.MessageAttributes["Error"] = message.Error.AsMessageAttributeValue();
+                if (message.ReplyId != null)
+                    to.MessageAttributes["ReplyId"] = message.ReplyId.AsMessageAttributeValue();
+                if (message.ReplyTo != null)
+                    to.MessageAttributes["ReplyTo"] = message.ReplyTo.AsMessageAttributeValue();
+                if (message.Meta != null)
+                    to.MessageAttributes["Meta"] = message.Meta.AsMessageAttributeValue();
+
+                return to;
+            }
+        }
+
+        internal static MessageAttributeValue AsMessageAttributeValue<T>(this T value)
+        {
+            return new MessageAttributeValue
+            {
+                DataType = "String",
+                StringValue = value.ToJson()
+            };
+        }
+
+        internal static MessageAttributeValue AsMessageAttributeValue(this string strValue)
+        {
+            return new MessageAttributeValue
+            {
+                DataType = "String",
+                StringValue = strValue
+            };
+        }
+
+        internal static MessageAttributeValue AsMessageAttributeValue(this int numValue)
+        {
+            return new MessageAttributeValue
+            {
+                DataType = "Number",
+                StringValue = numValue.ToString(CultureInfo.InvariantCulture),
+            };
+        }
+
+        internal static MessageAttributeValue AsMessageAttributeValue(this long numValue)
+        {
+            return new MessageAttributeValue
+            {
+                DataType = "Number",
+                StringValue = numValue.ToString(CultureInfo.InvariantCulture),
+            };
         }
 
     }

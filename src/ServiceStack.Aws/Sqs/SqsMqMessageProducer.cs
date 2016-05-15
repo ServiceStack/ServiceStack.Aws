@@ -67,29 +67,11 @@ namespace ServiceStack.Aws.Sqs
             var queueDefinition = sqsQueueManager.GetOrCreate(queueName);
             var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
-            sqsBuffer.Send(CreateSendMessageRequest(message, queueDefinition));
+            sqsBuffer.Send(message.ToSqsSendMessageRequest(queueDefinition));
 
             if (OnPublishedCallback != null)
             {
                 OnPublishedCallback();
-            }
-        }
-
-        public SendMessageRequest CreateSendMessageRequest(IMessage message, string queueName)
-        {
-            var queueDefinition = sqsQueueManager.GetOrCreate(queueName);
-            return CreateSendMessageRequest(message, queueDefinition);
-        }
-
-        public static SendMessageRequest CreateSendMessageRequest(IMessage message, SqsQueueDefinition queueDefinition)
-        {
-            using (AwsClientUtils.__requestAccess())
-            {
-                return new SendMessageRequest
-                {
-                    QueueUrl = queueDefinition.QueueUrl,
-                    MessageBody = AwsClientUtils.ToJson(message)
-                };
             }
         }
 

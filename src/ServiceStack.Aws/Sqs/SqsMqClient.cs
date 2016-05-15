@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Amazon.SQS.Model;
 using ServiceStack.Aws.Support;
 using ServiceStack.Messaging;
@@ -28,6 +29,8 @@ namespace ServiceStack.Aws.Sqs
             return GetMessage<T>(queueName, waitSeconds: 0);
         }
 
+        private static readonly List<string> AllMessageProperties = new List<string> { "All" };
+
         private IMessage<T> GetMessage<T>(string queueName, int waitSeconds)
         {
             using (AwsClientUtils.__requestAccess())
@@ -51,15 +54,13 @@ namespace ServiceStack.Aws.Sqs
                         MaxNumberOfMessages = queueDefinition.ReceiveBufferSize,
                         QueueUrl = queueDefinition.QueueUrl,
                         VisibilityTimeout = queueDefinition.VisibilityTimeout,
-                        WaitTimeSeconds = receiveWaitTime
+                        WaitTimeSeconds = receiveWaitTime,
+                        MessageAttributeNames = AllMessageProperties
                     });
 
-                    var message = sqsMessage.ToMessage<T>(queueDefinition.QueueName);
-
+                    var message = sqsMessage.FromSqsMessage<T>(queueDefinition.QueueName);
                     if (message != null)
-                    {
                         return message;
-                    }
 
                 } while (DateTime.UtcNow <= timeoutAt);
             }

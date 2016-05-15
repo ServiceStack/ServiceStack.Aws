@@ -6,6 +6,7 @@ using Amazon.SQS.Model;
 using NUnit.Framework;
 using ServiceStack.Aws.Sqs;
 using ServiceStack.Aws.Sqs.Fake;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Tests.Sqs
 {
@@ -53,6 +54,33 @@ namespace ServiceStack.Aws.Tests.Sqs
         private string GetNewId()
         {
             return Guid.NewGuid().ToString("N");
+        }
+
+        [Test]
+        public void Can_send_and_receive_message_with_Attributes()
+        {
+            var buffer = GetNewMqBuffer(disasbleBuffering: true);
+
+            var msgBody = "Test Body";
+            buffer.Send(new SendMessageRequest
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                MessageBody = msgBody,
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                {
+                    { "Custom", new MessageAttributeValue { DataType = "String", StringValue = "Header" } },
+                }
+            });
+
+            var responseMsg = buffer.Receive(new ReceiveMessageRequest
+            {
+                QueueUrl = buffer.QueueDefinition.QueueUrl,
+                MessageAttributeNames = new List<string> { "All" },
+            });
+
+            Assert.That(responseMsg.Body, Is.EqualTo(msgBody));
+
+            Assert.That(responseMsg.MessageAttributes["Custom"].StringValue, Is.EqualTo("Header"));
         }
 
         [Test]
