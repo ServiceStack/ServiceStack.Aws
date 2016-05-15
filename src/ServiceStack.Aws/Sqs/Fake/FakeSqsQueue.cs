@@ -172,7 +172,8 @@ namespace ServiceStack.Aws.Sqs.Fake
             var newItem = new FakeSqsQueueItem
             {
                 Body = request.MessageBody,
-                Status = FakeSqsItemStatus.Queued
+                Status = FakeSqsItemStatus.Queued,
+                MessageAttributes = request.MessageAttributes,
             };
 
             qItems.Enqueue(newItem);

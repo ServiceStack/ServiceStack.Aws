@@ -590,6 +590,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                 Messages = q.Receive(request)
                 .Select(qi => new Message {
                     Body = qi.Body,
+                    MessageAttributes = qi.MessageAttributes,
                     Attributes = qi.Attributes,
                     MessageId = qi.MessageId,
                     ReceiptHandle = qi.ReceiptHandle
@@ -674,14 +675,10 @@ namespace ServiceStack.Aws.Sqs.Fake
         public SendMessageBatchResponse SendMessageBatch(SendMessageBatchRequest request)
         {
             if (request.Entries == null || request.Entries.Count <= 0)
-            {
                 throw new EmptyBatchRequestException("No entires in request");
-            }
 
             if (request.Entries.Count > SqsQueueDefinition.MaxBatchSendItems)
-            {
                 throw new TooManyEntriesInBatchRequestException("Count of [{0}] exceeds limit of [{1}]".Fmt(request.Entries.Count, SqsQueueDefinition.MaxBatchSendItems));
-            }
 
             var q = GetQueue(request.QueueUrl);
 
@@ -707,8 +704,9 @@ namespace ServiceStack.Aws.Sqs.Fake
 
                     id = q.Send(new SendMessageRequest
                     {
+                        QueueUrl = q.QueueDefinition.QueueUrl,
+                        MessageAttributes = entry.MessageAttributes,
                         MessageBody = entry.MessageBody,
-                        QueueUrl = q.QueueDefinition.QueueUrl
                     });
                 }
                 catch (ReceiptHandleIsInvalidException rhex)
