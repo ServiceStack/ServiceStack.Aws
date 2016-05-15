@@ -4852,6 +4852,12 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:ServiceStack.ServiceStackHost.OnSessionFilter(ServiceStack.Auth.IAuthSession,System.String)">
+            <summary>
+            Inspect or modify ever new UserSession created or resolved from cache. 
+            return null if Session is invalid to create new Session.
+            </summary>
+        </member>
         <member name="F:ServiceStack.DtoUtils.ResponseStatusPropertyName">
             <summary>
             Naming convention for the ResponseStatus property name on the response DTO
