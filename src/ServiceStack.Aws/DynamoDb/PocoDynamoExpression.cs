@@ -810,25 +810,4 @@ namespace ServiceStack.Aws.DynamoDb
             return true;
         }
     }
-
-    public static class ExpressionExtensions
-    {
-        public static object GetValue(this MemberBinding binding)
-        {
-            switch (binding.BindingType)
-            {
-                case MemberBindingType.Assignment:
-                    var assign = (MemberAssignment)binding;
-                    var constant = assign.Expression as ConstantExpression;
-                    if (constant != null)
-                        return constant.Value;
-
-                    var member = Expression.Convert(assign.Expression, typeof(object));
-                    var lambda = Expression.Lambda<Func<object>>(member);
-                    var getter = lambda.Compile();
-                    return getter();
-            }
-            return null;
-        }
-    }
 }

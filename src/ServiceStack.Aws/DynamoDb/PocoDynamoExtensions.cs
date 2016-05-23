@@ -158,23 +158,6 @@ namespace ServiceStack.Aws.DynamoDb
             throw new ArgumentException("Could not find AssignedValue");
         }
 
-        public static Dictionary<string, object> AssignedValues<T>(this Expression<Func<T>> expr)
-        {
-            if (expr == null)
-                return null;
-
-            var initExpr = expr.Body as MemberInitExpression;
-            if (initExpr == null)
-                return null;
-
-            var to = new Dictionary<string, object>();
-            foreach (MemberBinding binding in initExpr.Bindings)
-            {
-                to[binding.Member.Name] = binding.GetValue();
-            }
-            return to;
-        }
-
         public static IEnumerable<string> ToObjectKeys<T>(this Func<T, object> fn)
         {
             if (fn == null)
