@@ -48,6 +48,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.GetTableNames().PrintDump();
 
             Assert.That(db.GetTableNames(), Is.EquivalentTo(new[] {
+                typeof(ApiKey).Name,
                 typeof(Seq).Name,
                 typeof(UserAuth).Name,
                 typeof(UserAuthDetails).Name,
