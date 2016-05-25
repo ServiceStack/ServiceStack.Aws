@@ -143,7 +143,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (IsColumnAccess(m))
                 return VisitColumnAccessMethod(m);
 
-            return Expression.Lambda(m).Compile().DynamicInvoke();
+            return CachedExpressionCompiler.Evaluate(m);
         }
 
         protected virtual object VisitDynamoMethodCall(MethodCallExpression m)
@@ -278,11 +278,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         private object ToInPartialString(Expression memberExpr, string memberName)
         {
-            var member = Expression.Convert(memberExpr, typeof(object));
-            var lambda = Expression.Lambda<Func<object>>(member);
-            var getter = lambda.Compile();
+            var result = CachedExpressionCompiler.Evaluate(memberExpr);
 
-            var items = Flatten(getter() as IEnumerable);
+            var items = Flatten(result as IEnumerable);
             var dbParams = items.Map(GetValueAsParam);
             var expr = "{0} IN ({1})".Fmt(
                 memberName, string.Join(",", dbParams));
@@ -313,16 +311,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         protected virtual object VisitNew(NewExpression nex)
         {
-            // TODO : check !
-            var member = Expression.Convert(nex, typeof(object));
-            var lambda = Expression.Lambda<Func<object>>(member);
-            try
+            var isAnonType = nex.Type.Name.StartsWith("<>");
+            if (isAnonType)
             {
-                var getter = lambda.Compile();
-                return getter();
-            }
-            catch (InvalidOperationException)
-            { // FieldName ?
                 var exprs = VisitExpressionList(nex.Arguments);
                 var r = StringBuilderCache.Allocate();
                 foreach (object e in exprs)
@@ -334,6 +325,8 @@ namespace ServiceStack.Aws.DynamoDb
                 }
                 return StringBuilderCache.ReturnAndFree(r);
             }
+
+            return CachedExpressionCompiler.Evaluate(nex);
         }
 
         private bool IsColumnAccess(MethodCallExpression m)
@@ -383,7 +376,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         protected virtual object VisitMemberInit(MemberInitExpression exp)
         {
-            return Expression.Lambda(exp).Compile().DynamicInvoke();
+            return CachedExpressionCompiler.Evaluate(exp);
         }
 
         protected virtual object VisitLambda(LambdaExpression lambda)
@@ -415,17 +408,7 @@ namespace ServiceStack.Aws.DynamoDb
                 return GetMemberExpression(m);
             }
 
-            var member = Expression.Convert(m, typeof(object));
-            var lambda = Expression.Lambda<Func<object>>(member);
-
-            // TODO
-            // NOTE: It looks like the lambda fails compile here when trying to access a member within a subtype
-            // Tried to find a way to do this but I didn't want to keep going down the expression tree building rabbit hole
-//            var parameter = Expression.Parameter(m.Expression.Type);
-//            var lambda = Expression.Lambda<Func<object>>(Expression.PropertyOrField(parameter, m.Member.Name), parameter);
-
-            var getter = lambda.Compile();
-            return getter();
+            return CachedExpressionCompiler.Evaluate(m);
         }
 
         private object GetMemberExpression(MemberExpression m)
@@ -510,7 +493,7 @@ namespace ServiceStack.Aws.DynamoDb
 
                 if (left as PartialString == null && right as PartialString == null)
                 {
-                    var result = Expression.Lambda(b).Compile().DynamicInvoke();
+                    var result = CachedExpressionCompiler.Evaluate(b);
                     return result;
                 }
 
@@ -548,7 +531,7 @@ namespace ServiceStack.Aws.DynamoDb
                 }
                 else if (left as PartialString == null && right as PartialString == null)
                 {
-                    var result = Expression.Lambda(b).Compile().DynamicInvoke();
+                    var result = CachedExpressionCompiler.Evaluate(b);
                     return result;
                 }
                 else if (left as PartialString == null)
@@ -719,7 +702,7 @@ namespace ServiceStack.Aws.DynamoDb
                     return new PartialString("not " + o);
                 case ExpressionType.Convert:
                     if (u.Method != null)
-                        return Expression.Lambda(u).Compile().DynamicInvoke();
+                        return CachedExpressionCompiler.Evaluate(u);
                     break;
                 case ExpressionType.ArrayLength:
                     o = Visit(u.Operand);
