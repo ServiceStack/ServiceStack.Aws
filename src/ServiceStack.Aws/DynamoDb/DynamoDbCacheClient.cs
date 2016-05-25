@@ -59,6 +59,15 @@ namespace ServiceStack.Aws.DynamoDb
             return entry.Data.FromJson<T>();
         }
 
+        public void ClearExpiredEntries()
+        {
+            var expiredIds = Dynamo.FromScan<CacheEntry>()
+                .Filter(x => x.ExpiryDate < DateTime.UtcNow)
+                .ExecColumn(x => x.Id);
+
+            Dynamo.DeleteItems<CacheEntry>(expiredIds);
+        }
+
         private bool CacheAdd<T>(string key, T value, DateTime? expiresAt)
         {
             var entry = GetValue<T>(key);
