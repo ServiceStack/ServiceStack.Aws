@@ -14,7 +14,7 @@ namespace ServiceStack.Aws.DynamoDb
         public DynamoDbAuthRepository(IPocoDynamo db, bool initSchema = false) : base(db, initSchema) { }
     }
 
-    public class DynamoDbAuthRepository<TUserAuth, TUserAuthDetails> : IUserAuthRepository, IManageRoles, IClearable, IRequiresSchema
+    public class DynamoDbAuthRepository<TUserAuth, TUserAuthDetails> : IUserAuthRepository, IManageRoles, IClearable, IRequiresSchema, IManageApiKeys
         where TUserAuth : class, IUserAuth
         where TUserAuthDetails : class, IUserAuthDetails
     {
@@ -42,6 +42,29 @@ namespace ServiceStack.Aws.DynamoDb
 
             [RangeKey]
             public int Id { get; set; }
+        }
+
+        [ProjectionType(DynamoProjectionType.All)]
+        public class ApiKeyIdIndex : IGlobalIndex<ApiKey>
+        {
+            [HashKey]
+            public string Id { get; set; }
+
+            [RangeKey]
+            public string UserAuthId { get; set; }
+
+            public string Environment { get; set; }
+            public string KeyType { get; set; }
+
+            public DateTime CreatedDate { get; set; }
+            public DateTime? ExpiryDate { get; set; }
+            public DateTime? CancelledDate { get; set; }
+            public string Notes { get; set; }
+
+            //Custom Reference Data
+            public int? RefId { get; set; }
+            public string RefIdStr { get; set; }
+            public Dictionary<string, string> Meta { get; set; }
         }
 
         public DynamoDbAuthRepository(IPocoDynamo db, bool initSchema=false)
@@ -523,6 +546,35 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
+        public void InitApiKeySchema() { }
+
+        public bool ApiKeyExists(string apiKey)
+        {
+            return Db.FromQueryIndex<ApiKeyIdIndex>(x => x.Id == apiKey).Exec(1).Count > 0;
+        }
+
+        public ApiKey GetApiKey(string apiKey)
+        {
+            return Db.FromQueryIndex<ApiKeyIdIndex>(x => x.Id == apiKey)
+                .ExecInto<ApiKey>()
+                .FirstOrDefault();
+        }
+
+        public List<ApiKey> GetUserApiKeys(string userId)
+        {
+            return Db.FromQuery<ApiKey>(x => x.UserAuthId == userId)
+                .Filter(x => x.CancelledDate == null
+                    && (x.ExpiryDate == null || x.ExpiryDate >= DateTime.UtcNow))
+                .Exec()
+                .OrderByDescending(x => x.CreatedDate)
+                .ToList();
+        }
+
+        public void StoreAll(IEnumerable<ApiKey> apiKeys)
+        {
+            Db.PutItems(apiKeys);
+        }
+
         private bool hasInitSchema = false;
 
         public void InitSchema()
@@ -547,6 +599,12 @@ namespace ServiceStack.Aws.DynamoDb
                 new CompositeKeyAttribute("UserAuthId", "Id"));
 
             Db.RegisterTable<UserAuthRole>();
+
+            typeof(ApiKey).AddAttributes(
+                new ReferencesAttribute(typeof(ApiKeyIdIndex)),
+                new CompositeKeyAttribute("UserAuthId", "Id"));
+
+            Db.RegisterTable<ApiKey>();
 
             Db.InitSchema();
         }
