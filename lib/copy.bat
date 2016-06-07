@@ -9,3 +9,5 @@ REM SET BUILD=Debug
 SET BUILD=Release
 
 COPY ..\src\ServiceStack.Aws\bin\%BUILD%\ServiceStack.Aws.* ..\..\ServiceStack\lib
+
+COPY C:\src\ServiceStack\lib\signed\* signed\
