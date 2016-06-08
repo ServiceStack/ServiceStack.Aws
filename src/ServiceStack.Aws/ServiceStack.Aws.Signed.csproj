@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EC090B85-E208-4B4E-AE19-BBFEF51E4560}</ProjectGuid>
+    <ProjectGuid>{B24B27DD-1450-43D2-BDFA-467322AA9FA6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ServiceStack.Aws</RootNamespace>
