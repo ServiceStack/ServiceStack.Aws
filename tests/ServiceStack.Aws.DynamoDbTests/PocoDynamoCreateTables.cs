@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
 using ServiceStack.Auth;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
 using ServiceStack.DataAnnotations;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDbTests
 {
@@ -350,6 +353,63 @@ namespace ServiceStack.Aws.DynamoDbTests
             var row = db.GetItem<AllTypes>(1);
 
             Assert.That(dto, Is.EqualTo(row));
+        }
+
+        public class TableWithIgnoredFields
+        {
+            public int Id { get; set; }
+
+            public string FirstName { get; set; }
+
+            [IgnoreDataMember]
+            public string LastName { get; set; }
+
+            public string DisplayName
+            {
+                get { return FirstName + " " + LastName; }
+            }
+
+            [DataAnnotations.Ignore]
+            public int IsIgnored { get; set; }
+        }
+
+        [Test]
+        public void Does_ignore_fields()
+        {
+            var db = CreatePocoDynamo();
+            db.RegisterTable<TableWithIgnoredFields>();
+            db.InitSchema();
+
+            db.PutItem(new TableWithIgnoredFields
+            {
+                Id = 1,
+                FirstName = "Foo",
+                LastName = "Bar",
+                IsIgnored = 10,
+            });
+
+            var row = db.GetItem<TableWithIgnoredFields>(1);
+
+            Assert.That(row.DisplayName, Is.EqualTo("Foo Bar"));
+            Assert.That(row.IsIgnored, Is.EqualTo(0));
+
+            var table = DynamoMetadata.GetTable<TableWithIgnoredFields>();
+            var request = new GetItemRequest
+            {
+                TableName = table.Name,
+                Key = db.Converters.ToAttributeKeyValue(db, table.HashKey, 1),
+            };
+
+            var raw = db.DynamoDb.GetItem(request);
+
+            Assert.That(raw.Item.ContainsKey("Id"));
+            Assert.That(raw.Item.ContainsKey("FirstName"));
+            Assert.That(raw.Item.ContainsKey("LastName"));
+            Assert.That(!raw.Item.ContainsKey("DisplayName"));
+            Assert.That(!raw.Item.ContainsKey("IsIgnored"));
+
+            var json = row.ToJson();
+            Assert.That(json, Is.Not.Contains("LastName"));
         }
     }
 

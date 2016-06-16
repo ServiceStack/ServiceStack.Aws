@@ -148,7 +148,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         private static PropertyInfo[] GetTableProperties(Type type)
         {
-            var props = type.GetSerializableProperties().Where(x => x.CanRead && x.CanWrite).ToArray();
+            var props = type.GetPublicProperties()
+                .Where(x => x.CanRead && x.CanWrite && !x.HasAttribute<IgnoreAttribute>())
+                .ToArray();
             return props;
         }
 
