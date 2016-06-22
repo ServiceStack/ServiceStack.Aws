@@ -16,6 +16,8 @@ namespace ServiceStack.Aws.DynamoDb
 {
     public partial class PocoDynamo
     {
+        public Action<Exception> ExceptionFilter { get; set; }
+
         //Error Handling: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ErrorHandling.html
         public void Exec(Action fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
         {
@@ -55,6 +57,9 @@ namespace ServiceStack.Aws.DynamoDb
                 catch (Exception outerEx)
                 {
                     var ex = outerEx.UnwrapIfSingleException();
+
+                    if (ExceptionFilter != null)
+                        ExceptionFilter(ex);
 
                     if (rethrowExceptions != null)
                     {
