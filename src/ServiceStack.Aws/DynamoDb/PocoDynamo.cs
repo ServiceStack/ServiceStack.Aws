@@ -437,6 +437,24 @@ namespace ServiceStack.Aws.DynamoDb
             return Converters.FromAttributeValues<T>(table, response.Attributes);
         }
 
+        public UpdateExpression<T> UpdateExpression<T>(object hash, object range=null)
+        {
+            return new UpdateExpression<T>(this, DynamoMetadata.GetTable<T>(), hash, range);
+        }
+
+        public bool UpdateItem<T>(UpdateExpression<T> update)
+        {
+            try
+            {
+                Exec(() => DynamoDb.UpdateItem(update));
+                return true;
+            }
+            catch (ConditionalCheckFailedException ex)
+            {
+                return false;
+            }
+        }
+
         public void UpdateItem<T>(DynamoUpdateItem update)
         {
             var table = DynamoMetadata.GetTable<T>();

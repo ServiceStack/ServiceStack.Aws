@@ -111,6 +111,17 @@ namespace ServiceStack.Aws.DynamoDb
         T PutItem<T>(T value, bool returnOld = false);
 
         /// <summary>
+        /// Creates an Typed `UpdateExpression` for the specified table
+        /// </summary>
+        UpdateExpression<T> UpdateExpression<T>(object hash, object range = null);
+
+        /// <summary>
+        /// Calls 'UpdateItem' to SET, REMOVE, ADD or DELETE item fields in DynamoDB.
+        /// </summary>
+        /// <returns>false if conditional check failed, otherwise true</returns>
+        bool UpdateItem<T>(UpdateExpression<T> update);
+
+        /// <summary>
         /// Calls 'UpdateItem' to ADD, PUT or DELETE item fields in DynamoDB
         /// </summary>
         void UpdateItem<T>(DynamoUpdateItem update);

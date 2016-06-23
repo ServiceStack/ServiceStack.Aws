@@ -139,7 +139,7 @@ namespace ServiceStack.Aws.DynamoDb
             });
         }
 
-        static T[] ToArraySafe<T>(this IEnumerable<T> items)
+        internal static T[] ToArraySafe<T>(this IEnumerable<T> items)
         {
             return items == null
                 ? null
@@ -196,7 +196,7 @@ namespace ServiceStack.Aws.DynamoDb
             return db.Query<T>(request.Projection<T>(), limit: limit);
         }
 
-        static AttributeValue NullValue = new AttributeValue { NULL = true };
+        static readonly AttributeValue NullValue = new AttributeValue { NULL = true };
 
         public static Dictionary<string, AttributeValue> ToExpressionAttributeValues(this IPocoDynamo db, Dictionary<string, object> args)
         {
@@ -207,19 +207,20 @@ namespace ServiceStack.Aws.DynamoDb
                     ? arg.Key
                     : ":" + arg.Key;
 
-                if (arg.Value != null)
-                {
-                    var argType = arg.Value.GetType();
-                    var dbType = db.Converters.GetFieldType(argType);
-
-                    attrValues[key] = db.Converters.ToAttributeValue(db, argType, dbType, arg.Value);
-                }
-                else
-                {
-                    attrValues[key] = NullValue;
-                }
+                attrValues[key] = ToAttributeValue(db, arg.Value);
             }
             return attrValues;
+        }
+
+        internal static AttributeValue ToAttributeValue(this IPocoDynamo db, object value)
+        {
+            if (value == null)
+                return NullValue;
+
+            var argType = value.GetType();
+            var dbType = db.Converters.GetFieldType(argType);
+
+            return db.Converters.ToAttributeValue(db, argType, dbType, value);
         }
     }
 }

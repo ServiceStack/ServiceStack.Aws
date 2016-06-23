@@ -135,5 +135,119 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(updatedCustomer.PrimaryAddress, Is.EqualTo(customer.PrimaryAddress));
             Assert.That(updatedCustomer.Orders, Is.Null);
         }
+
+        [Test]
+        public void Can_SET_ADD_REMOVE_with_conditional_expression_using_UpdateExpression()
+        {
+            var db = CreatePocoDynamo()
+                .RegisterTable<Customer>();
+
+            db.DeleteTable<Customer>();
+            db.InitSchema();
+
+            var customer = CreateCustomer();
+            customer.Age = 27;
+            db.PutItem(customer);
+
+            var decrBy = -1;
+            var q = db.UpdateExpression<Customer>(customer.Id)
+                .Set(() => new Customer { Nationality = "Australian" })
+                .Add(() => new Customer { Age = decrBy })
+                .Remove(x => new { x.Name, x.Orders })
+                .Condition(x => x.Age == 27);
+
+            var succeeded = db.UpdateItem(q);
+            Assert.That(succeeded);
+
+            var updatedCustomer = db.GetItem<Customer>(customer.Id);
+            Assert.That(updatedCustomer.Age, Is.EqualTo(customer.Age - 1));
+            Assert.That(updatedCustomer.Name, Is.Null);
+            Assert.That(updatedCustomer.Nationality, Is.EqualTo("Australian"));
+            Assert.That(updatedCustomer.PrimaryAddress, Is.EqualTo(customer.PrimaryAddress));
+            Assert.That(updatedCustomer.Orders, Is.Null);
+        }
+
+        [Test]
+        public void Can_update_SET_with_conditional_expression()
+        {
+            var db = CreatePocoDynamo()
+                .RegisterTable<Customer>();
+
+            db.DeleteTable<Customer>();
+            db.InitSchema();
+
+            var customer = CreateCustomer();
+            customer.Age = 27;
+
+            db.PutItem(customer);
+
+            var q = db.UpdateExpression<Customer>(customer.Id)
+                .Set(() => new Customer { Age = 30 })
+                .Condition(x => x.Age == 29);
+
+            var succeeded = db.UpdateItem(q);
+            Assert.That(!succeeded);
+
+            var latest = db.GetItem<Customer>(customer.Id);
+            Assert.That(latest.Age, Is.EqualTo(27));
+
+            q = db.UpdateExpression<Customer>(customer.Id)
+                .Set(() => new Customer { Age = 30 })
+                .Condition(x => x.Age == 27);
+
+            succeeded = db.UpdateItem(q);
+            Assert.That(succeeded);
+
+            latest = db.GetItem<Customer>(customer.Id);
+            Assert.That(latest.Age, Is.EqualTo(30));
+        }
+
+        [Test]
+        public void Can_ADD_with_UpdateExpression()
+        {
+            var db = CreatePocoDynamo()
+                .RegisterTable<Customer>();
+
+            db.DeleteTable<Customer>();
+            db.InitSchema();
+
+            var customer = CreateCustomer();
+            customer.Age = 27;
+            db.PutItem(customer);
+
+            var decrBy = -1;
+
+            var q = db.UpdateExpression<Customer>(customer.Id)
+                .Add(() => new Customer { Age = decrBy });
+
+            var succeeded = db.UpdateItem(q);
+            Assert.That(succeeded);
+
+            var latest = db.GetItem<Customer>(customer.Id);
+            Assert.That(latest.Age, Is.EqualTo(26));
+        }
+
+        [Test]
+        public void Can_REMOVE_with_UpdateExpression()
+        {
+            var db = CreatePocoDynamo()
+                .RegisterTable<Customer>();
+
+            db.DeleteTable<Customer>();
+            db.InitSchema();
+
+            var customer = CreateCustomer();
+            db.PutItem(customer);
+
+            var q = db.UpdateExpression<Customer>(customer.Id)
+                .Remove(x => new { x.Name, x.Orders });
+
+            var succeeded = db.UpdateItem(q);
+            Assert.That(succeeded);
+
+            var updatedCustomer = db.GetItem<Customer>(customer.Id);
+            Assert.That(updatedCustomer.Name, Is.Null);
+            Assert.That(updatedCustomer.Orders, Is.Null);
+        }
     }
 }

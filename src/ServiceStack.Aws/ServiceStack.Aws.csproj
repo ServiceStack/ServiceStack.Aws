@@ -86,6 +86,7 @@
     <Compile Include="DynamoDb\ScanExpression.cs" />
     <Compile Include="DynamoDb\QueryExpression.cs" />
     <Compile Include="DynamoDb\DynamoMetadata.cs" />
+    <Compile Include="DynamoDb\UpdateExpression.cs" />
     <Compile Include="FileStorage\IFileStorageProvider.cs" />
     <Compile Include="FileStorage\FileSystemObject.cs" />
     <Compile Include="DynamoDb\DynamoUtils.cs" />
