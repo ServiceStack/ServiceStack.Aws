@@ -135,8 +135,15 @@ namespace ServiceStack.Aws.DynamoDb
                 Range = range,
                 Put = put.AssignedValues(),
                 Add = add.AssignedValues(),
-                Delete = delete.ToObjectKeys().ToArray(),
+                Delete = delete.ToObjectKeys().ToArraySafe(),
             });
+        }
+
+        static T[] ToArraySafe<T>(this IEnumerable<T> items)
+        {
+            return items == null
+                ? null
+                : items.ToArray();
         }
 
         public static Dictionary<string, object> AssignedValue<T>(this Func<T, object> fn)
