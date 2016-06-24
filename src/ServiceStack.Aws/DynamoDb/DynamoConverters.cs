@@ -28,6 +28,8 @@ namespace ServiceStack.Aws.DynamoDb
             {typeof(DateTime), new DateTimeConverter() },
         };
 
+        public IAttributeValueConverter EnumConverter = new EnumConverter();
+
         public virtual string GetFieldName(PropertyInfo pi)
         {
             var dynoAttr = pi.FirstAttribute<DynamoDBPropertyAttribute>();
@@ -301,7 +303,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var valueConverter = GetValueConverter(fieldType);
             if (valueConverter != null)
-                return valueConverter.ToAttributeValue(value);
+                return valueConverter.ToAttributeValue(value, fieldType);
 
             switch (dbType)
             {
@@ -490,7 +492,11 @@ namespace ServiceStack.Aws.DynamoDb
             type = Nullable.GetUnderlyingType(type) ?? type;
 
             IAttributeValueConverter valueConverter;
-            ValueConverters.TryGetValue(type, out valueConverter);
+            if (!ValueConverters.TryGetValue(type, out valueConverter))
+            {
+                if (type.IsEnum)
+                    return EnumConverter;
+            }
             return valueConverter;
         }
 
@@ -498,7 +504,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var valueConverter = GetValueConverter(fieldType);
             if (valueConverter != null)
-                return valueConverter.FromAttributeValue(attrValue);
+                return valueConverter.FromAttributeValue(attrValue, fieldType);
 
             var value = FromAttributeValueFn != null
                 ? FromAttributeValueFn(attrValue, fieldType) ?? GetAttributeValue(attrValue)
