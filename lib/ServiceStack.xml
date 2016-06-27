@@ -31,7 +31,7 @@
         </member>
         <member name="P:ServiceStack.Auth.ApiKeyAuthProvider.ServiceRoutes">
             <summary>
-            Modify the registration of GetApiKeys and RegenrateApiKeys Services
+            Modify the registration of GetApiKeys and RegenerateApiKeys Services
             </summary>
         </member>
         <member name="P:ServiceStack.Auth.ApiKeyAuthProvider.KeySizeBytes">
