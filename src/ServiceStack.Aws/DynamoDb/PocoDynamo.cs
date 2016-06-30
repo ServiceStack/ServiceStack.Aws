@@ -193,7 +193,8 @@ namespace ServiceStack.Aws.DynamoDb
                 }
                 catch (AmazonDynamoDBException ex)
                 {
-                    if (ex.ErrorCode == DynamoErrors.AlreadyExists)
+                    if (ex.ErrorCode == DynamoErrors.AlreadyExists 
+                        || ex.Message == "Cannot create preexisting table")
                         return;
 
                     throw;
