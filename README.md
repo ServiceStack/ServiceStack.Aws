@@ -52,7 +52,7 @@ references the latest modular AWSSDK **v3.1x** dependencies **.NET 4.5+** projec
 
 This **ServiceStack.Aws** NuGet package includes implementations for the following ServiceStack providers:
 
-  - **[PocoDynamo](#pocodynamo)** - Exciting new declarative, code-first POCO client for DynamoDB with LINQ support
+  - **[PocoDynamo](https://github.com/ServiceStack/PocoDynamo)** - Exciting new declarative, code-first POCO client for DynamoDB with LINQ support
   - **[SqsMqServer](#sqsmqserver)** - A new [MQ Server](https://github.com/ServiceStack/ServiceStack/wiki/Messaging) for invoking ServiceStack Services via Amazon SQS MQ Service
   - **[S3VirtualPathProvider](#S3virtualpathprovider)** - A read/write [Virtual FileSystem](https://github.com/ServiceStack/ServiceStack/wiki/Virtual-file-system) around Amazon's S3 Simple Storage Service
   - **[DynamoDbAuthRepository](#dynamodbauthrepository)** - A new [UserAuth repository](https://github.com/ServiceStack/ServiceStack/wiki/Authentication-and-authorization) storing UserAuth info in DynamoDB
