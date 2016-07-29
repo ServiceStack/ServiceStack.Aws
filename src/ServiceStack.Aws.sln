@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{91F39E88-36DC-41BA-9B0A-27B7818F76C2}"
 	ProjectSection(SolutionItems) = preProject
@@ -29,6 +29,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demos", "Demos", "{13DBB9CD-5C5B-43D1-B1E9-C51DAFD68A47}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host.Console", "..\tests\Host.Console\Host.Console.csproj", "{BDF3DBA4-29B9-47D9-B25C-DDC0077FC7CD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{16A94121-C188-4E94-8F07-A7756A78D3C8}"
+	ProjectSection(SolutionItems) = preProject
+		..\NuGet.Signed\ServiceStack.Aws.Signed\servicestack.aws.signed.nuspec = ..\NuGet.Signed\ServiceStack.Aws.Signed\servicestack.aws.signed.nuspec
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
