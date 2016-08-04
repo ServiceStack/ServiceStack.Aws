@@ -150,6 +150,11 @@
             The AuthKey used to sign the JWT Token
             </summary>
         </member>
+        <member name="P:ServiceStack.Auth.JwtAuthProviderReader.FallbackAuthKeys">
+            <summary>
+            Allow verification using multiple Auth keys
+            </summary>
+        </member>
         <member name="F:ServiceStack.Auth.JwtAuthProviderReader.privateKey">
             <summary>
             The RSA Private Key used to Sign the JWT Token when RSA is used
@@ -168,6 +173,11 @@
         <member name="P:ServiceStack.Auth.JwtAuthProviderReader.PublicKeyXml">
             <summary>
             Convenient overload to intialize the Public Key via exported XML
+            </summary>
+        </member>
+        <member name="P:ServiceStack.Auth.JwtAuthProviderReader.FallbackPublicKeys">
+            <summary>
+            Allow verification using multiple public keys
             </summary>
         </member>
         <member name="P:ServiceStack.Auth.JwtAuthProviderReader.ExpireTokensIn">

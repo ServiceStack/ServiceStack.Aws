@@ -250,7 +250,7 @@ namespace ServiceStack.Aws.Sqs
 
             if (redrivePolicy != null)
             {
-                var json = AwsClientUtils.ToJson(redrivePolicy);
+                var json = redrivePolicy.ToJson();
                 request.Attributes.Add(QueueAttributeName.RedrivePolicy, json);
             }
 

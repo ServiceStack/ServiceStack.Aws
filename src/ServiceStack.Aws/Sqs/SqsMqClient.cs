@@ -33,37 +33,34 @@ namespace ServiceStack.Aws.Sqs
 
         private IMessage<T> GetMessage<T>(string queueName, int waitSeconds)
         {
-            using (AwsClientUtils.__requestAccess())
+            var receiveWaitTime = waitSeconds < 0
+                ? SqsQueueDefinition.MaxWaitTimeSeconds
+                : SqsQueueDefinition.GetValidQueueWaitTime(waitSeconds);
+
+            var queueDefinition = sqsQueueManager.GetOrCreate(queueName, receiveWaitTimeSeconds: receiveWaitTime);
+
+            var timeoutAt = waitSeconds >= 0
+                ? DateTime.UtcNow.AddSeconds(waitSeconds)
+                : DateTime.MaxValue;
+
+            var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
+
+            do
             {
-                var receiveWaitTime = waitSeconds < 0
-                    ? SqsQueueDefinition.MaxWaitTimeSeconds
-                    : SqsQueueDefinition.GetValidQueueWaitTime(waitSeconds);
-
-                var queueDefinition = sqsQueueManager.GetOrCreate(queueName, receiveWaitTimeSeconds: receiveWaitTime);
-
-                var timeoutAt = waitSeconds >= 0
-                    ? DateTime.UtcNow.AddSeconds(waitSeconds)
-                    : DateTime.MaxValue;
-
-                var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
-
-                do
+                var sqsMessage = sqsBuffer.Receive(new ReceiveMessageRequest
                 {
-                    var sqsMessage = sqsBuffer.Receive(new ReceiveMessageRequest
-                    {
-                        MaxNumberOfMessages = queueDefinition.ReceiveBufferSize,
-                        QueueUrl = queueDefinition.QueueUrl,
-                        VisibilityTimeout = queueDefinition.VisibilityTimeout,
-                        WaitTimeSeconds = receiveWaitTime,
-                        MessageAttributeNames = AllMessageProperties
-                    });
+                    MaxNumberOfMessages = queueDefinition.ReceiveBufferSize,
+                    QueueUrl = queueDefinition.QueueUrl,
+                    VisibilityTimeout = queueDefinition.VisibilityTimeout,
+                    WaitTimeSeconds = receiveWaitTime,
+                    MessageAttributeNames = AllMessageProperties
+                });
 
-                    var message = sqsMessage.FromSqsMessage<T>(queueDefinition.QueueName);
-                    if (message != null)
-                        return message;
+                var message = sqsMessage.FromSqsMessage<T>(queueDefinition.QueueName);
+                if (message != null)
+                    return message;
 
-                } while (DateTime.UtcNow <= timeoutAt);
-            }
+            } while (DateTime.UtcNow <= timeoutAt);
 
             return null;
         }
@@ -75,7 +72,7 @@ namespace ServiceStack.Aws.Sqs
                 return;
             }
 
-            var sqsTag = AwsClientUtils.FromJson<SqsMessageTag>(message.Tag);
+            var sqsTag = message.Tag.FromJson<SqsMessageTag>();
 
             var queueDefinition = sqsQueueManager.GetOrCreate(sqsTag.QName);
 
@@ -98,7 +95,7 @@ namespace ServiceStack.Aws.Sqs
             if (message == null || string.IsNullOrEmpty(message.Tag))
                 return;
 
-            var sqsTag = AwsClientUtils.FromJson<SqsMessageTag>(message.Tag);
+            var sqsTag = message.Tag.FromJson<SqsMessageTag>();
 
             var queueDefinition = sqsQueueManager.GetOrCreate(sqsTag.QName);
 
