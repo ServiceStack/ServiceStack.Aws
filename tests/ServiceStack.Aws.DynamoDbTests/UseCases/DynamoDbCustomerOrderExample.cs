@@ -42,6 +42,7 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
 
     [References(typeof(OrderCostLocalIndex))]
     [References(typeof(OrderCostGlobalIndex))]
+    [References(typeof(OrderProductGlobalIndex))]
     public class OrderTypedIndex
     {
         [AutoIncrement]
@@ -72,6 +73,17 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
         [RangeKey]
         public decimal Cost { get; set; }
 
+        public int CustomerId { get; set; }
+        public int Qty { get; set; }
+        public int Id { get; set; }
+    }
+
+    public class OrderProductGlobalIndex : IGlobalIndex<OrderTypedIndex>
+    {
+        [HashKey]
+        public string Product { get; set; }
+
+        public decimal Cost { get; set; }
         public int CustomerId { get; set; }
         public int Qty { get; set; }
         public int Id { get; set; }
@@ -237,6 +249,40 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
             expensiveOrders.PrintDump();
         }
 
+        [Test]
+        public void Can_query_related_Customer_orders_Typed_GlobalIndex_without_RangeKey()
+        {
+            db.DeleteTable<OrderTypedIndex>();
+            db.RegisterTable<OrderTypedIndex>();
+            db.InitSchema();
+
+            var customer = InsertCustomerAndOrders();
+
+            var indexOrders = db.GetRelatedItems<Order>(customer.Id)
+                .Map(x => x.ConvertTo<OrderTypedIndex>());
+
+            db.PutItems(indexOrders);
+
+            var expensiveItemAIndexes = db.FromQueryIndex<OrderProductGlobalIndex>(
+                    x => x.Product == "Item A")
+                .Filter(x => x.Cost > 10)
+                .Exec();
+
+            var expensiveItemAOrders = expensiveItemAIndexes
+                .Map(x => x.ConvertTo<Order>());
+
+            var expensiveOrderIndexes = db
+                .FromScanIndex<OrderProductGlobalIndex>(x => x.Cost > 10)
+                .Exec()
+                .ToList();
+
+            expensiveOrderIndexes.PrintDump();
+
+            var expensiveOrders = db.FromScanIndex<OrderProductGlobalIndex>(x => x.Cost > 10)
+                .ExecInto<Order>();
+
+            expensiveOrders.PrintDump();
+        }
 
         [Test]
         public void Can_Scan_by_FilterExpression()

@@ -306,12 +306,9 @@ namespace ServiceStack.Aws.DynamoDb
             if (indexRange == null)
                 indexRange = indexProps.FirstOrDefault(x => x.HasAttribute<IndexAttribute>());
 
-            if (indexRange == null)
-                throw new ArgumentException("Could not infer Range Key in index '{0}'.".Fmt(indexType));
-
-            var rangeKey = metadata.GetField(indexRange.Name);
-            if (rangeKey == null)
-                throw new ArgumentException("Range Key '{0}' was not found on Table '{1}'".Fmt(indexRange.Name, type.Name));
+            var rangeKey = indexRange != null
+                ? metadata.GetField(indexRange.Name)
+                : null;
 
             var indexAlias = indexType.FirstAttribute<AliasAttribute>();
 
