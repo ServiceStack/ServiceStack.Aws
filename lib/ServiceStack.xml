@@ -5524,6 +5524,16 @@
             Add Request Filter for a specific MQ Response DTO Type
             </summary>
         </member>
+        <member name="P:ServiceStack.IAppHost.GatewayRequestFilters">
+            <summary>
+            Add Request Filter for Service Gateway Requests
+            </summary>
+        </member>
+        <member name="P:ServiceStack.IAppHost.GatewayResponseFilters">
+            <summary>
+            Add Response Filter for Service Gateway Responses
+            </summary>
+        </member>
         <member name="P:ServiceStack.IAppHost.ViewEngines">
             <summary>
             Add alternative HTML View Engines
