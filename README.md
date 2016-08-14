@@ -580,6 +580,13 @@ var first100TableNames = db.GetTableNames().Take(100).ToList();
 
 and PocoDynamo will only make the minimum number of requests required to fetch the first 100 results.
 
+### Try out [PocoDynamo Live](http://gistlyn.com/pocodynamo-todo)
+
+A great way to try out PocoDynamo is on [gistlyn.com](http://gistlyn.com) which lets you immediately 
+run and explore PocoDynamo features from the comfort of your browser with zero software install:
+
+[![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/gistlyn-pocodynamo.png)](http://gistlyn.com/pocodynamo-todo)
+
 ### PocoDynamo Examples
 
 #### [DynamoDbCacheClient](https://github.com/ServiceStack/ServiceStack.Aws/blob/master/src/ServiceStack.Aws/DynamoDb/DynamoDbCacheClient.cs)
