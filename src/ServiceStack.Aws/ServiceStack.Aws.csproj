@@ -44,22 +44,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AWSSDK.Core, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.Core.3.1.10.0\lib\net45\AWSSDK.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="AWSSDK.DynamoDBv2, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.DynamoDBv2.3.1.5.3\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="AWSSDK.S3, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.S3.3.1.9.0\lib\net45\AWSSDK.S3.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="AWSSDK.SQS, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.SQS.3.1.0.13\lib\net45\AWSSDK.SQS.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="ServiceStack">
       <HintPath>..\..\lib\ServiceStack.dll</HintPath>
     </Reference>
@@ -149,6 +133,7 @@
     <Compile Include="Sqs\SqsQueueDefinition.cs" />
     <Compile Include="Sqs\SqsQueueName.cs" />
     <Compile Include="Support\HashExtensions.cs" />
+    <Compile Include="Support\NetCoreExtensions.cs" />
     <Compile Include="Support\PropertyInvoker.cs" />
   </ItemGroup>
   <ItemGroup>
