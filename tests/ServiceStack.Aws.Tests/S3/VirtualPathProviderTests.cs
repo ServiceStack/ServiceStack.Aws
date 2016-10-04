@@ -110,8 +110,9 @@ namespace ServiceStack.Aws.Tests.S3
 
             if (file.GetType().Name == "S3VirtualFile" && file.LastModified == prevLastModified)
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(200);
                 pathProvider.WriteFile(filePath, "file3");
+                Thread.Sleep(200);
                 file.Refresh();
             }
 
