@@ -333,7 +333,7 @@
           "System.Threading": "4.0.11"
         },
         "compile": {
-          "ref/netstandard1.3/System.Collections.Specialized.dll": {}
+          "ref/netstandard1.3/_._": {}
         },
         "runtime": {
           "lib/netstandard1.3/System.Collections.Specialized.dll": {}
@@ -1817,7 +1817,7 @@
           "System.Xml.XmlDocument": "4.0.1"
         },
         "compile": {
-          "ref/netstandard1.3/System.Xml.XmlSerializer.dll": {}
+          "ref/netstandard1.3/_._": {}
         },
         "runtime": {
           "lib/netstandard1.3/System.Xml.XmlSerializer.dll": {}
@@ -1867,42 +1867,6 @@
         },
         "runtime": {
           "netstandard1.1/ServiceStack.Interfaces.dll": {}
-        }
-      },
-      "ServiceStack.OrmLite/1.0.0": {
-        "type": "project",
-        "framework": ".NETStandard,Version=v1.3",
-        "dependencies": {
-          "NETStandard.Library": "1.6.0"
-        },
-        "compile": {
-          "netstandard1.3/ServiceStack.OrmLite.dll": {}
-        },
-        "runtime": {
-          "netstandard1.3/ServiceStack.OrmLite.dll": {}
-        }
-      },
-      "ServiceStack.Redis/1.0.0": {
-        "type": "project",
-        "framework": ".NETStandard,Version=v1.3",
-        "dependencies": {
-          "NETStandard.Library": "1.6.0"
-        },
-        "compile": {
-          "netstandard1.3/ServiceStack.Redis.dll": {}
-        },
-        "runtime": {
-          "netstandard1.3/ServiceStack.Redis.dll": {}
-        }
-      },
-      "ServiceStack.Server/1.0.0": {
-        "type": "project",
-        "framework": ".NETStandard,Version=v1.6",
-        "compile": {
-          "netstandard1.6/ServiceStack.Server.dll": {}
-        },
-        "runtime": {
-          "netstandard1.6/ServiceStack.Server.dll": {}
         }
       },
       "ServiceStack.Text/1.0.0": {
@@ -6194,21 +6158,6 @@
       "path": "../ServiceStack.Interfaces/project.json",
       "msbuildProject": "../ServiceStack.Interfaces/ServiceStack.Interfaces.xproj"
     },
-    "ServiceStack.OrmLite/1.0.0": {
-      "type": "project",
-      "path": "../ServiceStack.OrmLite/project.json",
-      "msbuildProject": "../ServiceStack.OrmLite/ServiceStack.OrmLite.xproj"
-    },
-    "ServiceStack.Redis/1.0.0": {
-      "type": "project",
-      "path": "../ServiceStack.Redis/project.json",
-      "msbuildProject": "../ServiceStack.Redis/ServiceStack.Redis.xproj"
-    },
-    "ServiceStack.Server/1.0.0": {
-      "type": "project",
-      "path": "../ServiceStack.Server/project.json",
-      "msbuildProject": "../ServiceStack.Server/ServiceStack.Server.xproj"
-    },
     "ServiceStack.Text/1.0.0": {
       "type": "project",
       "path": "../ServiceStack.Text/project.json",
@@ -6221,19 +6170,13 @@
       "ServiceStack.Client >= 1.0.*",
       "ServiceStack.Common >= 1.0.*",
       "ServiceStack.Interfaces >= 1.0.*",
-      "ServiceStack.OrmLite >= 1.0.*",
-      "ServiceStack.Redis >= 1.0.*",
-      "ServiceStack.Server >= 1.0.*",
       "ServiceStack.Text >= 1.0.*",
-      "System.Collections.Specialized >= 4.0.1",
       "System.Linq.Queryable >= 4.0.1",
-      "System.Runtime.Serialization.Primitives >= 4.1.1",
       "System.ServiceModel.Primitives >= 4.1.0",
       "System.Threading >= 4.0.11",
       "System.Threading.Tasks >= 4.0.11",
       "System.Threading.Thread >= 4.0.0",
-      "System.Threading.ThreadPool >= 4.0.10",
-      "System.Xml.XmlSerializer >= 4.0.11"
+      "System.Threading.ThreadPool >= 4.0.10"
     ],
     ".NETStandard,Version=v1.6": [
       "AWSSDK.Core >= 3.3.0.2",
