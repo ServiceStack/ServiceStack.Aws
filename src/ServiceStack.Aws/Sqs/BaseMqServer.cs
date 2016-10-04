@@ -125,10 +125,7 @@ namespace ServiceStack.Aws.Sqs
 
         public List<Type> RegisteredTypes { get; private set; }
 
-        public long BgThreadCount
-        {
-            get { return Interlocked.CompareExchange(ref bgThreadCount, 0, 0); }
-        }
+        public long BgThreadCount => Interlocked.CompareExchange(ref bgThreadCount, 0, 0);
 
         /// <summary>
         /// Execute global error handler logic. Must be thread-safe.
@@ -171,10 +168,7 @@ namespace ServiceStack.Aws.Sqs
         {
             log.Debug(string.Concat("Disposing all ", typeName, " MQ Server worker threads..."));
 
-            if (workers != null)
-            {
-                workers.ForEach(w => w.Dispose());
-            }
+            workers?.ForEach(w => w.Dispose());
         }
 
         public void Dispose()
@@ -205,10 +199,7 @@ namespace ServiceStack.Aws.Sqs
             }
             catch (Exception ex)
             {
-                if (this.ErrorHandler != null)
-                {
-                    this.ErrorHandler(ex);
-                }
+                ErrorHandler?.Invoke(ex);
             }
 
             DoDispose();
@@ -309,9 +300,7 @@ namespace ServiceStack.Aws.Sqs
                 }
                 catch (Exception ex)
                 {
-                    if (this.ErrorHandler != null)
-                        this.ErrorHandler(ex);
-
+                    ErrorHandler?.Invoke(ex);
                     log.Warn("Could not START SQS MQ worker thread: " + ex.Message);
                 }
             }
@@ -328,9 +317,7 @@ namespace ServiceStack.Aws.Sqs
                 }
                 catch (Exception ex)
                 {
-                    if (this.ErrorHandler != null)
-                        this.ErrorHandler(ex);
-
+                    ErrorHandler?.Invoke(ex);
                     log.Warn("Could not STOP " + typeName + " MQ worker thread: " + ex.Message);
                 }
             }
@@ -339,9 +326,7 @@ namespace ServiceStack.Aws.Sqs
         private void KillBgThreadIfExists()
         {
             if (bgThread == null || !bgThread.IsAlive)
-            {
                 return;
-            }
 
             try
             {
@@ -436,10 +421,7 @@ namespace ServiceStack.Aws.Sqs
 
                 StopWorkerThreads();
 
-                if (this.ErrorHandler != null)
-                {
-                    this.ErrorHandler(ex);
-                }
+                ErrorHandler?.Invoke(ex);
 
                 if (KeepAliveRetryAfterMs.HasValue)
                 {

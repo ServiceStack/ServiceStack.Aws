@@ -34,15 +34,9 @@ namespace ServiceStack.Aws.Sqs
         public int DefaultReceiveWaitTime { get; set; }
         public bool DisableBuffering { get; set; }
 
-        public SqsConnectionFactory ConnectionFactory
-        {
-            get { return sqsConnectionFactory; }
-        }
+        public SqsConnectionFactory ConnectionFactory => sqsConnectionFactory;
 
-        public ConcurrentDictionary<string, SqsQueueDefinition> QueueNameMap
-        {
-            get { return queueNameMap; }
-        }
+        public ConcurrentDictionary<string, SqsQueueDefinition> QueueNameMap => queueNameMap;
 
         private SqsQueueName GetSqsQueueName(string queueName)
         {
@@ -53,10 +47,7 @@ namespace ServiceStack.Aws.Sqs
                 : SqsQueueNames.GetSqsQueueName(queueName);
         }
 
-        public IAmazonSQS SqsClient
-        {
-            get { return sqsClient ?? (sqsClient = sqsConnectionFactory.GetClient()); }
-        }
+        public IAmazonSQS SqsClient => sqsClient ?? (sqsClient = sqsConnectionFactory.GetClient());
 
         public bool QueueExists(string queueName, bool forceRecheck = false)
         {

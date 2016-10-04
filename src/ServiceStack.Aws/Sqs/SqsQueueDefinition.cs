@@ -26,15 +26,9 @@
             VisibilityTimeout = DefaultVisibilityTimeoutSeconds;
         }
 
-        public string QueueName
-        {
-            get { return SqsQueueName.QueueName; }
-        }
+        public string QueueName => SqsQueueName.QueueName;
 
-        public string AwsQueueName
-        {
-            get { return SqsQueueName.AwsQueueName; }
-        }
+        public string AwsQueueName => SqsQueueName.AwsQueueName;
 
         public SqsQueueName SqsQueueName { get; set; }
 
@@ -96,10 +90,7 @@
         public long ApproximateNumberOfMessages { get; set; }
         public string QueueArn { get; set; }
 
-        public static char[] ValidNonAlphaNumericChars
-        {
-            get { return validNonAlphaNumericChars; }
-        }
+        public static char[] ValidNonAlphaNumericChars => validNonAlphaNumericChars;
 
         public static int GetValidQueueWaitTime(int value)
         {

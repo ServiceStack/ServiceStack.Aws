@@ -22,16 +22,10 @@ namespace ServiceStack.Aws.Sqs
             this.sqsConnectionFactory = sqsConnectionFactory;
         }
 
-        private IAmazonSQS SqsClient
-        {
-            get { return sqsClient ?? (sqsClient = sqsConnectionFactory.GetClient()); }
-        }
+        private IAmazonSQS SqsClient => sqsClient ?? (sqsClient = sqsConnectionFactory.GetClient());
 
-        public SqsQueueDefinition QueueDefinition
-        {
-            get { return queueDefinition; }
-        }
-        
+        public SqsQueueDefinition QueueDefinition => queueDefinition;
+
         public Action<Exception> ErrorHandler { get; set; }
         
         public bool Delete(DeleteMessageRequest request)
@@ -71,31 +65,16 @@ namespace ServiceStack.Aws.Sqs
             request.MaxNumberOfMessages = 1;
 
             var response = SqsClient.ReceiveMessage(request);
-
-            return response == null
-                ? null
-                : response.Messages.SingleOrDefault();
+            return response?.Messages.SingleOrDefault();
         }
 
-        public int DeleteBufferCount
-        {
-            get { return 0; }
-        }
+        public int DeleteBufferCount => 0;
 
-        public int SendBufferCount
-        {
-            get { return 0; }
-        }
+        public int SendBufferCount => 0;
 
-        public int ChangeVisibilityBufferCount
-        {
-            get { return 0; }
-        }
+        public int ChangeVisibilityBufferCount => 0;
 
-        public int ReceiveBufferCount
-        {
-            get { return 0; }
-        }
+        public int ReceiveBufferCount => 0;
 
         public void Drain(bool fullDrain, bool nakReceived = false)
         {

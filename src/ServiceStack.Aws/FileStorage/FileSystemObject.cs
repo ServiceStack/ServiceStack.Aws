@@ -101,24 +101,12 @@ namespace ServiceStack.Aws.FileStorage
             return returnVal;
         }
 
-        public string FullName
-        {
-            get
-            {
-                return Combine(string.IsNullOrEmpty(FolderName) ? string.Empty : FolderName, FileNameAndExtension);
-            }
-        }
+        public string FullName => Combine(string.IsNullOrEmpty(FolderName) ? string.Empty : FolderName, FileNameAndExtension);
 
-        public string FileNameAndExtension
-        {
-            get
-            {
-                return string.IsNullOrEmpty(FileExtension)
-                    ? FileName
-                    : string.Concat(FileName, ".", FileExtension);
-            }
-        }
-        
+        public string FileNameAndExtension => string.IsNullOrEmpty(FileExtension)
+            ? FileName
+            : string.Concat(FileName, ".", FileExtension);
+
         public bool Equals(FileSystemObject other)
         {   // Purpsely always use case-insensitive comparison for our purposes, seems safest to me
             return other != null &&

@@ -270,8 +270,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public void Close()
         {
-            if (Dynamo != null)
-                Dynamo.Close();
+            Dynamo?.Close();
         }
 
         ~DynamoDbCacheClient()

@@ -141,9 +141,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         internal static T[] ToArraySafe<T>(this IEnumerable<T> items)
         {
-            return items == null
-                ? null
-                : items.ToArray();
+            return items?.ToArray();
         }
 
         public static Dictionary<string, object> AssignedValue<T>(this Func<T, object> fn)

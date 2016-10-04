@@ -478,8 +478,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (operand == "AND" || operand == "OR")
             {
                 var m = b.Left as MemberExpression;
-                if (m != null && m.Expression != null
-                    && m.Expression.NodeType == ExpressionType.Parameter)
+                if (m?.Expression != null && m.Expression.NodeType == ExpressionType.Parameter)
                     left = new PartialString("{0}={1}".Fmt(VisitMemberAccess(m), GetTrueParam()));
                 else
                     left = Visit(b.Left);
@@ -536,11 +535,11 @@ namespace ServiceStack.Aws.DynamoDb
                 }
                 else if (left as PartialString == null)
                 {
-                    left = GetQuotedValue(left, left != null ? left.GetType() : null);
+                    left = GetQuotedValue(left, left?.GetType());
                 }
                 else if (right as PartialString == null)
                 {
-                    right = GetValue(right, right != null ? right.GetType() : null);
+                    right = GetValue(right, right?.GetType());
                 }
             }
 
@@ -743,7 +742,8 @@ namespace ServiceStack.Aws.DynamoDb
         public EnumMemberAccess(string text, Type enumType)
             : base(text)
         {
-            if (!enumType.IsEnum()) throw new ArgumentException("Type not valid", "enumType");
+            if (!enumType.IsEnum())
+                throw new ArgumentException("Type not valid", nameof(enumType));
 
             EnumType = enumType;
         }

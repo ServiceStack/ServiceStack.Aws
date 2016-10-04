@@ -31,20 +31,11 @@ namespace ServiceStack.Aws.S3
 
         public const char DirSep = '/';
 
-        public override IVirtualDirectory RootDirectory
-        {
-            get { return rootDirectory; }
-        }
+        public override IVirtualDirectory RootDirectory => rootDirectory;
 
-        public override string VirtualPathSeparator
-        {
-            get { return "/"; }
-        }
+        public override string VirtualPathSeparator => "/";
 
-        public override string RealPathSeparator
-        {
-            get { return "/"; }
-        }
+        public override string RealPathSeparator => "/";
 
         protected override void Initialize() {}
 
@@ -233,9 +224,7 @@ namespace ServiceStack.Aws.S3
                 ? null
                 : (filePath[0] == DirSep ? filePath.Substring(1) : filePath);
 
-            return sanitizedPath != null
-                ? sanitizedPath.Replace('\\', DirSep)
-                : null;
+            return sanitizedPath?.Replace('\\', DirSep);
         }
 
         public static string GetFileName(string filePath)

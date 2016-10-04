@@ -57,7 +57,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var metadata = Types.FirstOrDefault(x => x.Type == table);
             if (metadata == null || !metadata.IsTable)
-                throw new ArgumentNullException("table", "Table has not been registered: " + table.Name);
+                throw new ArgumentNullException(nameof(table), "Table has not been registered: " + table.Name);
 
             return metadata;
         }
@@ -72,9 +72,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static List<DynamoMetadataType> GetTables()
         {
-            return Types == null
-                ? new List<DynamoMetadataType>()
-                : Types.Where(x => x.IsTable).ToList();
+            return Types?.Where(x => x.IsTable).ToList() ?? new List<DynamoMetadataType>();
         }
 
         public static DynamoMetadataType GetType<T>()
@@ -203,8 +201,8 @@ namespace ServiceStack.Aws.DynamoDb
                 Type = type,
                 IsTable = true,
                 Name = alias != null ? alias.Name : genericTypeNameAlias ?? type.Name,
-                ReadCapacityUnits = provision != null ? provision.ReadCapacityUnits : (int?)null,
-                WriteCapacityUnits = provision != null ? provision.WriteCapacityUnits : (int?)null,
+                ReadCapacityUnits = provision?.ReadCapacityUnits,
+                WriteCapacityUnits = provision?.WriteCapacityUnits,
             };
             metadata.Fields = props.Map(p =>
                 new DynamoMetadataField
@@ -232,7 +230,7 @@ namespace ServiceStack.Aws.DynamoDb
             metadata.LocalIndexes = props.Where(x => x.HasAttribute<IndexAttribute>()).Map(x =>
             {
                 var indexProjection = x.FirstAttribute<ProjectionTypeAttribute>();
-                var projectionType = (indexProjection != null ? indexProjection.ProjectionType : null) ?? DynamoProjectionType.Include;
+                var projectionType = indexProjection?.ProjectionType ?? DynamoProjectionType.Include;
                 return new DynamoLocalIndex
                 {
                     Name = "{0}{1}Index".Fmt(metadata.Name, x.Name),
@@ -277,7 +275,7 @@ namespace ServiceStack.Aws.DynamoDb
                 throw new ArgumentException("Range Key '{0}' was not found on Table '{1}'".Fmt(indexProp.Name, type.Name));
 
             var indexProjection = indexType.FirstAttribute<ProjectionTypeAttribute>();
-            var projectionType = (indexProjection != null ? indexProjection.ProjectionType : null) ?? DynamoProjectionType.Include;
+            var projectionType = indexProjection?.ProjectionType ?? DynamoProjectionType.Include;
 
             return new DynamoLocalIndex
             {
@@ -315,7 +313,7 @@ namespace ServiceStack.Aws.DynamoDb
             var indexProvision = indexType.FirstAttribute<ProvisionedThroughputAttribute>();
 
             var indexProjection = indexType.FirstAttribute<ProjectionTypeAttribute>();
-            var projectionType = (indexProjection != null ? indexProjection.ProjectionType : null) ?? DynamoProjectionType.Include;
+            var projectionType = indexProjection?.ProjectionType ?? DynamoProjectionType.Include;
 
             return new DynamoGlobalIndex
             {
@@ -327,8 +325,8 @@ namespace ServiceStack.Aws.DynamoDb
                 ProjectedFields = projectionType == DynamoProjectionType.Include
                     ? indexProps.Where(x => x.Name != indexHash.Name).Select(x => x.Name).ToArray()
                     : new string[0],
-                ReadCapacityUnits = indexProvision != null ? indexProvision.ReadCapacityUnits : metadata.ReadCapacityUnits,
-                WriteCapacityUnits = indexProvision != null ? indexProvision.WriteCapacityUnits : metadata.WriteCapacityUnits,
+                ReadCapacityUnits = indexProvision?.ReadCapacityUnits ?? metadata.ReadCapacityUnits,
+                WriteCapacityUnits = indexProvision?.WriteCapacityUnits ?? metadata.WriteCapacityUnits,
             };
         }
     }

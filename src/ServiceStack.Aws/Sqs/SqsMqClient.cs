@@ -67,10 +67,8 @@ namespace ServiceStack.Aws.Sqs
 
         public void DeleteMessage(IMessage message)
         {
-            if (message == null || string.IsNullOrEmpty(message.Tag))
-            {
+            if (string.IsNullOrEmpty(message?.Tag))
                 return;
-            }
 
             var sqsTag = message.Tag.FromJson<SqsMessageTag>();
 
@@ -92,7 +90,7 @@ namespace ServiceStack.Aws.Sqs
 
         public void ChangeVisibility(IMessage message, int visibilityTimeoutSeconds)
         {
-            if (message == null || string.IsNullOrEmpty(message.Tag))
+            if (string.IsNullOrEmpty(message?.Tag))
                 return;
 
             var sqsTag = message.Tag.FromJson<SqsMessageTag>();

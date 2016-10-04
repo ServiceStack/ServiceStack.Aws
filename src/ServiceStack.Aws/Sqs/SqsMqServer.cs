@@ -27,16 +27,10 @@ namespace ServiceStack.Aws.Sqs
             this.sqsMqMessageFactory = sqsMqMessageFactory;
         }
         
-        public override IMessageFactory MessageFactory
-        {
-            get { return sqsMqMessageFactory; }
-        }
+        public override IMessageFactory MessageFactory => sqsMqMessageFactory;
 
-        public SqsConnectionFactory ConnectionFactory
-        {
-            get { return sqsMqMessageFactory.ConnectionFactory; }
-        }
-        
+        public SqsConnectionFactory ConnectionFactory => sqsMqMessageFactory.ConnectionFactory;
+
         /// <summary>
         /// How many times a message should be retried before sending to the DLQ (Max of 1000).
         /// </summary>
@@ -69,7 +63,7 @@ namespace ServiceStack.Aws.Sqs
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxVisibilityTimeoutSeconds,
-                                                "SQS MQ VisibilityTimeout must be 0-43200");
+                    "SQS MQ VisibilityTimeout must be 0-43200");
 
                 sqsMqMessageFactory.QueueManager.DefaultVisibilityTimeout = value;
             }
@@ -86,7 +80,7 @@ namespace ServiceStack.Aws.Sqs
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxWaitTimeSeconds,
-                                                "SQS MQ ReceiveWaitTime must be 0-20");
+                    "SQS MQ ReceiveWaitTime must be 0-20");
 
                 sqsMqMessageFactory.QueueManager.DefaultReceiveWaitTime = value;
             }
@@ -121,10 +115,7 @@ namespace ServiceStack.Aws.Sqs
             }
             catch (Exception ex)
             {
-                if (this.ErrorHandler != null)
-                {
-                    this.ErrorHandler(ex);
-                }
+                ErrorHandler?.Invoke(ex);
             }
         }
 

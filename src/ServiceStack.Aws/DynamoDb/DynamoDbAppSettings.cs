@@ -17,15 +17,9 @@ namespace ServiceStack.Aws.DynamoDb
 
     public class DynamoDbAppSettings : AppSettingsBase, IRequiresSchema, IClearable
     {
-        private DynamoDbSettings DbSettings
-        {
-            get { return (DynamoDbSettings)base.settings; }
-        }
+        private DynamoDbSettings DbSettings => (DynamoDbSettings)base.settings;
 
-        public IPocoDynamo Db
-        {
-            get { return DbSettings.Db; }
-        }
+        public IPocoDynamo Db => DbSettings.Db;
 
         private readonly DynamoMetadataType metadata;
 
@@ -51,7 +45,7 @@ namespace ServiceStack.Aws.DynamoDb
             public string Get(string key)
             {
                 var config = Db.GetItem<ConfigSetting>(key);
-                return config != null ? config.Value : null;
+                return config?.Value;
             }
 
             public List<string> GetAllKeys()

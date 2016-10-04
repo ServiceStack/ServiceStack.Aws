@@ -16,7 +16,7 @@ namespace ServiceStack.Aws.FileStorage
         public S3FileStorageProvider(S3ConnectionFactory s3ConnFactory)
         {
             if (s3ConnFactory == null)
-                throw new ArgumentNullException("s3ConnFactory");
+                throw new ArgumentNullException(nameof(s3ConnFactory));
 
             s3ConnectionFactory = s3ConnFactory;
         }
@@ -34,15 +34,9 @@ namespace ServiceStack.Aws.FileStorage
             catch { }
         }
 
-        private IAmazonS3 S3Client
-        {
-            get { return s3Client ?? (s3Client = s3ConnectionFactory.GetClient()); }
-        }
+        private IAmazonS3 S3Client => s3Client ?? (s3Client = s3ConnectionFactory.GetClient());
 
-        public override char DirectorySeparatorCharacter
-        {
-            get { return '/'; }
-        }
+        public override char DirectorySeparatorCharacter => '/';
 
         public override void Download(FileSystemObject thisFso, FileSystemObject downloadToFso)
         {
@@ -82,9 +76,7 @@ namespace ServiceStack.Aws.FileStorage
         {
             using (var stream = GetStream(fso))
             {
-                return stream == null
-                    ? null
-                    : stream.ToBytes();
+                return stream?.ToBytes();
             }
         }
 
@@ -538,7 +530,5 @@ namespace ServiceStack.Aws.FileStorage
 
             S3Client.PutBucket(request);
         }
-
     }
-
 }

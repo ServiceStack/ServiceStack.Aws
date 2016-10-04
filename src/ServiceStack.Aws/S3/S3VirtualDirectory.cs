@@ -28,42 +28,21 @@ namespace ServiceStack.Aws.S3
 
         public DateTime DirLastModified { get; set; }
 
-        public override DateTime LastModified
-        {
-            get { return DirLastModified; }
-        }
+        public override DateTime LastModified => DirLastModified;
 
-        public override IEnumerable<IVirtualFile> Files
-        {
-            get { return PathProvider.GetImmediateFiles(DirPath); }
-        }
+        public override IEnumerable<IVirtualFile> Files => PathProvider.GetImmediateFiles(DirPath);
 
-        public override IEnumerable<IVirtualDirectory> Directories
-        {
-            get { return PathProvider.GetImmediateDirectories(DirPath); }
-        }
+        public override IEnumerable<IVirtualDirectory> Directories => PathProvider.GetImmediateDirectories(DirPath);
 
-        public IAmazonS3 Client
-        {
-            get { return PathProvider.AmazonS3; }
-        }
+        public IAmazonS3 Client => PathProvider.AmazonS3;
 
-        public string BucketName
-        {
-            get { return PathProvider.BucketName; }
-        }
+        public string BucketName => PathProvider.BucketName;
 
         public string DirPath { get; set; }
 
-        public override string VirtualPath
-        {
-            get { return DirPath; }
-        }
+        public override string VirtualPath => DirPath;
 
-        public override string Name
-        {
-            get { return DirPath != null ? DirPath.SplitOnLast(InMemoryVirtualPathProvider.DirSep).Last() : null; }
-        }
+        public override string Name => DirPath?.SplitOnLast(InMemoryVirtualPathProvider.DirSep).Last();
 
         public override IVirtualFile GetFile(string virtualPath)
         {

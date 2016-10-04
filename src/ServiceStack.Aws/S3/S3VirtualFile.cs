@@ -15,15 +15,9 @@ namespace ServiceStack.Aws.S3
     {
         private S3VirtualPathProvider PathProvider { get; set; }
 
-        public IAmazonS3 Client
-        {
-            get { return PathProvider.AmazonS3; }
-        }
+        public IAmazonS3 Client => PathProvider.AmazonS3;
 
-        public string BucketName
-        {
-            get { return PathProvider.BucketName; }
-        }
+        public string BucketName => PathProvider.BucketName;
 
         public S3VirtualFile(S3VirtualPathProvider pathProvider, IVirtualDirectory directory)
             : base(pathProvider, directory)
@@ -31,36 +25,21 @@ namespace ServiceStack.Aws.S3
             this.PathProvider = pathProvider;
         }
 
-        public string DirPath
-        {
-            get { return base.Directory.VirtualPath; }
-        }
+        public string DirPath => base.Directory.VirtualPath;
 
         public string FilePath { get; set; }
 
         public string ContentType { get; set; }
 
-        public override string Name
-        {
-            get { return S3VirtualPathProvider.GetFileName(FilePath); }
-        }
+        public override string Name => S3VirtualPathProvider.GetFileName(FilePath);
 
-        public override string VirtualPath
-        {
-            get { return FilePath; }
-        }
+        public override string VirtualPath => FilePath;
 
         public DateTime FileLastModified { get; set; }
 
-        public override DateTime LastModified
-        {
-            get { return FileLastModified; }
-        }
+        public override DateTime LastModified => FileLastModified;
 
-        public override long Length
-        {
-            get { return ContentLength; }
-        }
+        public override long Length => ContentLength;
 
         public long ContentLength { get; set; }
 

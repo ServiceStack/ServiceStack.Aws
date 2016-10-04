@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 
 namespace ServiceStack.Aws.FileStorage
@@ -10,21 +9,12 @@ namespace ServiceStack.Aws.FileStorage
 
         protected BaseFileStorageProvider() { }
 
-        public virtual char DirectorySeparatorCharacter
-        {
-            get { return Path.DirectorySeparatorChar; }
-        }
+        public virtual char DirectorySeparatorCharacter => Path.DirectorySeparatorChar;
 
-        private string ReplaceThisDirectorySeparatorCharacter
-        {
-            get
-            {
-                return replaceThisDirectorySeparatorCharacter ??
-                       (replaceThisDirectorySeparatorCharacter = DirectorySeparatorCharacter.Equals('\\')
-                    ? "/"
-                    : "\\");
-            }
-        }
+        private string ReplaceThisDirectorySeparatorCharacter => replaceThisDirectorySeparatorCharacter ??
+            (replaceThisDirectorySeparatorCharacter = DirectorySeparatorCharacter.Equals('\\')
+                ? "/"
+                : "\\");
 
         public string NormalizePath(string path)
         {

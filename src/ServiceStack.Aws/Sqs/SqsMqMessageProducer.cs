@@ -68,11 +68,7 @@ namespace ServiceStack.Aws.Sqs
             var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
             sqsBuffer.Send(message.ToSqsSendMessageRequest(queueDefinition));
-
-            if (OnPublishedCallback != null)
-            {
-                OnPublishedCallback();
-            }
+            OnPublishedCallback?.Invoke();
         }
 
         public void Publish(string queueName, SendMessageRequest msgRequest)
@@ -81,11 +77,7 @@ namespace ServiceStack.Aws.Sqs
             var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
             sqsBuffer.Send(msgRequest);
-
-            if (OnPublishedCallback != null)
-            {
-                OnPublishedCallback();
-            }
+            OnPublishedCallback?.Invoke();
         }
 
         public void Dispose()

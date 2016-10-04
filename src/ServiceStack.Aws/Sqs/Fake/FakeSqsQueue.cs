@@ -181,10 +181,7 @@ namespace ServiceStack.Aws.Sqs.Fake
             return newItem.MessageId;
         }
 
-        public int Count
-        {
-            get { return qItems.Count + inFlighItems.Count; }
-        }
+        public int Count => qItems.Count + inFlighItems.Count;
 
         public void Clear()
         {
@@ -198,6 +195,5 @@ namespace ServiceStack.Aws.Sqs.Fake
                 }
             }
         }
-
     }
 }

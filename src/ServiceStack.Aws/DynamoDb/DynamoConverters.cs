@@ -33,11 +33,11 @@ namespace ServiceStack.Aws.DynamoDb
         public virtual string GetFieldName(PropertyInfo pi)
         {
             var dynoAttr = pi.FirstAttribute<DynamoDBPropertyAttribute>();
-            if (dynoAttr != null && dynoAttr.AttributeName != null)
+            if (dynoAttr?.AttributeName != null)
                 return dynoAttr.AttributeName;
 
             var alias = pi.FirstAttribute<AliasAttribute>();
-            if (alias != null && alias.Name != null)
+            if (alias?.Name != null)
                 return alias.Name;
 
             return pi.Name;
@@ -78,12 +78,9 @@ namespace ServiceStack.Aws.DynamoDb
             if (type.IsInstanceOfType(value))
                 return value;
 
-            if (ConvertValueFn != null)
-            {
-                var to = ConvertValueFn(value, type);
-                if (to != null)
-                    return to;
-            }
+            var to = ConvertValueFn?.Invoke(value, type);
+            if (to != null)
+                return to;
 
             var mapValue = value as Dictionary<string, AttributeValue>;
             if (mapValue != null)
@@ -220,12 +217,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         public virtual Dictionary<string, AttributeValue> ToAttributeValues(IPocoDynamo db, object instance, DynamoMetadataType table)
         {
-            if (ToAttributeValuesFn != null)
-            {
-                var ret = ToAttributeValuesFn(instance, table);
-                if (ret != null)
-                    return ret;
-            }
+            var ret = ToAttributeValuesFn?.Invoke(instance, table);
+            if (ret != null)
+                return ret;
 
             using (AwsClientUtils.GetJsScope())
             {
@@ -291,12 +285,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         public virtual AttributeValue ToAttributeValue(IPocoDynamo db, Type fieldType, string dbType, object value)
         {
-            if (ToAttributeValueFn != null)
-            {
-                var attrVal = ToAttributeValueFn(fieldType, value);
-                if (attrVal != null)
-                    return attrVal;
-            }
+            var attrVal = ToAttributeValueFn?.Invoke(fieldType, value);
+            if (attrVal != null)
+                return attrVal;
 
             if (value == null)
                 return new AttributeValue { NULL = true };
@@ -370,7 +361,7 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     value = ApplyFieldBehavior(db,
                         meta,
-                        meta != null ? meta.GetField((string)key) : null,
+                        meta?.GetField((string)key),
                         oMap,
                         value);
                 }
@@ -471,7 +462,7 @@ namespace ServiceStack.Aws.DynamoDb
             foreach (var entry in attributeValues)
             {
                 var field = table.Fields.FirstOrDefault(x => x.Name == entry.Key);
-                if (field == null || field.SetValueFn == null)
+                if (field?.SetValueFn == null)
                     continue;
 
                 var attrValue = entry.Value;

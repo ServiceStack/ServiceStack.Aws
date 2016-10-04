@@ -6,14 +6,9 @@ namespace ServiceStack.Aws.FileStorage
 {
     public class FileSystemStorageProvider : BaseFileStorageProvider
     {
-        private static readonly FileSystemStorageProvider instance = new FileSystemStorageProvider();
-
         static FileSystemStorageProvider() { }
         
-        public static FileSystemStorageProvider Instance
-        {
-            get { return instance; }
-        }
+        public static FileSystemStorageProvider Instance { get; } = new FileSystemStorageProvider();
 
         public override void Download(FileSystemObject thisFso, FileSystemObject downloadToFso)
         {   // Download on FileSystem is just a copy operation
@@ -73,12 +68,9 @@ namespace ServiceStack.Aws.FileStorage
         private bool TreatAsLocalFileSystemProvider(IFileStorageProvider targetProvider)
         {
             if (targetProvider == null)
-            {
                 return true;
-            }
 
             var provider = targetProvider as FileSystemStorageProvider;
-
             return provider != null;
         }
 
@@ -97,9 +89,7 @@ namespace ServiceStack.Aws.FileStorage
         private void CopyInFileSystem(FileSystemObject sourceFso, FileSystemObject targetFso)
         {
             if (sourceFso.Equals(targetFso))
-            {
                 return;
-            }
 
             CreateFolder(targetFso.FolderName);
             File.Copy(sourceFso.FullName, targetFso.FullName, overwrite: true);
@@ -121,9 +111,7 @@ namespace ServiceStack.Aws.FileStorage
         private void MoveInFileSystem(FileSystemObject sourceFso, FileSystemObject targetFso)
         {
             if (sourceFso.Equals(targetFso))
-            {
                 return;
-            }
 
             CreateFolder(targetFso.FolderName);
             File.Move(sourceFso.FullName, targetFso.FullName);
@@ -167,6 +155,5 @@ namespace ServiceStack.Aws.FileStorage
                 Directory.CreateDirectory(path);
             }
         }
-        
     }
 }

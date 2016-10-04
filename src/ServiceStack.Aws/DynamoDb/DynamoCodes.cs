@@ -189,7 +189,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             unchecked
             {
-                return ((Hash != null ? Hash.GetHashCode() : 0)*397) ^ (Range != null ? Range.GetHashCode() : 0);
+                return ((Hash?.GetHashCode() ?? 0)*397) ^ (Range?.GetHashCode() ?? 0);
             }
         }
     }

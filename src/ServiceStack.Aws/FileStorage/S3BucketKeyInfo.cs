@@ -13,7 +13,7 @@ namespace ServiceStack.Aws.FileStorage
         public S3BucketKeyInfo(string fullPathAndFileName, bool terminateWithPathDelimiter = false)
         {
             if (string.IsNullOrEmpty(fullPathAndFileName))
-                throw new ArgumentNullException("fullPathAndFileName");
+                throw new ArgumentNullException(nameof(fullPathAndFileName));
 
             Key = string.Empty;
             FileName = string.Empty;
@@ -54,35 +54,29 @@ namespace ServiceStack.Aws.FileStorage
             }
         }
 
-        public string BucketName { get; private set; }
-        public string Prefix { get; private set; }
-        public string Key { get; private set; }
+        public string BucketName { get; }
+        public string Prefix { get; }
+        public string Key { get; }
         public string FileName { get; private set; }
 
         public bool IsBucketObject { get; private set; }
 
-        public bool HasPrefix
-        {
-            get { return !string.IsNullOrEmpty(Prefix); }
-        }
-        
+        public bool HasPrefix => !string.IsNullOrEmpty(Prefix);
+
         public bool Equals(S3BucketKeyInfo other)
         {
             return other != null &&
-                   BucketName.Equals(other.BucketName, StringComparison.OrdinalIgnoreCase) &&
-                   Key.Equals(other.Key, StringComparison.OrdinalIgnoreCase);
+                BucketName.Equals(other.BucketName, StringComparison.OrdinalIgnoreCase) &&
+                Key.Equals(other.Key, StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object obj)
         {
             if (obj == null)
-            {
                 return false;
-            }
+
             if (ReferenceEquals(this, obj))
-            {
                 return true;
-            }
 
             var fi = obj as S3BucketKeyInfo;
 
@@ -102,6 +96,5 @@ namespace ServiceStack.Aws.FileStorage
         {
             return ToString().GetHashCode();
         }
-
     }
 }

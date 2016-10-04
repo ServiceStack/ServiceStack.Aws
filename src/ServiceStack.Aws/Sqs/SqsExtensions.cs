@@ -103,7 +103,7 @@ namespace ServiceStack.Aws.Sqs
             {
                 foreach (var entry in sqsMessage.MessageAttributes)
                 {
-                    if (entry.Value == null || string.IsNullOrEmpty(entry.Value.StringValue))
+                    if (string.IsNullOrEmpty(entry.Value?.StringValue))
                         continue;
 
                     var strValue = entry.Value.StringValue;

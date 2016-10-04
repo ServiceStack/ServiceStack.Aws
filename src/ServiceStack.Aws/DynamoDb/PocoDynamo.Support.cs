@@ -58,8 +58,7 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     var ex = outerEx.UnwrapIfSingleException();
 
-                    if (ExceptionFilter != null)
-                        ExceptionFilter(ex);
+                    ExceptionFilter?.Invoke(ex);
 
                     if (rethrowExceptions != null)
                     {
@@ -79,12 +78,9 @@ namespace ServiceStack.Aws.DynamoDb
                         originalEx = ex;
 
                     var amazonEx = ex as AmazonDynamoDBException;
-                    if (amazonEx != null)
-                    {
-                        if (amazonEx.StatusCode == HttpStatusCode.BadRequest &&
-                            !retryOnErrorCodes.Contains(amazonEx.ErrorCode))
-                            throw;
-                    }
+                    if (amazonEx?.StatusCode == HttpStatusCode.BadRequest &&
+                        !retryOnErrorCodes.Contains(amazonEx.ErrorCode))
+                        throw;
 
                     i.SleepBackOffMultiplier();
                 }

@@ -23,15 +23,9 @@ namespace ServiceStack.Aws.Sqs
             this.sqsQueueManager = sqsQueueManager;
         }
 
-        public SqsQueueManager QueueManager
-        {
-            get { return sqsQueueManager; }
-        }
-    
-        public SqsConnectionFactory ConnectionFactory
-        {
-            get { return sqsQueueManager.ConnectionFactory; }
-        }
+        public SqsQueueManager QueueManager => sqsQueueManager;
+
+        public SqsConnectionFactory ConnectionFactory => sqsQueueManager.ConnectionFactory;
 
         public Action<Exception> ErrorHandler
         {

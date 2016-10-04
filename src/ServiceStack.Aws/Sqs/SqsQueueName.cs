@@ -30,7 +30,7 @@ namespace ServiceStack.Aws.Sqs
             AwsQueueName = originalQueueName.ToValidQueueName();
         }
 
-        public string QueueName { get; private set; }
+        public string QueueName { get; }
         public string AwsQueueName { get; private set; }
 
         public bool Equals(SqsQueueName other)

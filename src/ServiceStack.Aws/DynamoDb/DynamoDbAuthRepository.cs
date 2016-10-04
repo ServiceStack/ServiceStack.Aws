@@ -197,7 +197,7 @@ namespace ServiceStack.Aws.DynamoDb
         public void SaveUserAuth(IAuthSession authSession)
         {
             if (authSession == null)
-                throw new ArgumentNullException("authSession");
+                throw new ArgumentNullException(nameof(authSession));
 
             var userAuth = !authSession.UserAuthId.IsNullOrEmpty()
                 ? Db.GetItem<TUserAuth>(int.Parse(authSession.UserAuthId))
@@ -216,7 +216,7 @@ namespace ServiceStack.Aws.DynamoDb
         public void SaveUserAuth(IUserAuth userAuth)
         {
             if (userAuth == null)
-                throw new ArgumentNullException("userAuth");
+                throw new ArgumentNullException(nameof(userAuth));
 
             userAuth.ModifiedDate = DateTime.UtcNow;
             if (userAuth.CreatedDate == default(DateTime))
@@ -447,7 +447,7 @@ namespace ServiceStack.Aws.DynamoDb
         public virtual bool HasRole(string userAuthId, string role)
         {
             if (role == null)
-                throw new ArgumentNullException("role");
+                throw new ArgumentNullException(nameof(role));
 
             if (userAuthId == null)
                 return false;
@@ -463,7 +463,7 @@ namespace ServiceStack.Aws.DynamoDb
         public virtual bool HasPermission(string userAuthId, string permission)
         {
             if (permission == null)
-                throw new ArgumentNullException("permission");
+                throw new ArgumentNullException(nameof(permission));
 
             if (userAuthId == null)
                 return false;

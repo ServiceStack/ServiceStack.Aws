@@ -29,15 +29,9 @@ namespace ServiceStack.Aws.Sqs
             this.sqsConnectionFactory = sqsConnectionFactory;
         }
 
-        private IAmazonSQS SqsClient
-        {
-            get { return sqsClient ?? (sqsClient = sqsConnectionFactory.GetClient()); }
-        }
+        private IAmazonSQS SqsClient => sqsClient ?? (sqsClient = sqsConnectionFactory.GetClient());
 
-        public SqsQueueDefinition QueueDefinition
-        {
-            get { return queueDefinition; }
-        }
+        public SqsQueueDefinition QueueDefinition => queueDefinition;
 
         public Action<Exception> ErrorHandler { get; set; }
 
@@ -100,7 +94,7 @@ namespace ServiceStack.Aws.Sqs
 
         private IEnumerable<ChangeMessageVisibilityBatchRequestEntry> EntriesToCv(int count)
         {
-            var result = new Dictionary<String, ChangeMessageVisibilityBatchRequestEntry>(count);
+            var result = new Dictionary<string, ChangeMessageVisibilityBatchRequestEntry>(count);
 
             while (result.Count < count)
             {
@@ -244,7 +238,7 @@ namespace ServiceStack.Aws.Sqs
 
         private IEnumerable<DeleteMessageBatchRequestEntry> EntriesToDelete(int count)
         {
-            var result = new Dictionary<String, DeleteMessageBatchRequestEntry>(count);
+            var result = new Dictionary<string, DeleteMessageBatchRequestEntry>(count);
 
             while (result.Count < count)
             {
@@ -270,7 +264,7 @@ namespace ServiceStack.Aws.Sqs
 
         private Message BufferResponse(ReceiveMessageResponse response)
         {
-            if (response == null || response.Messages == null)
+            if (response?.Messages == null)
                 return null;
 
             Message toReturn = null;
@@ -323,25 +317,13 @@ namespace ServiceStack.Aws.Sqs
             }
         }
 
-        public int DeleteBufferCount
-        {
-            get { return deleteBuffer.Count; }
-        }
+        public int DeleteBufferCount => deleteBuffer.Count;
 
-        public int SendBufferCount
-        {
-            get { return sendBuffer.Count; }
-        }
+        public int SendBufferCount => sendBuffer.Count;
 
-        public int ChangeVisibilityBufferCount
-        {
-            get { return cvBuffer.Count; }
-        }
+        public int ChangeVisibilityBufferCount => cvBuffer.Count;
 
-        public int ReceiveBufferCount
-        {
-            get { return receiveBuffer.Count; }
-        }
+        public int ReceiveBufferCount => receiveBuffer.Count;
 
         public void Drain(bool fullDrain, bool nakReceived = false)
         {

@@ -16,7 +16,6 @@ namespace ServiceStack.Aws.FileStorage
     {
         private readonly ConcurrentDictionary<string, MemoryFileMeta> fileMap;
         private static readonly FileSystemStorageProvider localFs = FileSystemStorageProvider.Instance;
-        private static readonly InMemoryFileStorageProvider instance = new InMemoryFileStorageProvider();
 
         static InMemoryFileStorageProvider() { }
         
@@ -25,10 +24,7 @@ namespace ServiceStack.Aws.FileStorage
             fileMap = new ConcurrentDictionary<string, MemoryFileMeta>();
         }
 
-        public static InMemoryFileStorageProvider Instance
-        {
-            get { return instance; }
-        }
+        public static InMemoryFileStorageProvider Instance { get; } = new InMemoryFileStorageProvider();
 
         public override void Download(FileSystemObject thisFso, FileSystemObject downloadToFso)
         {
@@ -54,10 +50,7 @@ namespace ServiceStack.Aws.FileStorage
         public override byte[] Get(FileSystemObject fso)
         {
             var map = TryGetMap(fso.FullName);
-
-            return map == null
-                ? null
-                : map.Bytes;
+            return map?.Bytes;
         }
 
         public override void Store(byte[] bytes, FileSystemObject fso)
@@ -94,9 +87,7 @@ namespace ServiceStack.Aws.FileStorage
             var bytes = Get(thisFso);
 
             if (bytes == null)
-            {
                 throw new FileNotFoundException("File does not exist in memory provider", thisFso.FullName);
-            }
 
             if (TreatAsInMemoryProvider(targetProvider))
             {
@@ -117,9 +108,7 @@ namespace ServiceStack.Aws.FileStorage
             var sourceBytes = Get(sourceFso);
 
             if (sourceBytes == null)
-            {
                 throw new FileNotFoundException("File does not exist in memory provider", sourceFso.FullName);
-            }
 
             if (TreatAsInMemoryProvider(targetProvider))
             {

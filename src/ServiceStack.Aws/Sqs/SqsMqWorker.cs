@@ -135,10 +135,7 @@ namespace ServiceStack.Aws.Sqs
             {   
                 Stop();
 
-                if (errorHandler != null)
-                {
-                    errorHandler(this, ex);
-                }
+                errorHandler?.Invoke(this, ex);
             }
             finally
             {

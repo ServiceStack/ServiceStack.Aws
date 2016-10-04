@@ -32,10 +32,7 @@ namespace ServiceStack.Aws.Sqs.Fake
             return q;
         }
 
-        public static FakeAmazonSqs Instance
-        {
-            get { return instance; }
-        }
+        public static FakeAmazonSqs Instance => instance;
 
         public void Dispose()
         {
