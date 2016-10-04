@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-    <id>ServiceStack.Aws</id> 
-    <version>4.5.0</version>
+    <id>ServiceStack.Aws.Core</id> 
+    <version>1.0.0</version>
     <authors>ServiceStack</authors> 
     <owners>ServiceStack</owners>
     <description>
@@ -13,13 +13,17 @@
     <iconUrl>https://servicestack.net/img/logo-32.png</iconUrl>
     <tags>ServiceStack AWS Amazon WebServices DynamoDb S3 SQS Cache CacheClient</tags>
     <language>en-US</language> 
-    <copyright>ServiceStack 2016 and Contributors</copyright>
+    <copyright>ServiceStack 2015 and Contributors</copyright>
     <dependencies>
-        <dependency id="ServiceStack" version="4.5" />
         <dependency id="AWSSDK.Core" version="3.3.0.2" />
         <dependency id="AWSSDK.DynamoDBv2" version="3.3.0" />
         <dependency id="AWSSDK.S3" version="3.3.0.1" />
         <dependency id="AWSSDK.SQS" version="3.3.0" />
+        <dependency id="ServiceStack.Text.Core" version="[1.0.0, )" />
+        <dependency id="ServiceStack.Interfaces.Core" version="[1.0.0, )" />
+        <dependency id="ServiceStack.Client.Core" version="[1.0.0, )" />
+        <dependency id="ServiceStack.Common.Core" version="[1.0.0, )" />
+        <dependency id="ServiceStack.Core" version="[1.0.0, )" />
     </dependencies>
   </metadata>
   <files>
