@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Support
 {
@@ -18,7 +19,7 @@ namespace ServiceStack.Aws.Support
                 encoding = Encoding.Unicode;
             }
 
-            var bytes = encoding.GetBytes(toHash).ToSha256ByteHash();
+            var bytes = encoding.GetBytes(toHash).ToSha256HashBytes();
             return ToBase64String(bytes);
         }
 
@@ -27,24 +28,26 @@ namespace ServiceStack.Aws.Support
             return Convert.ToBase64String(bytes);
         }
 
-        public static byte[] ToSha256ByteHash(this byte[] byteBuffer)
+        public static string ToSha256Hash(this string value)
         {
-            if (byteBuffer == null || !byteBuffer.Any())
+            var sb = StringBuilderCache.Allocate();
+            using (var hash = SHA256.Create())
             {
-                return null;
+                var result = hash.ComputeHash(value.ToUtf8Bytes());
+                foreach (var b in result)
+                {
+                    sb.Append(b.ToString("x2"));
+                }
             }
-
-            var ha = SHA256.Create();
-
-            if (ha == null)
-            {
-                return null;
-            }
-
-            var hashValue = ha.ComputeHash(byteBuffer);
-            ha.Clear();
-            return hashValue;
+            return StringBuilderCache.ReturnAndFree(sb);
         }
 
+        public static byte[] ToSha256HashBytes(this byte[] bytes)
+        {
+            using (var hash = SHA256.Create())
+            {
+                return hash.ComputeHash(bytes);
+            }
+        }
     }
 }

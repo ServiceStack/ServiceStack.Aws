@@ -172,8 +172,8 @@ namespace ServiceStack.Aws.Tests.FileStorage
 
             var downloadedContents = File.ReadAllBytes(downloadFile.FullName);
 
-            var testHash = testFileContents.ToSha256ByteHash().ToBase64String();
-            var downloadHash = downloadedContents.ToSha256ByteHash().ToBase64String();
+            var testHash = testFileContents.ToSha256HashBytes().ToBase64String();
+            var downloadHash = downloadedContents.ToSha256HashBytes().ToBase64String();
 
             Assert.AreEqual(testHash, downloadHash);
         }
@@ -197,8 +197,8 @@ namespace ServiceStack.Aws.Tests.FileStorage
 
             var memContents = memProvider.Get(memFile);
 
-            var sourceHash = sourceFileContents.ToSha256ByteHash().ToBase64String();
-            var memHash = memContents.ToSha256ByteHash().ToBase64String();
+            var sourceHash = sourceFileContents.ToSha256HashBytes().ToBase64String();
+            var memHash = memContents.ToSha256HashBytes().ToBase64String();
 
             Assert.AreEqual(sourceHash, memHash);
         }
@@ -222,8 +222,8 @@ namespace ServiceStack.Aws.Tests.FileStorage
 
             var memContents = memProvider.Get(memFile);
 
-            var sourceHash = sourceFileContents.ToSha256ByteHash().ToBase64String();
-            var memHash = memContents.ToSha256ByteHash().ToBase64String();
+            var sourceHash = sourceFileContents.ToSha256HashBytes().ToBase64String();
+            var memHash = memContents.ToSha256HashBytes().ToBase64String();
 
             Assert.AreEqual(sourceHash, memHash);
         }
@@ -256,8 +256,8 @@ namespace ServiceStack.Aws.Tests.FileStorage
 
             var copiedContents = provider.Get(copiedFile);
 
-            var testHash = testFileContents.ToSha256ByteHash().ToBase64String();
-            var copyHash = copiedContents.ToSha256ByteHash().ToBase64String();
+            var testHash = testFileContents.ToSha256HashBytes().ToBase64String();
+            var copyHash = copiedContents.ToSha256HashBytes().ToBase64String();
 
             Assert.AreEqual(testHash, copyHash);
         }
@@ -280,8 +280,8 @@ namespace ServiceStack.Aws.Tests.FileStorage
 
             var movedContents = provider.Get(movedFile);
 
-            var testHash = testFileContents.ToSha256ByteHash().ToBase64String();
-            var moveHash = movedContents.ToSha256ByteHash().ToBase64String();
+            var testHash = testFileContents.ToSha256HashBytes().ToBase64String();
+            var moveHash = movedContents.ToSha256HashBytes().ToBase64String();
 
             Assert.AreEqual(testHash, moveHash);
         }
@@ -425,8 +425,8 @@ namespace ServiceStack.Aws.Tests.FileStorage
             // Get it
             var getFile = provider.Get(file);
 
-            var getFileHash = getFile.ToSha256ByteHash().ToBase64String();
-            var fileHash = sourceBytes.ToSha256ByteHash().ToBase64String();
+            var getFileHash = getFile.ToSha256HashBytes().ToBase64String();
+            var fileHash = sourceBytes.ToSha256HashBytes().ToBase64String();
 
             Assert.AreEqual(fileHash, getFileHash);
         }
