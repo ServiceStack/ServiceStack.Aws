@@ -121,6 +121,7 @@ namespace ServiceStack.Aws.Sqs
                     StartPolling();
                 }
             }
+#if !NETSTANDARD1_6            
             catch(ThreadInterruptedException)
             {   // Expected exceptions from Kill()
                 log.Warn("Received ThreadInterruptedException in Worker: {0}".Fmt(QueueName));
@@ -129,6 +130,7 @@ namespace ServiceStack.Aws.Sqs
             {   // Expected exceptions from Kill()
                 log.Warn("Received ThreadAbortException in Worker: {0}".Fmt(QueueName));
             }
+#endif
             catch (Exception ex)
             {   
                 Stop();

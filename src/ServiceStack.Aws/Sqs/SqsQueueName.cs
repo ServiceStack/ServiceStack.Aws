@@ -36,7 +36,7 @@ namespace ServiceStack.Aws.Sqs
         public bool Equals(SqsQueueName other)
         {
             return other != null &&
-                   QueueName.Equals(other.QueueName, StringComparison.InvariantCultureIgnoreCase);
+                   QueueName.Equals(other.QueueName, StringComparison.OrdinalIgnoreCase);
         }
         
         public override bool Equals(object obj)

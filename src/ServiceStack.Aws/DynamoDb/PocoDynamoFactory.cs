@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Service Stack LLC. All Rights Reserved.
 // License: https://raw.github.com/ServiceStack/ServiceStack/master/license.txt
 
+using System;
 using Amazon.DynamoDBv2;
-using Amib.Threading;
 
 namespace ServiceStack.Aws.DynamoDb
 {

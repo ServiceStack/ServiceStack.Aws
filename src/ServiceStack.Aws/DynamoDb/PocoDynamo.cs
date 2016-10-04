@@ -111,8 +111,8 @@ namespace ServiceStack.Aws.DynamoDb
             do
             {
                 response = response == null
-                    ? Exec(() => DynamoDb.ListTables())
-                    : Exec(() => DynamoDb.ListTables(response.LastEvaluatedTableName));
+                    ? Exec(() => DynamoDb.ListTables(new ListTablesRequest()))
+                    : Exec(() => DynamoDb.ListTables(new ListTablesRequest(response.LastEvaluatedTableName)));
 
                 foreach (var tableName in response.TableNames)
                 {
@@ -577,7 +577,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var i = 0;
                 while (response.UnprocessedItems.Count > 0)
                 {
-                    response = Exec(() => DynamoDb.BatchWriteItem(response.UnprocessedItems));
+                    response = Exec(() => DynamoDb.BatchWriteItem(new BatchWriteItemRequest(response.UnprocessedItems)));
 
                     if (response.UnprocessedItems.Count > 0)
                         i.SleepBackOffMultiplier();
@@ -857,7 +857,7 @@ namespace ServiceStack.Aws.DynamoDb
         public long DescribeItemCount<T>()
         {
             var table = DynamoMetadata.GetTable<T>();
-            var response = Exec(() => DynamoDb.DescribeTable(table.Name));
+            var response = Exec(() => DynamoDb.DescribeTable(new DescribeTableRequest(table.Name)));
             return response.Table.ItemCount;
         }
 

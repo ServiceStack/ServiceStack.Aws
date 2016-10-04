@@ -106,7 +106,7 @@ namespace ServiceStack.Aws.DynamoDb
                 try
                 {
                     var responses = pendingTables.Map(x =>
-                        Exec(() => DynamoDb.DescribeTable(x)));
+                        Exec(() => DynamoDb.DescribeTable(new DescribeTableRequest(x))));
 
                     foreach (var response in responses)
                     {
@@ -188,7 +188,7 @@ namespace ServiceStack.Aws.DynamoDb
             var i = 0;
             while (response.UnprocessedKeys.Count > 0)
             {
-                response = Exec(() => DynamoDb.BatchGetItem(response.UnprocessedKeys));
+                response = Exec(() => DynamoDb.BatchGetItem(new BatchGetItemRequest(response.UnprocessedKeys)));
                 if (response.Responses.TryGetValue(table.Name, out results))
                     results.Each(x => to.Add(Converters.FromAttributeValues<T>(table, x)));
 
@@ -211,7 +211,7 @@ namespace ServiceStack.Aws.DynamoDb
             var i = 0;
             while (response.UnprocessedItems.Count > 0)
             {
-                response = Exec(() => DynamoDb.BatchWriteItem(response.UnprocessedItems));
+                response = Exec(() => DynamoDb.BatchWriteItem(new BatchWriteItemRequest(response.UnprocessedItems)));
 
                 if (response.UnprocessedItems.Count > 0)
                     i.SleepBackOffMultiplier();

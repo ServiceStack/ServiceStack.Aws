@@ -67,10 +67,12 @@ namespace ServiceStack.Aws.DynamoDb
                 ScanIndexForward = ScanIndexForward,                                
             }.SetSelect(base.Select);
 
+#if !NETSTANDARD1_6
             if (ReadWriteTimeoutInternal != null)
                 q.ReadWriteTimeoutInternal = ReadWriteTimeoutInternal;
             if (TimeoutInternal != null)
                 q.TimeoutInternal = TimeoutInternal;
+#endif
 
             return q;
         }

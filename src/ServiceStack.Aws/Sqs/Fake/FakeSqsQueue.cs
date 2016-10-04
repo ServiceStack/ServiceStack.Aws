@@ -47,7 +47,7 @@ namespace ServiceStack.Aws.Sqs.Fake
 
         public bool ChangeVisibility(ChangeMessageVisibilityRequest request)
         {
-            if (request.ReceiptHandle.Equals(FakeBatchItemFailString, StringComparison.InvariantCultureIgnoreCase))
+            if (request.ReceiptHandle.Equals(FakeBatchItemFailString, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
@@ -68,7 +68,7 @@ namespace ServiceStack.Aws.Sqs.Fake
 
         public bool DeleteMessage(DeleteMessageRequest request)
         {   // Handle still has to be valid
-            if (request.ReceiptHandle.Equals(FakeBatchItemFailString, StringComparison.InvariantCultureIgnoreCase))
+            if (request.ReceiptHandle.Equals(FakeBatchItemFailString, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
@@ -164,7 +164,7 @@ namespace ServiceStack.Aws.Sqs.Fake
 
         public string Send(SendMessageRequest request)
         {
-            if (request.MessageBody.Equals(FakeBatchItemFailString, StringComparison.InvariantCultureIgnoreCase))
+            if (request.MessageBody.Equals(FakeBatchItemFailString, StringComparison.OrdinalIgnoreCase))
             {
                 return null;
             }

@@ -28,7 +28,7 @@ namespace ServiceStack.Aws.FileStorage
 
         public string NormalizePath(string path)
         {
-            return path.Replace(ReplaceThisDirectorySeparatorCharacter, DirectorySeparatorCharacter.ToString(CultureInfo.InvariantCulture));
+            return path.Replace(ReplaceThisDirectorySeparatorCharacter, DirectorySeparatorCharacter.ToString());
         }
 
         protected FileSystemObject GetFileSystemObject(string fileName)

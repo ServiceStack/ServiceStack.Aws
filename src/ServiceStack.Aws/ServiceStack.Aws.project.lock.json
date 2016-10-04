@@ -1,0 +1,223 @@
+{
+  "locked": false,
+  "version": 2,
+  "targets": {
+    ".NETFramework,Version=v4.5": {
+      "AWSSDK.Core/3.3.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/net45/AWSSDK.Core.dll": {}
+        },
+        "runtime": {
+          "lib/net45/AWSSDK.Core.dll": {}
+        }
+      },
+      "AWSSDK.DynamoDBv2/3.3.0": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "[3.3.0, 3.4.0)"
+        },
+        "compile": {
+          "lib/net45/AWSSDK.DynamoDBv2.dll": {}
+        },
+        "runtime": {
+          "lib/net45/AWSSDK.DynamoDBv2.dll": {}
+        }
+      },
+      "AWSSDK.S3/3.3.0.1": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "[3.3.0, 3.4.0)"
+        },
+        "compile": {
+          "lib/net45/AWSSDK.S3.dll": {}
+        },
+        "runtime": {
+          "lib/net45/AWSSDK.S3.dll": {}
+        }
+      },
+      "AWSSDK.SQS/3.3.0": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "[3.3.0, 3.4.0)"
+        },
+        "compile": {
+          "lib/net45/AWSSDK.SQS.dll": {}
+        },
+        "runtime": {
+          "lib/net45/AWSSDK.SQS.dll": {}
+        }
+      }
+    },
+    ".NETFramework,Version=v4.5/win": {
+      "AWSSDK.Core/3.3.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/net45/AWSSDK.Core.dll": {}
+        },
+        "runtime": {
+          "lib/net45/AWSSDK.Core.dll": {}
+        }
+      },
+      "AWSSDK.DynamoDBv2/3.3.0": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "[3.3.0, 3.4.0)"
+        },
+        "compile": {
+          "lib/net45/AWSSDK.DynamoDBv2.dll": {}
+        },
+        "runtime": {
+          "lib/net45/AWSSDK.DynamoDBv2.dll": {}
+        }
+      },
+      "AWSSDK.S3/3.3.0.1": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "[3.3.0, 3.4.0)"
+        },
+        "compile": {
+          "lib/net45/AWSSDK.S3.dll": {}
+        },
+        "runtime": {
+          "lib/net45/AWSSDK.S3.dll": {}
+        }
+      },
+      "AWSSDK.SQS/3.3.0": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "[3.3.0, 3.4.0)"
+        },
+        "compile": {
+          "lib/net45/AWSSDK.SQS.dll": {}
+        },
+        "runtime": {
+          "lib/net45/AWSSDK.SQS.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "AWSSDK.Core/3.3.0.2": {
+      "sha512": "dybg1n26ZvgqgBwsD2jUIyMQtxWO/Ix5VkmCeg3F/piWd43xX8dbuKo3PjRswMzyv3LkitUfi7OAPTpm6zNHgA==",
+      "type": "package",
+      "path": "AWSSDK.Core/3.3.0.2",
+      "files": [
+        "AWSSDK.Core.3.3.0.2.nupkg.sha512",
+        "AWSSDK.Core.nuspec",
+        "lib/Xamarin.Mac20/AWSSDK.Core.XML",
+        "lib/Xamarin.Mac20/AWSSDK.Core.dll",
+        "lib/Xamarin.iOS10/AWSSDK.Core.XML",
+        "lib/Xamarin.iOS10/AWSSDK.Core.dll",
+        "lib/monoandroid/AWSSDK.Core.XML",
+        "lib/monoandroid/AWSSDK.Core.dll",
+        "lib/monoandroid/AWSSDK.Core.pdb",
+        "lib/net35/AWSSDK.Core.XML",
+        "lib/net35/AWSSDK.Core.dll",
+        "lib/net35/AWSSDK.Core.pdb",
+        "lib/net45/AWSSDK.Core.XML",
+        "lib/net45/AWSSDK.Core.dll",
+        "lib/net45/AWSSDK.Core.pdb",
+        "lib/netstandard1.3/AWSSDK.Core.dll",
+        "lib/netstandard1.3/AWSSDK.Core.pdb",
+        "lib/netstandard1.3/AWSSDK.Core.xml",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.Core.XML",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.Core.dll",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.Core.pdb",
+        "lib/windows8/AWSSDK.Core.XML",
+        "lib/windows8/AWSSDK.Core.dll",
+        "lib/windows8/AWSSDK.Core.pdb",
+        "lib/wp8/AWSSDK.Core.XML",
+        "lib/wp8/AWSSDK.Core.dll",
+        "lib/wp8/AWSSDK.Core.pdb",
+        "lib/wpa81/AWSSDK.Core.XML",
+        "lib/wpa81/AWSSDK.Core.dll",
+        "lib/wpa81/AWSSDK.Core.pdb",
+        "tools/account-management.ps1"
+      ]
+    },
+    "AWSSDK.DynamoDBv2/3.3.0": {
+      "sha512": "q+0pjm41XhA8akY8R2bJkD5Abvs5j7IiLG7rce7hrsmyekk/koeRbOfsmI6LXFaG7TdkKN8ojNi1cZ90FEmqBQ==",
+      "type": "package",
+      "path": "AWSSDK.DynamoDBv2/3.3.0",
+      "files": [
+        "AWSSDK.DynamoDBv2.3.3.0.nupkg.sha512",
+        "AWSSDK.DynamoDBv2.nuspec",
+        "analyzers/dotnet/cs/AWSSDK.DynamoDBv2.CodeAnalysis.dll",
+        "lib/net35/AWSSDK.DynamoDBv2.XML",
+        "lib/net35/AWSSDK.DynamoDBv2.dll",
+        "lib/net35/AWSSDK.DynamoDBv2.pdb",
+        "lib/net45/AWSSDK.DynamoDBv2.XML",
+        "lib/net45/AWSSDK.DynamoDBv2.dll",
+        "lib/net45/AWSSDK.DynamoDBv2.pdb",
+        "lib/netstandard1.3/AWSSDK.DynamoDBv2.dll",
+        "lib/netstandard1.3/AWSSDK.DynamoDBv2.pdb",
+        "lib/netstandard1.3/AWSSDK.DynamoDBv2.xml",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.DynamoDBv2.XML",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.DynamoDBv2.dll",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.DynamoDBv2.pdb",
+        "tools/install.ps1",
+        "tools/uninstall.ps1"
+      ]
+    },
+    "AWSSDK.S3/3.3.0.1": {
+      "sha512": "eCatQt1SsHGmvJFR1+AcRIAbz0AeBX7KYI9+PVSv4B5BMwTP0/MAkaC/SOWx0d7QVkLrZDZWv2wfmH1UpctG4A==",
+      "type": "package",
+      "path": "AWSSDK.S3/3.3.0.1",
+      "files": [
+        "AWSSDK.S3.3.3.0.1.nupkg.sha512",
+        "AWSSDK.S3.nuspec",
+        "analyzers/dotnet/cs/AWSSDK.S3.CodeAnalysis.dll",
+        "lib/net35/AWSSDK.S3.XML",
+        "lib/net35/AWSSDK.S3.dll",
+        "lib/net35/AWSSDK.S3.pdb",
+        "lib/net45/AWSSDK.S3.XML",
+        "lib/net45/AWSSDK.S3.dll",
+        "lib/net45/AWSSDK.S3.pdb",
+        "lib/netstandard1.3/AWSSDK.S3.dll",
+        "lib/netstandard1.3/AWSSDK.S3.pdb",
+        "lib/netstandard1.3/AWSSDK.S3.xml",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.S3.XML",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.S3.dll",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.S3.pdb",
+        "tools/install.ps1",
+        "tools/uninstall.ps1"
+      ]
+    },
+    "AWSSDK.SQS/3.3.0": {
+      "sha512": "O4QYJMRlLUgcrdIlI36A9L9vHxnJYNwWN6WLFesLgrfhmGjsEksF9R39Q3vaH3q7W4Cw/fcgkyxDnqWYEHpWjQ==",
+      "type": "package",
+      "path": "AWSSDK.SQS/3.3.0",
+      "files": [
+        "AWSSDK.SQS.3.3.0.nupkg.sha512",
+        "AWSSDK.SQS.nuspec",
+        "analyzers/dotnet/cs/AWSSDK.SQS.CodeAnalysis.dll",
+        "lib/net35/AWSSDK.SQS.XML",
+        "lib/net35/AWSSDK.SQS.dll",
+        "lib/net35/AWSSDK.SQS.pdb",
+        "lib/net45/AWSSDK.SQS.XML",
+        "lib/net45/AWSSDK.SQS.dll",
+        "lib/net45/AWSSDK.SQS.pdb",
+        "lib/netstandard1.3/AWSSDK.SQS.dll",
+        "lib/netstandard1.3/AWSSDK.SQS.pdb",
+        "lib/netstandard1.3/AWSSDK.SQS.xml",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.SQS.XML",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.SQS.dll",
+        "lib/portable-net45+netcore45+wpa81+wp8+MonoAndroid10+xamarinios10+MonoTouch10/AWSSDK.SQS.pdb",
+        "tools/install.ps1",
+        "tools/uninstall.ps1"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "": [
+      "AWSSDK.Core >= 3.3.0.2",
+      "AWSSDK.DynamoDBv2 >= 3.3.0",
+      "AWSSDK.S3 >= 3.3.0.1",
+      "AWSSDK.SQS >= 3.3.0"
+    ],
+    ".NETFramework,Version=v4.5": []
+  },
+  "tools": {},
+  "projectFileToolGroups": {}
+}

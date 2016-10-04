@@ -433,7 +433,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var memberName = GetMemberName(m.Member.Name);
 
-            if (propertyInfo != null && propertyInfo.PropertyType.IsEnum)
+            if (propertyInfo != null && propertyInfo.PropertyType.IsEnum())
                 return new EnumMemberAccess(memberName, propertyInfo.PropertyType);
 
             return new PartialString(memberName);
@@ -743,7 +743,7 @@ namespace ServiceStack.Aws.DynamoDb
         public EnumMemberAccess(string text, Type enumType)
             : base(text)
         {
-            if (!enumType.IsEnum) throw new ArgumentException("Type not valid", "enumType");
+            if (!enumType.IsEnum()) throw new ArgumentException("Type not valid", "enumType");
 
             EnumType = enumType;
         }

@@ -103,7 +103,9 @@ namespace ServiceStack.Aws.Sqs
                     return qd.QueueUrl;
             }
 
-            var response = SqsClient.GetQueueUrl(queueName.AwsQueueName);
+            var response = SqsClient.GetQueueUrl(new GetQueueUrlRequest { 
+                QueueName = queueName.AwsQueueName
+            });
             return response.QueueUrl;
         }
 
@@ -332,7 +334,7 @@ namespace ServiceStack.Aws.Sqs
         {
             try
             {
-                SqsClient.PurgeQueue(queueUrl);
+                SqsClient.PurgeQueue(new PurgeQueueRequest { QueueUrl = queueUrl });
             }
             catch (QueueDoesNotExistException) { }
             catch (PurgeQueueInProgressException) { }
@@ -400,7 +402,7 @@ namespace ServiceStack.Aws.Sqs
                     continue;
                 }
 
-                SqsClient.DeleteQueue(queueUrl);
+                SqsClient.DeleteQueue(new DeleteQueueRequest { QueueUrl = queueUrl });
                 queuesRemoved++;
             }
 

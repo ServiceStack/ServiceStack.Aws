@@ -69,8 +69,8 @@ namespace ServiceStack.Aws.FileStorage
         public bool Equals(S3BucketKeyInfo other)
         {
             return other != null &&
-                   BucketName.Equals(other.BucketName, StringComparison.InvariantCultureIgnoreCase) &&
-                   Key.Equals(other.Key, StringComparison.InvariantCultureIgnoreCase);
+                   BucketName.Equals(other.BucketName, StringComparison.OrdinalIgnoreCase) &&
+                   Key.Equals(other.Key, StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object obj)

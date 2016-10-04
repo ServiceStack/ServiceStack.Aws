@@ -152,8 +152,8 @@ namespace ServiceStack.Aws.FileStorage
         public override IEnumerable<string> ListFolder(string folderName, bool recursive = false, bool fileNamesOnly = false)
         {
             return fileMap.Where(f => recursive
-                    ? f.Value.Fso.FolderName.StartsWith(folderName, StringComparison.InvariantCulture)
-                    : f.Value.Fso.FolderName.Equals(folderName, StringComparison.InvariantCulture))
+                    ? f.Value.Fso.FolderName.StartsWith(folderName, StringComparison.Ordinal)
+                    : f.Value.Fso.FolderName.Equals(folderName, StringComparison.Ordinal))
                 .Select(f => fileNamesOnly
                     ? f.Value.Fso.FileNameAndExtension
                     : f.Value.Fso.FullName);
@@ -161,7 +161,7 @@ namespace ServiceStack.Aws.FileStorage
 
         public override void DeleteFolder(string path, bool recursive)
         {
-            var keysToDelete = fileMap.Where(i => i.Value.Fso.FolderName.StartsWith(path, StringComparison.InvariantCulture))
+            var keysToDelete = fileMap.Where(i => i.Value.Fso.FolderName.StartsWith(path, StringComparison.Ordinal))
                 .Select(kvp => kvp.Key);
 
             Delete(keysToDelete);

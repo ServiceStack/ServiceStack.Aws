@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using ServiceStack.Aws.Support;
@@ -41,6 +42,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             // Nothing to do here, this object is basically a singleton that mimics an SQS client with in-memory data backing,
             // so no disposal required (actually shouldn't do so even if you want to, as each time you dispose you'll wind up
             // clearning the "server" data)
+        }
+
+        public Task<string> AuthorizeS3ToSendMessageAsync(string queueUrl, string bucket)
+        {
+            throw new NotImplementedException();
         }
 
         public AddPermissionResponse AddPermission(string queueUrl, string label, List<string> awsAccountIds, List<string> actions)
@@ -218,7 +224,7 @@ namespace ServiceStack.Aws.Sqs.Fake
 
             var qd = request.Attributes.ToQueueDefinition(SqsQueueNames.GetSqsQueueName(request.QueueName), qUrl, disableBuffering: true);
 
-            var existingQueue = queues.SingleOrDefault(kvp => kvp.Value.QueueDefinition.QueueName.Equals(qd.QueueName, StringComparison.InvariantCultureIgnoreCase)).Value;
+            var existingQueue = queues.SingleOrDefault(kvp => kvp.Value.QueueDefinition.QueueName.Equals(qd.QueueName, StringComparison.OrdinalIgnoreCase)).Value;
 
             if (existingQueue != null)
             {   // If an existing q with same name, attributes must match, which we only check 2 of currently in Fake
@@ -439,11 +445,11 @@ namespace ServiceStack.Aws.Sqs.Fake
             {
                 Attributes = new Dictionary<string, string>
                 {
-                    { QueueAttributeName.VisibilityTimeout, q.QueueDefinition.VisibilityTimeout.ToString(CultureInfo.InvariantCulture) },
-                    { QueueAttributeName.ReceiveMessageWaitTimeSeconds, q.QueueDefinition.ReceiveWaitTime.ToString(CultureInfo.InvariantCulture) },
-                    { QueueAttributeName.CreatedTimestamp, q.QueueDefinition.CreatedTimestamp.ToString(CultureInfo.InvariantCulture) },
-                    { QueueAttributeName.ApproximateNumberOfMessages, q.Count.ToString(CultureInfo.InvariantCulture) },
-                    { QueueAttributeName.QueueArn, q.QueueDefinition.QueueArn.ToString(CultureInfo.InvariantCulture) },
+                    { QueueAttributeName.VisibilityTimeout, q.QueueDefinition.VisibilityTimeout.ToString() },
+                    { QueueAttributeName.ReceiveMessageWaitTimeSeconds, q.QueueDefinition.ReceiveWaitTime.ToString() },
+                    { QueueAttributeName.CreatedTimestamp, q.QueueDefinition.CreatedTimestamp.ToString() },
+                    { QueueAttributeName.ApproximateNumberOfMessages, q.Count.ToString() },
+                    { QueueAttributeName.QueueArn, q.QueueDefinition.QueueArn.ToString() },
                     { QueueAttributeName.RedrivePolicy, q.QueueDefinition.RedrivePolicy == null
                         ? null
                         : q.QueueDefinition.RedrivePolicy.ToJson() }
@@ -472,7 +478,7 @@ namespace ServiceStack.Aws.Sqs.Fake
 
         public GetQueueUrlResponse GetQueueUrl(GetQueueUrlRequest request)
         {
-            var q = queues.Where(kvp => kvp.Value.QueueDefinition.QueueName.Equals(request.QueueName, StringComparison.InvariantCultureIgnoreCase))
+            var q = queues.Where(kvp => kvp.Value.QueueDefinition.QueueName.Equals(request.QueueName, StringComparison.OrdinalIgnoreCase))
                 .Select(kvp => kvp.Value)
                 .SingleOrDefault();
 
@@ -519,7 +525,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                 ? queues.Keys
                 : queues.Values
                     .Where(q => q.QueueDefinition
-                        .QueueName.StartsWith(request.QueueNamePrefix, StringComparison.InvariantCultureIgnoreCase))
+                        .QueueName.StartsWith(request.QueueNamePrefix, StringComparison.OrdinalIgnoreCase))
                     .Select(q => q.QueueDefinition.QueueUrl);
 
             var response = new ListQueuesResponse
@@ -804,9 +810,21 @@ namespace ServiceStack.Aws.Sqs.Fake
             throw new NotImplementedException();
         }
 
+        public Task<Dictionary<string, string>> GetAttributesAsync(string queueUrl)
+        {
+            throw new NotImplementedException();
+        }
+
         public void SetAttributes(string queueUrl, Dictionary<string, string> attributes)
         {
             throw new NotImplementedException();
         }
+
+        public Task SetAttributesAsync(string queueUrl, Dictionary<string, string> attributes)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IClientConfig Config { get; }
     }
 }

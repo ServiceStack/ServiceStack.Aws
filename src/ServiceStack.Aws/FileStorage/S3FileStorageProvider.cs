@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Amazon.S3;
-using Amazon.S3.IO;
 using Amazon.S3.Model;
 
 namespace ServiceStack.Aws.FileStorage
@@ -52,8 +51,8 @@ namespace ServiceStack.Aws.FileStorage
 
         private bool IsMissingObjectException(AmazonS3Exception s3x)
         {
-            return s3x.ErrorCode.Equals("NoSuchBucket", StringComparison.InvariantCultureIgnoreCase) ||
-                   s3x.ErrorCode.Equals("NoSuchKey", StringComparison.InvariantCultureIgnoreCase);
+            return s3x.ErrorCode.Equals("NoSuchBucket", StringComparison.OrdinalIgnoreCase) ||
+                   s3x.ErrorCode.Equals("NoSuchKey", StringComparison.OrdinalIgnoreCase);
         }
 
         public override Stream GetStream(FileSystemObject fso)
@@ -253,7 +252,7 @@ namespace ServiceStack.Aws.FileStorage
 
             using (var response = S3Client.GetObject(request))
             {
-                response.WriteResponseStreamToFile(downloadToFso.FullName);
+                response.WriteResponseStreamToFile(downloadToFso.FullName, append:false);
             }
 
         }
@@ -302,9 +301,23 @@ namespace ServiceStack.Aws.FileStorage
         {
             var bki = new S3BucketKeyInfo(fso.FullName);
 
-            var s3FileInfo = new S3FileInfo(S3Client, bki.BucketName, bki.Key);
+            try
+            {
+                var response = S3Client.GetObjectMetadata(new GetObjectMetadataRequest
+                {
+                    BucketName = bki.BucketName,
+                    Key = bki.Key
+                });
+                return true;
+            }
+            catch (AmazonS3Exception ex)
+            {
+                if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    return false;
 
-            return s3FileInfo.Exists;
+                //status wasn't not found, so throw the exception
+                throw;
+            }
         }
 
         public override bool FolderExists(string path)
@@ -330,7 +343,9 @@ namespace ServiceStack.Aws.FileStorage
 
             try
             {
-                var bucketLocation = S3Client.GetBucketLocation(bki.BucketName);
+                var bucketLocation = S3Client.GetBucketLocation(new GetBucketLocationRequest { 
+                    BucketName = bki.BucketName
+                });
                 return true;
             }
             catch (AmazonS3Exception s3x)
@@ -367,8 +382,8 @@ namespace ServiceStack.Aws.FileStorage
                     .Select(o => new S3BucketKeyInfo(bki.BucketName, o))
                     .Where(b => !string.IsNullOrEmpty(b.FileName))
                     .Where(b => recursive
-                        ? b.Prefix.StartsWith(bki.Prefix, StringComparison.InvariantCulture)
-                        : b.Prefix.Equals(bki.Prefix, StringComparison.InvariantCulture))
+                        ? b.Prefix.StartsWith(bki.Prefix, StringComparison.Ordinal)
+                        : b.Prefix.Equals(bki.Prefix, StringComparison.Ordinal))
                     .Select(b => fileNamesOnly
                         ? b.FileName
                         : b.ToString()

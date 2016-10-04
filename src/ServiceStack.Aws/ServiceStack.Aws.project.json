@@ -1,0 +1,14 @@
+﻿{
+  "frameworks": {
+    "net45": {}
+  },
+  "runtimes": {
+    "win": {}
+  },
+  "dependencies": {
+    "AWSSDK.Core": "3.3.0.2",
+    "AWSSDK.DynamoDBv2": "3.3.0",
+    "AWSSDK.S3": "3.3.0.1",
+    "AWSSDK.SQS": "3.3.0"
+  }
+}

@@ -494,7 +494,7 @@ namespace ServiceStack.Aws.DynamoDb
             IAttributeValueConverter valueConverter;
             if (!ValueConverters.TryGetValue(type, out valueConverter))
             {
-                if (type.IsEnum)
+                if (type.IsEnum())
                     return EnumConverter;
             }
             return valueConverter;

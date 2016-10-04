@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using System.Timers;
 using ServiceStack.Aws.Support;
-using Timer = System.Timers.Timer;
 
 namespace ServiceStack.Aws.Sqs
 {
@@ -36,17 +34,11 @@ namespace ServiceStack.Aws.Sqs
                 if (timer != null)
                     return;
 
-                timer = new Timer(bufferFlushIntervalSeconds)
-                {
-                    AutoReset = false
-                };
-
-                timer.Elapsed += OnTimerElapsed;
-                timer.Start();
+                timer = new Timer(OnTimerElapsed, null, bufferFlushIntervalSeconds, Timeout.Infinite);
             }
         }
 
-        private void OnTimerElapsed(object source, ElapsedEventArgs e)
+        private void OnTimerElapsed(object state)
         {
             if (Interlocked.CompareExchange(ref processingTimer, 1, 0) > 0)
                 return;
@@ -62,13 +54,12 @@ namespace ServiceStack.Aws.Sqs
             {
                 if (bufferFlushIntervalSeconds <= 0)
                 {
-                    timer.Stop();
+                    timer.Dispose();
                     timer = null;
                 }
                 else
                 {
-                    timer.Interval = bufferFlushIntervalSeconds;
-                    timer.Start();
+                    timer.Change(bufferFlushIntervalSeconds, Timeout.Infinite);
                 }
 
                 Interlocked.CompareExchange(ref processingTimer, 0, 1);

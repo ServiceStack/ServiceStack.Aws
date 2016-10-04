@@ -4,13 +4,8 @@ using System.IO;
 
 namespace ServiceStack.Aws.FileStorage
 {
-    public class FileSystemObject : ICloneable, IEquatable<FileSystemObject>
+    public class FileSystemObject : IEquatable<FileSystemObject>
     {
-        object ICloneable.Clone()
-        {
-            return Clone();
-        }
-
         public FileSystemObject Clone()
         {
             var cloned = (FileSystemObject)MemberwiseClone();
@@ -26,8 +21,8 @@ namespace ServiceStack.Aws.FileStorage
         public FileSystemObject(string filePathAndName)
         {   // Figure out if there are mixed directory markers and adjust to the appropriate one across the board - If we have 
             // both path separators, use only the first. If we have only one, use that
-            var slashPartIndex = filePathAndName.IndexOf("/", StringComparison.InvariantCultureIgnoreCase);
-            var backslashPartIndex = filePathAndName.IndexOf("\\", StringComparison.InvariantCultureIgnoreCase);
+            var slashPartIndex = filePathAndName.IndexOf("/", StringComparison.OrdinalIgnoreCase);
+            var backslashPartIndex = filePathAndName.IndexOf("\\", StringComparison.OrdinalIgnoreCase);
 
             var useBackslashDirectorySeparator = (slashPartIndex >= 0 && backslashPartIndex >= 0)
                 ? backslashPartIndex < slashPartIndex
@@ -43,7 +38,7 @@ namespace ServiceStack.Aws.FileStorage
 
         public FileSystemObject(string filePathAndName, char dirSeparatorCharacter)
         {
-            directorySeparatorCharacter = dirSeparatorCharacter.ToString(CultureInfo.InvariantCulture);
+            directorySeparatorCharacter = dirSeparatorCharacter.ToString();
             Init(filePathAndName);
         }
 
@@ -56,17 +51,17 @@ namespace ServiceStack.Aws.FileStorage
                 var isFileTestExtension = Path.GetExtension(isFileTestPath);
 
                 if (!String.IsNullOrEmpty(isFileTestExtension) &&
-                    isFileTestPath.EndsWith(isFileTestExtension, StringComparison.InvariantCultureIgnoreCase))
+                    isFileTestPath.EndsWith(isFileTestExtension, StringComparison.OrdinalIgnoreCase))
                 {
                     filePathAndName = isFileTestPath;
                 }
             }
 
             Func<string, string> pathScrubber = (f) => f.Replace(
-                directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
+                directorySeparatorCharacter.Equals("\\", StringComparison.Ordinal)
                     ? "/"
                     : "\\",
-                directorySeparatorCharacter.Equals("\\", StringComparison.InvariantCulture)
+                directorySeparatorCharacter.Equals("\\", StringComparison.Ordinal)
                     ? "\\"
                     : "/");
 
@@ -75,7 +70,7 @@ namespace ServiceStack.Aws.FileStorage
 
             var fileExtension = pathScrubber(Path.GetExtension(filePathAndName));
 
-            FileExtension = fileExtension.StartsWith(".", StringComparison.InvariantCultureIgnoreCase)
+            FileExtension = fileExtension.StartsWith(".", StringComparison.OrdinalIgnoreCase)
                 ? fileExtension.Substring(1)
                 : fileExtension;
         }
@@ -100,7 +95,7 @@ namespace ServiceStack.Aws.FileStorage
                         : string.Empty,
                     path);
 
-                appendSeparator = !path.EndsWith(directorySeparatorCharacter, StringComparison.InvariantCultureIgnoreCase);
+                appendSeparator = !path.EndsWith(directorySeparatorCharacter, StringComparison.OrdinalIgnoreCase);
             }
 
             return returnVal;
@@ -127,7 +122,7 @@ namespace ServiceStack.Aws.FileStorage
         public bool Equals(FileSystemObject other)
         {   // Purpsely always use case-insensitive comparison for our purposes, seems safest to me
             return other != null &&
-                   FullName.Equals(other.FullName, StringComparison.InvariantCulture);
+                   FullName.Equals(other.FullName, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
