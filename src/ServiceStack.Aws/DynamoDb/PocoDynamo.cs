@@ -206,7 +206,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var props = table.Type.GetSerializableProperties();
             if (props.Length == 0)
-                throw new NotSupportedException("{0} does not have any serializable properties".Fmt(table.Name));
+                throw new NotSupportedException($"{table.Name} does not have any serializable properties");
 
             var keySchema = new List<KeySchemaElement> {
                 new KeySchemaElement(table.HashKey.Name, KeyType.HASH),
@@ -401,7 +401,7 @@ namespace ServiceStack.Aws.DynamoDb
             var request = new QueryRequest(table.Name)
             {
                 Limit = PagingLimit,
-                KeyConditionExpression = "{0} = :k1".Fmt(table.HashKey.Name),
+                KeyConditionExpression = $"{table.HashKey.Name} = :k1",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
                     {":k1", Converters.ToAttributeValue(this, argType, dbType, hash) }
                 }
@@ -415,7 +415,7 @@ namespace ServiceStack.Aws.DynamoDb
             var table = DynamoMetadata.GetTable<T>();
 
             if (table.HashKey == null || table.RangeKey == null)
-                throw new ArgumentException("Related table '{0}' needs both a HashKey and RangeKey".Fmt(typeof(T).Name));
+                throw new ArgumentException($"Related table '{typeof(T).Name}' needs both a HashKey and RangeKey");
 
             DeleteItems<T>(ranges.Map(range => new DynamoId(hash, range)));
         }
@@ -532,7 +532,7 @@ namespace ServiceStack.Aws.DynamoDb
             var table = DynamoMetadata.GetTable<T>();
 
             if (table.HashKey == null || table.RangeKey == null)
-                throw new ArgumentException("Related table '{0}' needs both a HashKey and RangeKey".Fmt(typeof(T).Name));
+                throw new ArgumentException($"Related table '{typeof(T).Name}' needs both a HashKey and RangeKey");
 
             table.HashKey.SetValue(item, hash);
             PutItem(item);
@@ -543,7 +543,7 @@ namespace ServiceStack.Aws.DynamoDb
             var table = DynamoMetadata.GetTable<T>();
 
             if (table.HashKey == null || table.RangeKey == null)
-                throw new ArgumentException("Related table '{0}' needs both a HashKey and RangeKey".Fmt(typeof(T).Name));
+                throw new ArgumentException($"Related table '{typeof(T).Name}' needs both a HashKey and RangeKey");
 
             var related = items.ToList();
             related.Each(x => table.HashKey.SetValue(x, hash));

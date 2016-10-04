@@ -76,12 +76,12 @@ namespace ServiceStack.Aws.Sqs
 
             if (Interlocked.CompareExchange(ref status, WorkerStatus.Starting, WorkerStatus.Stopped) == WorkerStatus.Stopped)
             {
-                log.Debug("Starting MQ Handler Worker: {0}...".Fmt(QueueName));
+                log.Debug($"Starting MQ Handler Worker: {QueueName}...");
 
                 //Should only be 1 thread past this point
                 bgThread = new Thread(Run)
                 {
-                    Name = "{0}: {1}".Fmt(GetType().Name, QueueName),
+                    Name = $"{GetType().Name}: {QueueName}",
                     IsBackground = true,
                 };
 
@@ -96,7 +96,7 @@ namespace ServiceStack.Aws.Sqs
 
             if (Interlocked.CompareExchange(ref status, WorkerStatus.Stopping, WorkerStatus.Started) == WorkerStatus.Started)
             {
-                log.Debug("Stopping SQS MQ Handler Worker: {0}...".Fmt(QueueName));
+                log.Debug($"Stopping SQS MQ Handler Worker: {QueueName}...");
                 
                 Thread.Sleep(100);
                 
@@ -124,11 +124,11 @@ namespace ServiceStack.Aws.Sqs
 #if !NETSTANDARD1_6            
             catch(ThreadInterruptedException)
             {   // Expected exceptions from Kill()
-                log.Warn("Received ThreadInterruptedException in Worker: {0}".Fmt(QueueName));
+                log.Warn($"Received ThreadInterruptedException in Worker: {QueueName}");
             }
             catch(ThreadAbortException)
             {   // Expected exceptions from Kill()
-                log.Warn("Received ThreadAbortException in Worker: {0}".Fmt(QueueName));
+                log.Warn($"Received ThreadAbortException in Worker: {QueueName}");
             }
 #endif
             catch (Exception ex)
@@ -184,11 +184,11 @@ namespace ServiceStack.Aws.Sqs
                         return;
                     }
 
-                    log.Debug("Received exception polling in MqWorker {0}".Fmt(QueueName), ex);
+                    log.Debug($"Received exception polling in MqWorker {QueueName}", ex);
 
                     // If it was an unexpected exception, pause for a bit before retrying
                     var waitMs = Math.Min(retryCount++ * 2000, 60000);
-                    log.Debug("Retrying poll after {0}ms...".Fmt(waitMs), ex);
+                    log.Debug($"Retrying poll after {waitMs}ms...", ex);
                     Thread.Sleep(waitMs);
                 }
             }

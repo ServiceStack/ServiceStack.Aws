@@ -207,7 +207,7 @@ namespace ServiceStack.Aws.DynamoDb
         public virtual ScanExpression<T> CreateScanExpresion()
         {
             if (!allowScans)
-                throw new InvalidOperationException("AutoQuery SCAN is not permitted on '{0}' DynamoDB Table".Fmt(modelDef.Name));
+                throw new InvalidOperationException($"AutoQuery SCAN is not permitted on '{modelDef.Name}' DynamoDB Table");
 
             return !isGlobalIndex
                 ? db.FromScan<T>()
@@ -231,8 +231,8 @@ namespace ServiceStack.Aws.DynamoDb
                 var multiFmt = DynamoQueryConditions.GetMultiExpressionFormat(condition.QueryCondition.Alias);
 
                 if (fmt == null && multiFmt == null && isMultipleWithOrTerm)
-                    throw new NotSupportedException("DynamoDB does not support {0} filter with multiple OR queries"
-                        .Fmt(condition.QueryCondition.Alias));
+                    throw new NotSupportedException(
+                        $"DynamoDB does not support {condition.QueryCondition.Alias} filter with multiple OR queries");
 
                 if (fmt == null && multiFmt == null)
                     continue;
@@ -274,7 +274,7 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 var values = ((IEnumerable)condition.Value).Map(x => x);
                 if (values.Count < 2)
-                    throw new ArgumentException("{0} BETWEEN must have 2 values".Fmt(condition.Field.Name));
+                    throw new ArgumentException($"{condition.Field.Name} BETWEEN must have 2 values");
 
                 var pFrom = argPrefix + args.Count;
                 args[pFrom] = values[0];

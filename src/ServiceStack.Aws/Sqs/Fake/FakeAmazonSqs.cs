@@ -14,7 +14,6 @@ namespace ServiceStack.Aws.Sqs.Fake
 {
     public class FakeAmazonSqs : IAmazonSQS
     {
-        private static readonly FakeAmazonSqs instance = new FakeAmazonSqs();
         private static readonly ConcurrentDictionary<string, FakeSqsQueue> queues = new ConcurrentDictionary<string, FakeSqsQueue>();
 
         static FakeAmazonSqs() { }
@@ -26,13 +25,13 @@ namespace ServiceStack.Aws.Sqs.Fake
 
             if (!queues.TryGetValue(queueUrl, out q))
             {
-                throw new QueueDoesNotExistException("Queue does not exist for url [{0}]".Fmt(queueUrl));
+                throw new QueueDoesNotExistException($"Queue does not exist for url [{queueUrl}]");
             }
 
             return q;
         }
 
-        public static FakeAmazonSqs Instance => instance;
+        public static FakeAmazonSqs Instance { get; } = new FakeAmazonSqs();
 
         public void Dispose()
         {
@@ -114,7 +113,8 @@ namespace ServiceStack.Aws.Sqs.Fake
             }
             if (request.Entries.Count > SqsQueueDefinition.MaxBatchCvItems)
             {
-                throw new TooManyEntriesInBatchRequestException("Count of [{0}] exceeds limit of [{1]}".Fmt(request.Entries.Count, SqsQueueDefinition.MaxBatchCvItems));
+                throw new TooManyEntriesInBatchRequestException(
+                    $"Count of [{request.Entries.Count}] exceeds limit of [{SqsQueueDefinition.MaxBatchCvItems}]");
             }
 
             var q = GetQueue(request.QueueUrl);
@@ -130,9 +130,7 @@ namespace ServiceStack.Aws.Sqs.Fake
             foreach (var entry in request.Entries)
             {
                 if (entryIds.Contains(entry.Id))
-                {
-                    throw new BatchEntryIdsNotDistinctException("Duplicate Id of [{0}]".Fmt(entry.Id));
-                }
+                    throw new BatchEntryIdsNotDistinctException($"Duplicate Id of [{entry.Id}]");
 
                 entryIds.Add(entry.Id);
 
@@ -234,7 +232,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                     };
                 }
 
-                throw new QueueNameExistsException("Queue with name [{0}] already exists".Fmt(qd.QueueName));
+                throw new QueueNameExistsException($"Queue with name [{qd.QueueName}] already exists");
             }
 
             qd.QueueArn = Guid.NewGuid().ToString("N");
@@ -245,9 +243,7 @@ namespace ServiceStack.Aws.Sqs.Fake
             };
 
             if (!queues.TryAdd(qUrl, q))
-            {
                 throw new Exception("This should not happen, somehow the QueueUrl already exists");
-            }
 
             return new CreateQueueResponse
             {
@@ -306,14 +302,11 @@ namespace ServiceStack.Aws.Sqs.Fake
         public DeleteMessageBatchResponse DeleteMessageBatch(DeleteMessageBatchRequest request)
         {
             if (request.Entries == null || request.Entries.Count <= 0)
-            {
                 throw new EmptyBatchRequestException("No entires in request");
-            }
 
             if (request.Entries.Count > SqsQueueDefinition.MaxBatchDeleteItems)
-            {
-                throw new TooManyEntriesInBatchRequestException("Count of [{0}] exceeds limit of [{1}]".Fmt(request.Entries.Count, SqsQueueDefinition.MaxBatchDeleteItems));
-            }
+                throw new TooManyEntriesInBatchRequestException(
+                    $"Count of [{request.Entries.Count}] exceeds limit of [{SqsQueueDefinition.MaxBatchDeleteItems}]");
 
             var q = GetQueue(request.QueueUrl);
 
@@ -333,9 +326,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                 try
                 {
                     if (entryIds.Contains(entry.Id))
-                    {
-                        throw new BatchEntryIdsNotDistinctException("Duplicate Id of [{0}]".Fmt(entry.Id));
-                    }
+                        throw new BatchEntryIdsNotDistinctException($"Duplicate Id of [{entry.Id}]");
 
                     entryIds.Add(entry.Id);
 
@@ -480,7 +471,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                 .SingleOrDefault();
 
             if (q == null)
-                throw new QueueDoesNotExistException("Queue does not exist with namel [{0}]".Fmt(request.QueueName));
+                throw new QueueDoesNotExistException($"Queue does not exist with namel [{request.QueueName}]");
 
             return new GetQueueUrlResponse
             {
@@ -582,9 +573,8 @@ namespace ServiceStack.Aws.Sqs.Fake
         public ReceiveMessageResponse ReceiveMessage(ReceiveMessageRequest request)
         {
             if (request.MaxNumberOfMessages > SqsQueueDefinition.MaxBatchReceiveItems)
-            {
-                throw new TooManyEntriesInBatchRequestException("Count of [{0}] exceeds limit of [{1]}".Fmt(request.MaxNumberOfMessages, SqsQueueDefinition.MaxBatchReceiveItems));
-            }
+                throw new TooManyEntriesInBatchRequestException(
+                    $"Count of [{request.MaxNumberOfMessages}] exceeds limit of [{SqsQueueDefinition.MaxBatchReceiveItems}]");
 
             var q = GetQueue(request.QueueUrl);
 
@@ -681,7 +671,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                 throw new EmptyBatchRequestException("No entires in request");
 
             if (request.Entries.Count > SqsQueueDefinition.MaxBatchSendItems)
-                throw new TooManyEntriesInBatchRequestException("Count of [{0}] exceeds limit of [{1}]".Fmt(request.Entries.Count, SqsQueueDefinition.MaxBatchSendItems));
+                throw new TooManyEntriesInBatchRequestException($"Count of [{request.Entries.Count}] exceeds limit of [{SqsQueueDefinition.MaxBatchSendItems}]");
 
             var q = GetQueue(request.QueueUrl);
 
@@ -701,7 +691,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                 try
                 {
                     if (entryIds.Contains(entry.Id))
-                        throw new BatchEntryIdsNotDistinctException("Duplicate Id of [{0}]".Fmt(entry.Id));
+                        throw new BatchEntryIdsNotDistinctException($"Duplicate Id of [{entry.Id}]");
 
                     entryIds.Add(entry.Id);
 

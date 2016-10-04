@@ -159,7 +159,7 @@ namespace ServiceStack.Aws.Tests.Sqs
         [Test]
         public void Sending_to_non_existent_q_throws_exception()
         {
-            var queueUrl = "http://{0}.com".Fmt(Guid.NewGuid().ToString("N"));
+            var queueUrl = $"http://{Guid.NewGuid():N}.com";
             SqsTestAssert.Throws<QueueDoesNotExistException>(() => helper.SendMessages(queueUrl), "specified queue does not exist");
         }
 
@@ -365,7 +365,7 @@ namespace ServiceStack.Aws.Tests.Sqs
         public void Deleting_from_non_existent_q_throws_exception()
         {
             var entries = 1.Times(() => new DeleteMessageBatchRequestEntry());
-            var queueUrl = "http://{0}.com".Fmt(Guid.NewGuid().ToString("N"));
+            var queueUrl = $"http://{Guid.NewGuid():N}.com";
             
             SqsTestAssert.Throws<QueueDoesNotExistException>(() => client.DeleteMessageBatch(queueUrl, entries), "specified queue does not exist");
         }

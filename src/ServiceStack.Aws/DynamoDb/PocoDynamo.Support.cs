@@ -86,7 +86,7 @@ namespace ServiceStack.Aws.DynamoDb
                 }
             }
 
-            throw new TimeoutException("Exceeded timeout of {0}".Fmt(MaxRetryOnExceptionTimeout), originalEx);
+            throw new TimeoutException($"Exceeded timeout of {MaxRetryOnExceptionTimeout}", originalEx);
         }
 
         public bool WaitForTablesToBeReady(IEnumerable<string> tableNames, TimeSpan? timeout = null)
@@ -111,7 +111,7 @@ namespace ServiceStack.Aws.DynamoDb
                     }
 
                     if (Log.IsDebugEnabled)
-                        Log.Debug("Tables Pending: {0}".Fmt(pendingTables.ToJsv()));
+                        Log.Debug($"Tables Pending: {pendingTables.ToJsv()}");
 
                     if (pendingTables.Count == 0)
                         return true;

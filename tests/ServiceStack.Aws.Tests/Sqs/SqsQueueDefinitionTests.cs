@@ -24,7 +24,7 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             foreach (var qn in validQueueNames)
             {
-                Assert.AreEqual(qn, qn.ToValidQueueName(), "This string failed [{0}]".Fmt(qn));
+                Assert.AreEqual(qn, qn.ToValidQueueName(), $"This string failed [{qn}]");
             }
         }
 
@@ -42,7 +42,9 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             foreach (var qn in validQueueNames)
             {
-                Assert.AreEqual(qn.Replace(".", "-").Replace(":", "-").Replace(" ", "-"), qn.ToValidQueueName(), "This string failed [{0}]".Fmt(qn));
+                Assert.AreEqual(qn.Replace(".", "-").Replace(":", "-").Replace(" ", "-"), 
+                    qn.ToValidQueueName(),
+                    $"This string failed [{qn}]");
             }
         }
 

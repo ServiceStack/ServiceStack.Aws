@@ -74,7 +74,7 @@ namespace ServiceStack.Aws.Tests.Sqs
                 }
                 catch (Exception ex)
                 {
-                    Assert.Fail("Real SQS client - expected to throw typed or SQS exception, but it threw a different one. Exception type: [{0}], message [{1}]".Fmt(ex.GetType(), ex.Message));
+                    Assert.Fail($"Real SQS client - expected to throw typed or SQS exception, but it threw a different one. Exception type: [{ex.GetType()}], message [{ex.Message}]");
                 }
 
                 Assert.Fail("Real SQS client - expected to throw exception, but it did not throw one.");

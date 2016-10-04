@@ -98,13 +98,13 @@ namespace ServiceStack.Aws.DynamoDbTests
         {
             var fns = 10.Times(i => (Action)(() =>
             {
-                this.cacheClient.Set("concurrent-test", "Data: {0}".Fmt(i));
+                this.cacheClient.Set("concurrent-test", $"Data: {i}");
             }));
 
             Parallel.Invoke(fns.ToArray());
 
             var entry = this.cacheClient.Get<string>("concurrent-test");
-            Assert.That(entry, Is.StringStarting("Data: "));
+            Assert.That(entry, Does.StartWith("Data: "));
 
             this.cacheClient.Remove("concurrent-test");
         }

@@ -119,7 +119,7 @@ namespace ServiceStack.Aws.DynamoDb
                 }
             }
 
-            throw new TimeoutException("Exceeded timeout of {0}".Fmt(Dynamo.MaxRetryOnExceptionTimeout), lastEx);
+            throw new TimeoutException($"Exceeded timeout of {Dynamo.MaxRetryOnExceptionTimeout}", lastEx);
         }
 
         private int UpdateCounterBy(string key, int amount)

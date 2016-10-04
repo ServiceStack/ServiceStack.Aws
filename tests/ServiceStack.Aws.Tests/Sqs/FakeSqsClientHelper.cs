@@ -19,7 +19,7 @@ namespace ServiceStack.Aws.Tests.Sqs
                 var dt = DateTime.UtcNow;
 
                 Id = Guid.NewGuid().ToString("N");
-                Name = "Name for {0}".Fmt(Id);
+                Name = $"Name for {Id}";
                 DecValue = 12340.56789m;
                 IntValue = dt.Ticks;
                 DtValue = dt;

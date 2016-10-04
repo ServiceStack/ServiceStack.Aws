@@ -72,7 +72,7 @@ namespace ServiceStack.Aws.DynamoDb
                     }
 
                     if (Log.IsDebugEnabled)
-                        Log.Debug("Tables Pending: {0}".Fmt(pendingTables.ToJsv()));
+                        Log.Debug($"Tables Pending: {pendingTables.ToJsv()}");
 
                     if (pendingTables.Count == 0)
                         return;

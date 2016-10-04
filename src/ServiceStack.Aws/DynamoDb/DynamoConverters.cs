@@ -126,14 +126,14 @@ namespace ServiceStack.Aws.DynamoDb
                     var hashField = compositeKey.FieldNames[0];
                     hash = props.FirstOrDefault(x => x.Name == hashField);
                     if (hash == null)
-                        throw new ArgumentException("Could not find Hash Key field '{0}' in CompositeIndex".Fmt(hashField));
+                        throw new ArgumentException($"Could not find Hash Key field '{hashField}' in CompositeIndex");
 
                     if (compositeKey.FieldNames.Count == 2)
                     {
                         var rangeField = compositeKey.FieldNames[1];
                         range = props.FirstOrDefault(x => x.Name == rangeField);
                         if (range == null)
-                            throw new ArgumentException("Could not find Range Key field '{0}' in CompositeIndex".Fmt(rangeField));
+                            throw new ArgumentException($"Could not find Range Key field '{rangeField}' in CompositeIndex");
                     }
                 }
                 else

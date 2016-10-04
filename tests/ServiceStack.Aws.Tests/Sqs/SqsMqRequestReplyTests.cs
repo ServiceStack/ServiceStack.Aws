@@ -65,7 +65,7 @@ namespace ServiceStack.Aws.Tests.Sqs
     {
         public object Any(HelloIntro request)
         {
-            return new HelloIntroResponse { Result = "Hello, {0}!".Fmt(request.Name) };
+            return new HelloIntroResponse { Result = $"Hello, {request.Name}!"};
         }
     }
 
@@ -81,7 +81,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             using (var mqServer = CreateMqServer())
             {
                 mqServer.RegisterHandler<HelloIntro>(m =>
-                    new HelloIntroResponse { Result = "Hello, {0}!".Fmt(m.GetBody().Name) });
+                    new HelloIntroResponse { Result = $"Hello, {m.GetBody().Name}!"});
                 mqServer.Start();
 
                 using (var mqClient = mqServer.CreateMessageQueueClient())
@@ -105,7 +105,11 @@ namespace ServiceStack.Aws.Tests.Sqs
             using (var mqServer = CreateMqServer())
             {
                 mqServer.RegisterHandler<HelloIntro>(m =>
-                    new Message<HelloIntroResponse>(new HelloIntroResponse { Result = "Hello, {0}!".Fmt(m.GetBody().Name) }) { Meta = m.Meta });
+                    new Message<HelloIntroResponse>(new HelloIntroResponse {
+                        Result = $"Hello, {m.GetBody().Name}!"
+                    }) {
+                        Meta = m.Meta
+                    });
                 mqServer.Start();
 
                 using (var mqClient = mqServer.CreateMessageQueueClient())
@@ -176,8 +180,7 @@ namespace ServiceStack.Aws.Tests.Sqs
                                     var expected = next + 1;
                                     if (actual != expected)
                                     {
-                                        errors[next] = string.Format("Actual: {1}, Expected: {0}",
-                                            actual, expected);
+                                        errors[next] = $"Actual: {expected}, Expected: {actual}";
                                     }
 
                                 }

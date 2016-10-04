@@ -223,7 +223,7 @@ namespace ServiceStack.Aws.DynamoDb
             metadata.RangeKey = metadata.Fields.FirstOrDefault(x => x.IsRangeKey);
 
             if (metadata.HashKey == null)
-                throw new ArgumentException("Could not infer Hash Key in Table '{0}'".Fmt(type.Name));
+                throw new ArgumentException($"Could not infer Hash Key in Table '{type.Name}'");
 
             var hashField = metadata.HashKey.Name;
 
@@ -233,7 +233,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var projectionType = indexProjection?.ProjectionType ?? DynamoProjectionType.Include;
                 return new DynamoLocalIndex
                 {
-                    Name = "{0}{1}Index".Fmt(metadata.Name, x.Name),
+                    Name = $"{metadata.Name}{x.Name}Index",
                     HashKey = metadata.HashKey,
                     RangeKey = metadata.GetField(x.Name),
                     ProjectionType = projectionType,
@@ -267,12 +267,12 @@ namespace ServiceStack.Aws.DynamoDb
                 x.HasAttribute<IndexAttribute>() || x.HasAttribute<DynamoDBRangeKeyAttribute>());
 
             if (indexProp == null)
-                throw new ArgumentException("Missing [Index]. Could not infer Range Key in index '{0}'.".Fmt(indexType));
+                throw new ArgumentException($"Missing [Index]. Could not infer Range Key in index '{indexType}'.");
 
             var indexAlias = indexType.FirstAttribute<AliasAttribute>();
             var rangeKey = metadata.GetField(indexProp.Name);
             if (rangeKey == null)
-                throw new ArgumentException("Range Key '{0}' was not found on Table '{1}'".Fmt(indexProp.Name, type.Name));
+                throw new ArgumentException($"Range Key '{indexProp.Name}' was not found on Table '{type.Name}'");
 
             var indexProjection = indexType.FirstAttribute<ProjectionTypeAttribute>();
             var projectionType = indexProjection?.ProjectionType ?? DynamoProjectionType.Include;
@@ -299,7 +299,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var hashKey = metadata.GetField(indexHash.Name);
             if (hashKey == null)
-                throw new ArgumentException("Hash Key '{0}' was not found on Table '{1}'".Fmt(indexHash.Name, type.Name));
+                throw new ArgumentException($"Hash Key '{indexHash.Name}' was not found on Table '{type.Name}'");
 
             if (indexRange == null)
                 indexRange = indexProps.FirstOrDefault(x => x.HasAttribute<IndexAttribute>());

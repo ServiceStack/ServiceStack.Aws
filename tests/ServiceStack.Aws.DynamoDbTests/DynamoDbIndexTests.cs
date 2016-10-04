@@ -20,10 +20,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         public int? Age { get; set; }
         public bool Alive { get; set; }
 
-        public string Url
-        {
-            get { return "/stars/{0}/{1}/".Fmt(Alive ? "alive" : "dead", LastName.ToLower()); }
-        }
+        public string Url => $"/stars/{(Alive ? "alive" : "dead")}/{LastName.ToLower()}/";
 
         public Rockstar() { }
         public Rockstar(int id, string firstName, string lastName, int age, bool alive)

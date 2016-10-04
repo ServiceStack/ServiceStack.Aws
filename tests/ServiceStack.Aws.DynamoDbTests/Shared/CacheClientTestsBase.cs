@@ -267,13 +267,13 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             var cache = CreateCacheClient();
             var fns = 10.Times(i => (Action)(() =>
             {
-                cache.Set("concurrent-test", "Data: {0}".Fmt(i));
+                cache.Set("concurrent-test", $"Data: {i}");
             }));
 
             Parallel.Invoke(fns.ToArray());
 
             var entry = cache.Get<string>("concurrent-test");
-            Assert.That(entry, Is.StringStarting("Data: "));
+            Assert.That(entry, Does.StartWith("Data: "));
         }
 
         [Test]

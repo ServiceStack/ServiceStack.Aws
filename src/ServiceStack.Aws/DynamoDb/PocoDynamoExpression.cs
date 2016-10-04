@@ -156,22 +156,18 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 var items = Flatten(args[0] as IEnumerable);
                 var dbParams = items.Map(GetValueAsParam);
-                var expr = "{0} IN ({1})".Fmt(
-                    quotedColName, string.Join(",", dbParams));
+                var expr = $"{quotedColName} IN ({string.Join(",", dbParams)})";
                 return new PartialString(expr);
             }
             else if (m.Method.Name == "Between")
             {
-                var expr = "{0} BETWEEN {1} AND {2}".Fmt(
-                    quotedColName, GetValueAsParam(args[0]), GetValueAsParam(args[1]));
+                var expr = $"{quotedColName} BETWEEN {GetValueAsParam(args[0])} AND {GetValueAsParam(args[1])}";
                 return new PartialString(expr);
             }
 
             var dynamoName = m.Method.Name.ToLowercaseUnderscore();
-            return new PartialString("{0}({1}{2})".Fmt(
-                dynamoName,
-                quotedColName,
-                args.Count == 1 ? ", {0}".Fmt(GetValueAsParam(args[0])) : ""));
+            var arg = args.Count == 1 ? ", " + GetValueAsParam(args[0]) : "";
+            return new PartialString($"{dynamoName}({quotedColName}{arg})");
         }
 
         private bool visitingExpressionList = false;
@@ -218,8 +214,7 @@ namespace ServiceStack.Aws.DynamoDb
                     if (memberExpr != null && memberExpr.Expression.NodeType == ExpressionType.Parameter)
                     {
                         var memberName = GetMemberName(memberExpr.Member.Name);
-                        var expr = "contains({0}, {1})".Fmt(
-                            memberName, GetValueAsParam(arg));
+                        var expr = $"contains({memberName}, {GetValueAsParam(arg)})";
                         return new PartialString(expr);
                     }
                     else
@@ -227,8 +222,7 @@ namespace ServiceStack.Aws.DynamoDb
                         var items = Flatten(args[0] as IEnumerable);
                         var dbParams = items.Map(GetValueAsParam);
                         var memberName = GetMemberName(arg.ToString());
-                        var expr = "{0} IN ({1})".Fmt(
-                            memberName, string.Join(",", dbParams));
+                        var expr = $"{memberName} IN ({string.Join(",", dbParams)})";
 
                         return new PartialString(expr);
                     }
@@ -267,7 +261,7 @@ namespace ServiceStack.Aws.DynamoDb
                     {
                         object arg = args[0];
                         var memberName = GetMemberName(memberExpr.Member.Name);
-                        var expr = "contains({0}, {1})".Fmt(memberName, GetValueAsParam(arg));
+                        var expr = $"contains({memberName}, {GetValueAsParam(arg)})";
                         return new PartialString(expr);
                     }
 
@@ -282,8 +276,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var items = Flatten(result as IEnumerable);
             var dbParams = items.Map(GetValueAsParam);
-            var expr = "{0} IN ({1})".Fmt(
-                memberName, string.Join(",", dbParams));
+            var expr = $"{memberName} IN ({string.Join(",", dbParams)})";
             return new PartialString(expr);
         }
 
@@ -335,9 +328,7 @@ namespace ServiceStack.Aws.DynamoDb
                 return IsColumnAccess(m.Object as MethodCallExpression);
 
             var exp = m.Object as MemberExpression;
-            return exp != null
-                && exp.Expression != null
-                && exp.Expression.NodeType == ExpressionType.Parameter;
+            return exp?.Expression != null && exp.Expression.NodeType == ExpressionType.Parameter;
         }
 
         protected virtual object VisitColumnAccessMethod(MethodCallExpression m)
@@ -350,12 +341,10 @@ namespace ServiceStack.Aws.DynamoDb
             switch (m.Method.Name)
             {
                 case "StartsWith":
-                    statement = string.Format("begins_with({0}, {1})",
-                        quotedColName, GetValueAsParam(wildcardArg));
+                    statement = $"begins_with({quotedColName}, {GetValueAsParam(wildcardArg)})";
                     break;
                 case "Contains":
-                    statement = string.Format("contains({0}, {1})",
-                        quotedColName, GetValueAsParam(wildcardArg));
+                    statement = $"contains({quotedColName}, {GetValueAsParam(wildcardArg)})";
                     break;
                 default:
                     throw new NotSupportedException();
@@ -387,7 +376,7 @@ namespace ServiceStack.Aws.DynamoDb
                 if (m.Expression != null)
                 {
                     string r = VisitMemberAccess(m).ToString();
-                    return string.Format("{0} = {1}", r, GetTrueParam());
+                    return $"{r} = {GetTrueParam()}";
                 }
 
             }
@@ -398,7 +387,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             if (m.Member.Name == "Length" || m.Member.Name == "Count")
             {
-                return new PartialString("size({0})".Fmt(((MemberExpression)m.Expression).Member.Name));
+                return new PartialString($"size({((MemberExpression) m.Expression).Member.Name})");
             }
 
             if (m.Expression != null &&
@@ -479,14 +468,13 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 var m = b.Left as MemberExpression;
                 if (m?.Expression != null && m.Expression.NodeType == ExpressionType.Parameter)
-                    left = new PartialString("{0}={1}".Fmt(VisitMemberAccess(m), GetTrueParam()));
+                    left = new PartialString($"{VisitMemberAccess(m)}={GetTrueParam()}");
                 else
                     left = Visit(b.Left);
 
                 m = b.Right as MemberExpression;
-                if (m != null && m.Expression != null
-                    && m.Expression.NodeType == ExpressionType.Parameter)
-                    right = new PartialString("{0}={1}".Fmt(VisitMemberAccess(m), GetTrueParam()));
+                if (m?.Expression != null && m.Expression.NodeType == ExpressionType.Parameter)
+                    right = new PartialString($"{VisitMemberAccess(m)}={GetTrueParam()}");
                 else
                     right = Visit(b.Right);
 
@@ -681,15 +669,9 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
-        protected object GetTrueExpression()
-        {
-            return new PartialString(string.Format("({0} = {1})", GetTrueParam(), GetTrueParam()));
-        }
+        protected object GetTrueExpression() => new PartialString($"({GetTrueParam()} = {GetTrueParam()})");
 
-        protected object GetFalseExpression()
-        {
-            return new PartialString(string.Format("({0} = {1})", GetTrueParam(), GetFalseParam()));
-        }
+        protected object GetFalseExpression() => new PartialString($"({GetTrueParam()} = {GetFalseParam()})");
 
         protected virtual object VisitUnary(UnaryExpression u)
         {
@@ -705,7 +687,7 @@ namespace ServiceStack.Aws.DynamoDb
                     break;
                 case ExpressionType.ArrayLength:
                     o = Visit(u.Operand);
-                    return new PartialString("size({0})".Fmt(o));
+                    return new PartialString($"size({o})");
             }
             return Visit(u.Operand);
         }

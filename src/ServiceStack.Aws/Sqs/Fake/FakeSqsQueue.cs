@@ -27,7 +27,7 @@ namespace ServiceStack.Aws.Sqs.Fake
 
             if (!inFlighItems.TryGetValue(receiptHandle, out item))
             {
-                throw new ReceiptHandleIsInvalidException("Handle [{0}] does not exist".Fmt(receiptHandle));
+                throw new ReceiptHandleIsInvalidException($"Handle [{receiptHandle}] does not exist");
             }
 
             var status = item.GetStatus();
@@ -42,7 +42,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                 RequeueInFlightMessage(receiptHandle);
             }
 
-            throw new MessageNotInflightException("Item with handle [{0}] is not in flight".Fmt(receiptHandle));
+            throw new MessageNotInflightException($"Item with handle [{receiptHandle}] is not in flight");
         }
 
         public bool ChangeVisibility(ChangeMessageVisibilityRequest request)
@@ -151,9 +151,7 @@ namespace ServiceStack.Aws.Sqs.Fake
                 qi.Status = FakeSqsItemStatus.InFlight;
 
                 if (!inFlighItems.TryAdd(qi.ReceiptHandle, qi))
-                {
-                    throw new ReceiptHandleIsInvalidException("Could not flight queued item with handle [{0}]".Fmt(qi.ReceiptHandle));
-                }
+                    throw new ReceiptHandleIsInvalidException($"Could not flight queued item with handle [{qi.ReceiptHandle}]");
 
                 count++;
                 yield return qi;

@@ -134,7 +134,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var index = q.Table.GetIndexByField(indexField);
 
                 if (index == null)
-                    throw new ArgumentException("Could not find index for field '{0}'".Fmt(indexField));
+                    throw new ArgumentException($"Could not find index for field '{indexField}'");
 
                 this.IndexName = index.Name;
             }
