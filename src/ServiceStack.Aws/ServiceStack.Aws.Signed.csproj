@@ -133,7 +133,7 @@
     <Compile Include="Sqs\SqsQueueDefinition.cs" />
     <Compile Include="Sqs\SqsQueueName.cs" />
     <Compile Include="Support\HashExtensions.cs" />
-    <Compile Include="Support\NetCoreExtensions.cs" />
+    <Compile Include="Support\NetCoreAwsExtensions.cs" />
     <Compile Include="Support\PropertyInvoker.cs" />
   </ItemGroup>
   <ItemGroup>
