@@ -321,6 +321,9 @@ namespace ServiceStack.Aws.Tests.Sqs
         [Test]
         public void Can_remove_empty_temp_queues()
         {
+            //Clean up
+            sqsQueueManager.RemoveEmptyTemporaryQueues(DateTime.UtcNow.AddDays(5).ToUnixTime());
+
             var nonEmptyTempQueue = sqsQueueManager.CreateQueue(QueueNames.GetTempQueueName());
 
             sqsQueueManager.SqsClient.SendMessage(nonEmptyTempQueue.QueueUrl, "Just some text");
