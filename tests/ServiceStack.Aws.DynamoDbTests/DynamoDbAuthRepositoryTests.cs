@@ -89,6 +89,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 FullName = "First Last",
                 UserName = "mythz",
             };
+
             authRepo.CreateUserAuth(user2, "test");
             Assert.That(user2.Id, Is.GreaterThan(0));
 

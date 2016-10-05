@@ -70,7 +70,7 @@ namespace ServiceStack.Aws.DynamoDbTests.UseCases
             {
                 try
                 {
-                    var descResponse = awsDb.DescribeTable("Todo");
+                    var descResponse = awsDb.DescribeTable(new DescribeTableRequest("Todo"));
                     if (descResponse.Table.TableStatus == DynamoStatus.Active)
                         break;
 
