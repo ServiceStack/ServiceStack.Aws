@@ -63,7 +63,8 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             if (count <= 1)
             {
-                var scalarResponse = client.SendMessage(queueUrl, FakeSqsModel.CreateJson());
+                var scalarResponse = client.SendMessage(new SendMessageRequest(
+                    queueUrl, FakeSqsModel.CreateJson()));
 
                 return string.IsNullOrEmpty(scalarResponse.MessageId)
                     ? 0

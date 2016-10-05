@@ -116,7 +116,7 @@ namespace ServiceStack.Aws.Tests.FileStorage
 
             var normalizedTestFolder = provider.NormalizePath(testFolder);
 
-            Assert.IsTrue(files.All(f => f.StartsWith(normalizedTestFolder, StringComparison.InvariantCulture)));
+            Assert.IsTrue(files.All(f => f.StartsWith(normalizedTestFolder, StringComparison.Ordinal)));
         }
 
         [Test]

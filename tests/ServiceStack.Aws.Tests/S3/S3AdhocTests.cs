@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using NUnit.Framework;
+using ServiceStack.Aws;
 using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Tests.S3

@@ -41,7 +41,8 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             foreach (var invalidName in invalidNames)
             {
-                Assert.Throws<AmazonSQSException>(() => client.CreateQueue(invalidName), invalidName);
+                Assert.Throws<AmazonSQSException>(() => 
+                    client.CreateQueue(new CreateQueueRequest(invalidName)), invalidName);
             }
         }
 
@@ -57,7 +58,7 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             foreach (var validName in validNames)
             {
-                var createResponse = client.CreateQueue(validName);
+                var createResponse = client.CreateQueue(new CreateQueueRequest(validName));
                 Assert.That(createResponse.QueueUrl, Is.Not.Null.Or.Empty);
             }
         }
@@ -79,17 +80,15 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             Assert.That(createResponse.QueueUrl, Is.Not.Null.Or.Empty);
 
-            var attrResponse = client.GetQueueAttributes(createResponse.QueueUrl, new List<string>
-            {
-                "All"
-            });
+            var attrResponse = client.GetQueueAttributes(new GetQueueAttributesRequest(
+                createResponse.QueueUrl, new List<string> { "All" }));
                 
             Assert.AreEqual(attrResponse.Attributes[QueueAttributeName.VisibilityTimeout],
                             createRequest.Attributes[QueueAttributeName.VisibilityTimeout]);
             Assert.AreEqual(attrResponse.Attributes[QueueAttributeName.ReceiveMessageWaitTimeSeconds],
                             createRequest.Attributes[QueueAttributeName.ReceiveMessageWaitTimeSeconds]);
 
-            var qUrlResponse = client.GetQueueUrl(createRequest.QueueName);
+            var qUrlResponse = client.GetQueueUrl(new GetQueueUrlRequest(createRequest.QueueName));
 
             Assert.AreEqual(qUrlResponse.QueueUrl, createResponse.QueueUrl);
         }
@@ -199,7 +198,8 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             var message = helper.ReceiveSingle();
 
-            var response = client.ChangeMessageVisibility(helper.DefaultQueueUrl, message.ReceiptHandle, 28);
+            var response = client.ChangeMessageVisibility(new ChangeMessageVisibilityRequest(
+                helper.DefaultQueueUrl, message.ReceiptHandle, 28));
 
             Assert.IsNotNull(response);
         }
@@ -223,11 +223,12 @@ namespace ServiceStack.Aws.Tests.Sqs
             var message = helper.ReceiveSingle(newQueueUrl);
 
             // Q should be empty again
-            response = client.ReceiveMessage(newQueueUrl);
+            response = client.ReceiveMessage(new ReceiveMessageRequest(newQueueUrl));
             Assert.AreEqual(0, response.Messages.Count);
 
             // CV on message we have
-            client.ChangeMessageVisibility(newQueueUrl, message.ReceiptHandle, 0);
+            client.ChangeMessageVisibility(new ChangeMessageVisibilityRequest(
+                newQueueUrl, message.ReceiptHandle, 0));
 
             // Should be a single item (same one) back on q again
             var messageRepeat = helper.ReceiveSingle(newQueueUrl);
@@ -240,7 +241,8 @@ namespace ServiceStack.Aws.Tests.Sqs
             helper.SendMessages(count: 4);
 
             Assert.Throws<ReceiptHandleIsInvalidException>(
-                () => client.ChangeMessageVisibility(helper.DefaultQueueUrl, Guid.NewGuid().ToString("N"), 11));
+                () => client.ChangeMessageVisibility(new ChangeMessageVisibilityRequest(
+                    helper.DefaultQueueUrl, Guid.NewGuid().ToString("N"), 11)));
         }
         
         [Test]
@@ -278,7 +280,9 @@ namespace ServiceStack.Aws.Tests.Sqs
         [Test]
         public void Deleting_non_existent_item_throws_exception()
         {
-            Assert.Throws<ReceiptHandleIsInvalidException>(() => client.DeleteMessage(helper.DefaultQueueUrl, Guid.NewGuid().ToString("N")));
+            Assert.Throws<ReceiptHandleIsInvalidException>(() => 
+                client.DeleteMessage(new DeleteMessageRequest(
+                    helper.DefaultQueueUrl, Guid.NewGuid().ToString("N"))));
         }
 
         [Test]
@@ -288,7 +292,8 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             var message = helper.ReceiveSingle();
 
-            var success = client.DeleteMessage(helper.DefaultQueueUrl, message.ReceiptHandle);
+            var success = client.DeleteMessage(new DeleteMessageRequest(
+                helper.DefaultQueueUrl, message.ReceiptHandle));
 
             Assert.IsNotNull(success);
         }
@@ -310,13 +315,13 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             SqsTestAssert.FakeEqualRealGreater(5, 1, received.Messages.Count);
 
-            var response = client.DeleteMessageBatch(newQueueUrl,
-                received.Messages.Select(m => new DeleteMessageBatchRequestEntry
-                {
-                    Id = m.MessageId,
-                    ReceiptHandle = m.ReceiptHandle
-                })
-                .ToList());
+            var response = client.DeleteMessageBatch(new DeleteMessageBatchRequest(
+                newQueueUrl,
+                received.Messages.Select(m => new DeleteMessageBatchRequestEntry {
+                        Id = m.MessageId,
+                        ReceiptHandle = m.ReceiptHandle
+                    }).ToList()
+                ));
 
             Assert.AreEqual(received.Messages.Count, response.Successful.Count);
 
@@ -367,7 +372,9 @@ namespace ServiceStack.Aws.Tests.Sqs
             var entries = 1.Times(() => new DeleteMessageBatchRequestEntry());
             var queueUrl = $"http://{Guid.NewGuid():N}.com";
             
-            SqsTestAssert.Throws<QueueDoesNotExistException>(() => client.DeleteMessageBatch(queueUrl, entries), "specified queue does not exist");
+            SqsTestAssert.Throws<QueueDoesNotExistException>(() => 
+                client.DeleteMessageBatch(new DeleteMessageBatchRequest(queueUrl, entries)), 
+                "specified queue does not exist");
         }
 
         [Test]
@@ -375,7 +382,7 @@ namespace ServiceStack.Aws.Tests.Sqs
         {
             var qUrl = helper.CreateQueue();
 
-            var response = client.DeleteQueue(qUrl);
+            var response = client.DeleteQueue(new DeleteQueueRequest(qUrl));
 
             Assert.IsNotNull(response);
         }
@@ -387,7 +394,7 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             var qUrl = helper.CreateQueue(qName);
 
-            var response = client.GetQueueUrl(qName);
+            var response = client.GetQueueUrl(new GetQueueUrlRequest(qName));
 
             Assert.IsNotNull(response);
             Assert.AreEqual(qUrl, response.QueueUrl);
@@ -396,7 +403,8 @@ namespace ServiceStack.Aws.Tests.Sqs
         [Test]
         public void Getting_url_for_non_existent_queue_throws_exception()
         {
-            Assert.Throws<QueueDoesNotExistException>(() => client.GetQueueUrl(Guid.NewGuid().ToString("N")));
+            Assert.Throws<QueueDoesNotExistException>(() => 
+                client.GetQueueUrl(new GetQueueUrlRequest(Guid.NewGuid().ToString("N"))));
         }
 
         [Test]

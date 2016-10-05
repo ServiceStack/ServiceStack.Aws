@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="AwsConfig.cs" />
     <Compile Include="FileStorage\FileSystemObjectTests.cs" />
+    <Compile Include="NetCoreTestsRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FileStorage\S3FileStorageProviderTests.cs" />
     <Compile Include="FileStorage\FileStorageProviderCommonTests.cs" />

@@ -59,7 +59,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.IsTrue(sqsQueueManager.QueueExists(qd.QueueName));
 
             // delete q directly at the client
-            Assert.IsNotNull(sqsQueueManager.SqsClient.DeleteQueue(qd.QueueUrl));
+            Assert.IsNotNull(sqsQueueManager.SqsClient.DeleteQueue(new DeleteQueueRequest(qd.QueueUrl)));
 
             // should still be in the cache
             Assert.IsTrue(sqsQueueManager.QueueNameMap.ContainsKey(qd.QueueName));
@@ -134,7 +134,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.AreEqual(qd.QueueUrl, url, "QueueUrl not equal");
 
             // delete q directly at the client
-            Assert.IsNotNull(sqsQueueManager.SqsClient.DeleteQueue(qd.QueueUrl));
+            Assert.IsNotNull(sqsQueueManager.SqsClient.DeleteQueue(new DeleteQueueRequest(qd.QueueUrl)));
 
             // should still be in the cache
             Assert.IsTrue(sqsQueueManager.QueueNameMap.ContainsKey(qd.QueueName));
@@ -192,7 +192,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.IsTrue(ReferenceEquals(qd, returnedQd));
 
             // delete q directly at the client
-            Assert.IsNotNull(sqsQueueManager.SqsClient.DeleteQueue(qd.QueueUrl));
+            Assert.IsNotNull(sqsQueueManager.SqsClient.DeleteQueue(new DeleteQueueRequest(qd.QueueUrl)));
 
             // should still be in the cache
             Assert.IsTrue(sqsQueueManager.QueueNameMap.ContainsKey(qd.QueueName));
@@ -326,8 +326,8 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             var nonEmptyTempQueue = sqsQueueManager.CreateQueue(QueueNames.GetTempQueueName());
 
-            sqsQueueManager.SqsClient.SendMessage(nonEmptyTempQueue.QueueUrl, "Just some text");
-            sqsQueueManager.SqsClient.SendMessage(nonEmptyTempQueue.QueueUrl, "Just some more text");
+            sqsQueueManager.SqsClient.SendMessage(new SendMessageRequest(nonEmptyTempQueue.QueueUrl, "Just some text"));
+            sqsQueueManager.SqsClient.SendMessage(new SendMessageRequest(nonEmptyTempQueue.QueueUrl, "Just some more text"));
 
             var emptyTempQueue1 = sqsQueueManager.CreateQueue(QueueNames.GetTempQueueName());
             var emptyTempQueue2 = sqsQueueManager.CreateQueue(QueueNames.GetTempQueueName());
