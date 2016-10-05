@@ -128,7 +128,10 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static void RegisterTypes(params Type[] refTypes)
         {
-            var metadatas = refTypes.Where(x => !x.IsValueType() && !x.IsSystemType()).Map(ToMetadataType);
+            var metadatas = refTypes.Where(x => !x.IsValueType() 
+                && !x.IsSystemType() 
+                && Types.All(t => t.Type != x))
+            .Map(ToMetadataType);
 
             // Make thread-safe to allow usage at runtime
             HashSet<DynamoMetadataType> snapshot, newCache;
