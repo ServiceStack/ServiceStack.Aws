@@ -64,11 +64,12 @@ namespace ServiceStack.Aws.FileStorage
                 directorySeparatorCharacter.Equals("\\", StringComparison.Ordinal)
                     ? "\\"
                     : "/");
+            var normalizedName = Path.DirectorySeparatorChar == '/' ? filePathAndName.Replace('\\', '/') : filePathAndName;
 
-            FileName = pathScrubber(Path.GetFileNameWithoutExtension(filePathAndName));
-            FolderName = pathScrubber(Path.GetDirectoryName(filePathAndName));
+            FileName = pathScrubber(Path.GetFileNameWithoutExtension(normalizedName));
+            FolderName = pathScrubber(Path.GetDirectoryName(normalizedName));
 
-            var fileExtension = pathScrubber(Path.GetExtension(filePathAndName));
+            var fileExtension = pathScrubber(Path.GetExtension(normalizedName));
 
             FileExtension = fileExtension.StartsWith(".", StringComparison.OrdinalIgnoreCase)
                 ? fileExtension.Substring(1)
