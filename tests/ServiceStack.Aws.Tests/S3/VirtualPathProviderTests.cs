@@ -105,6 +105,7 @@ namespace ServiceStack.Aws.Tests.S3
             file.Refresh();
             Assert.That(file.LastModified, Is.EqualTo(prevLastModified));
 
+            Thread.Sleep(1000);  //see: https://github.com/dotnet/corefx/issues/12403
             pathProvider.WriteFile(filePath, "file2");
             file.Refresh();
 
