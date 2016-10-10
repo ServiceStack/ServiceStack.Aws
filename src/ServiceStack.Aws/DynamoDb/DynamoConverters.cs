@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -299,7 +300,10 @@ namespace ServiceStack.Aws.DynamoDb
             switch (dbType)
             {
                 case DynamoType.String:
-                    var str = value as string ?? value.ToString();
+                    var str = value as string 
+                        ?? (value is DateTimeOffset
+                            ? ((DateTimeOffset)value).ToString(CultureInfo.InvariantCulture)
+                            : value.ToString());
                     return str == "" //DynamoDB throws on String.Empty
                         ? new AttributeValue { NULL = true } 
                         : new AttributeValue { S = str };
