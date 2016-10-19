@@ -10,6 +10,7 @@
     "AWSSDK.Core": "3.3.2.1",
     "AWSSDK.DynamoDBv2": "3.3.0.1",
     "AWSSDK.S3": "3.3.1",
-    "AWSSDK.SQS": "3.3.0.1"
+    "AWSSDK.SQS": "3.3.0.1",
+    "NUnit": "3.5.0"
   }
 }
