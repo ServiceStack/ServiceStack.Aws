@@ -102,11 +102,6 @@
   <ItemGroup>
     <Folder Include="Issues\" />
   </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\..\src\packages\AWSSDK.DynamoDBv2.3.3.0\analyzers\dotnet\cs\AWSSDK.DynamoDBv2.CodeAnalysis.dll" />
-    <Analyzer Include="..\..\src\packages\AWSSDK.S3.3.3.0.1\analyzers\dotnet\cs\AWSSDK.S3.CodeAnalysis.dll" />
-    <Analyzer Include="..\..\src\packages\AWSSDK.SQS.3.3.0\analyzers\dotnet\cs\AWSSDK.SQS.CodeAnalysis.dll" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
