@@ -2,12 +2,12 @@
   "configurations": {
     "Debug": {
       "buildOptions": {
-        "define": ["NETCORE_SUPPORT", "NETCORE", "DEBUG", "TRACE"]
+        "define": [ "NETCORE_SUPPORT", "NETCORE", "DEBUG", "TRACE" ]
       }
     },
     "Release": {
       "buildOptions": {
-        "define": ["NETCORE_SUPPORT", "NETCORE", "TRACE"],
+        "define": [ "NETCORE_SUPPORT", "NETCORE", "TRACE" ],
         "optimize": true
       }
     }
@@ -21,15 +21,15 @@
       "type": "platform",
       "version": "1.0.0"
     },
-    "NUnitLite" : "3.2.1"
+    "NUnitLite": "3.2.1"
   },
   "frameworks": {
-   "netcoreapp1.0": { 
+    "netcoreapp1.0": {
       "imports": [
         "dnxcore50",
         "portable-net451+win8"
       ],
-      "dependencies" : {
+      "dependencies": {
         "NETStandard.Library": "1.6.0",
         "System.Collections.Specialized": "4.0.1",
         "System.Reflection.Extensions": "4.0.1",
@@ -40,15 +40,17 @@
         "System.Threading.Thread": "4.0.0",
         "System.Threading.ThreadPool": "4.0.10",
         "System.Threading.Tasks": "4.0.11",
-        "System.Data.SqlClient" : "4.1.0",
-        "AWSSDK.Core": "3.3.0.2",
-        "AWSSDK.DynamoDBv2": "3.3.0",
-        "ServiceStack.Text" : "1.0.*",
-        "ServiceStack.Interfaces" : "1.0.*",
-        "ServiceStack.Client" : "1.0.*",
-        "ServiceStack.Common" : "1.0.*",
-        "ServiceStack" : "1.0.*",
-        "ServiceStack.Aws" : "1.0.*"
+        "System.Data.SqlClient": "4.1.0",
+        "AWSSDK.Core": "3.3.2.1",
+        "AWSSDK.DynamoDBv2": "3.3.0.1",
+        "AWSSDK.S3": "3.3.1",
+        "AWSSDK.SQS": "3.3.0.1",
+        "ServiceStack.Text": "1.0.*",
+        "ServiceStack.Interfaces": "1.0.*",
+        "ServiceStack.Client": "1.0.*",
+        "ServiceStack.Common": "1.0.*",
+        "ServiceStack": "1.0.*",
+        "ServiceStack.Aws": "1.0.*"
       }
     }
   }
