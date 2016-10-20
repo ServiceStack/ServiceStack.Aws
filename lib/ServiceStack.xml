@@ -744,6 +744,24 @@
             Wrappers for improving consistency with .NET Core Conventions
             </summary>
         </member>
+        <member name="T:ServiceStack.DisposableTracker">
+            <summary>
+            Tracks created <see cref="T:System.IDisposable"></see> objects.
+            Used by <see cref="T:ServiceStack.RequestContext"></see> to track <see cref="T:Funq.Container"></see> created IDisposable instances.
+            These instances are tracked and disposed at the end of a request.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.DisposableTracker.Add(System.IDisposable)">
+            <summary>
+            Adds disposable to the tracker
+            </summary>
+        </member>
+        <member name="M:ServiceStack.DisposableTracker.Dispose">
+            <summary>
+            Dispose all disposables in the tracker.
+            If disposable is still alive alose <see cref="T:ServiceStack.HostContext"></see>.Release() is called to release the object.
+            </summary>
+        </member>
         <member name="M:ServiceStack.FluentValidation.Internal.CollectionPropertyRule`1.Create``1(System.Linq.Expressions.Expression{System.Func{``0,System.Collections.Generic.IEnumerable{`0}}},System.Func{ServiceStack.FluentValidation.CascadeMode})">
             <summary>
             Creates a new property rule from a lambda expression.
@@ -2428,6 +2446,11 @@
         <member name="M:ServiceStack.Host.Handlers.IndexPageHttpHandler.ProcessRequest(System.Web.HttpContextBase)">
             <summary>
             ASP.NET requests
+            </summary>
+        </member>
+        <member name="M:ServiceStack.Host.Handlers.StaticFileHandler.#ctor(System.String)">
+            <summary>
+            Return File at specified virtualPath from AppHost.VirtualFiles ContentRootPath
             </summary>
         </member>
         <member name="M:ServiceStack.Host.Handlers.StaticFileHandler.SetDefaultFile(System.String,System.Byte[],System.DateTime)">
@@ -4334,6 +4357,71 @@
             behaves in this manner.
             </summary>
         </member>
+        <member name="P:ServiceStack.ServiceStackHost.StartedAt">
+            <summary>
+            When the AppHost was instantiated.
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.AfterInitAt">
+            <summary>
+            When the Init function was done.
+            Called at begin of <see cref="M:ServiceStack.ServiceStackHost.OnAfterInit"/>
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.ReadyAt">
+            <summary>
+            When all configuration was completed.
+            Called at the end of <see cref="M:ServiceStack.ServiceStackHost.OnAfterInit"/>
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.TestMode">
+            <summary>
+            If app currently runs for unit tests.
+            Used for overwritting AuthSession.
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.ServiceAssemblies">
+            <summary>
+            The assemblies reflected to find api services.
+            These can be provided in the constructor call.
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.HasStarted">
+            <summary>
+            Wether AppHost configuration is done.
+            Note: It doesn't mean the start function was called.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.IsReady">
+            <summary>
+            Wether AppHost is ready configured and either ready to run or already running.
+            Equals <see cref="P:ServiceStack.ServiceStackHost.HasStarted"/>
+            </summary>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.SetConfig(ServiceStack.HostConfig)">
+            <summary>
+            Set the host config of the AppHost.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.Init">
+            <summary>
+            Initializes the AppHost.
+            Calls the <see cref="M:ServiceStack.ServiceStackHost.Configure(Funq.Container)"/> method.
+            Should be called before start.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.GetWebRootPath">
+            <summary>
+            Gets Full Directory Path of where the app is running
+            </summary>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.Start(System.String)">
+            <summary>
+            Starts the AppHost.
+            this methods needs to be overwritten in subclass to provider a listener to start handling requests.
+            </summary>
+            <param name="urlBase">Url to listen to</param>
+        </member>
         <member name="M:ServiceStack.ServiceStackHost.RedirectDirectory(ServiceStack.Web.IHttpRequest)">
             <summary>
             Retain the same behavior as ASP.NET and redirect requests to directores 
@@ -4343,6 +4431,43 @@
         <member name="P:ServiceStack.ServiceStackHost.Container">
             <summary>
             The AppHost.Container. Note: it is not thread safe to register dependencies after AppStart.
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.PreRequestFilters">
+            <summary>
+            Collection of PreRequest filters.
+            They are called before each request is handled by a service, but after an HttpHandler is by the <see cref="T:ServiceStack.HttpHandlerFactory"/> chosen.
+            called in <see cref="M:ServiceStack.ServiceStackHost.ApplyPreRequestFilters(ServiceStack.Web.IRequest,ServiceStack.Web.IResponse)"/>.
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.RequestConverters">
+            <summary>
+            Collection of RequestConverters.
+            Can be used to convert/change Input Dto
+            Called after routing and model binding, but before request filters.
+            All request converters are called unless <see cref="P:ServiceStack.Web.IResponse.IsClosed"></see>
+            Converter can return null, orginal model will be used.
+            
+            Note one converter could influence the input for the next converter!
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.ResponseConverters">
+            <summary>
+            Collection of ResponseConverters.
+            Can be used to convert/change Output Dto
+            
+            Called directly after response is handled, even before <see cref="M:ServiceStack.ServiceStackHost.ApplyResponseFilters(ServiceStack.Web.IRequest,ServiceStack.Web.IResponse,System.Object)"></see>!
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.ViewEngines">
+            <summary>
+            Lists of view engines for this app.
+            If view is needed list is looped until view is found.
+            </summary>
+        </member>
+        <member name="P:ServiceStack.ServiceStackHost.Plugins">
+            <summary>
+            Collection of added plugins.
             </summary>
         </member>
         <member name="M:ServiceStack.ServiceStackHost.OnPreExecuteServiceFilter(ServiceStack.IService,System.Object,ServiceStack.Web.IRequest,ServiceStack.Web.IResponse)">
@@ -4363,6 +4488,36 @@
         <member name="M:ServiceStack.ServiceStackHost.OnUncaughtException(ServiceStack.Web.IRequest,ServiceStack.Web.IResponse,System.String,System.Exception)">
             <summary>
             Occurs when an exception is thrown whilst processing a request.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.Register``1(``0)">
+            <summary>
+            Register singleton in the Ioc Container of the AppHost.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.RegisterAs``2">
+            <summary>
+            Registers type to be automatically wired by the Ioc container of the AppHost.
+            </summary>
+            <typeparam name="T">Concrete type</typeparam>
+            <typeparam name="TAs">Abstract type</typeparam>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.TryResolve``1">
+            <summary>
+            Tries to resolve type through the ioc container of the AppHost. 
+            Can return null.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.Resolve``1">
+            <summary>
+            Resolves Type through the Ioc container of the AppHost.
+            </summary>
+            <exception cref="T:Funq.ResolutionException">If type is not registered</exception>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.GetPlugin``1">
+            <summary>
+            Looks for first plugin of this type in Plugins.
+            Reflection performance penalty.
             </summary>
         </member>
         <member name="M:ServiceStack.ServiceStackHost.ApplyCustomHandlerRequestFilters(ServiceStack.Web.IRequest,ServiceStack.Web.IResponse)">
@@ -4401,6 +4556,48 @@
             Inspect or modify ever new UserSession created or resolved from cache. 
             return null if Session is invalid to create new Session.
             </summary>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.GetDbConnection(ServiceStack.Web.IRequest)">
+            <summary>
+            Gets IDbConnection Checks if DbInfo is seat in RequestContext.
+            See multitenancy: https://github.com/ServiceStack/ServiceStack/wiki/Multitenancy
+            Called by itself, <see cref="T:ServiceStack.Service"></see> and <see cref="!:ServiceStack.Razor.ViewPageBase"></see>
+            </summary>
+            <param name="req">Provided by services and pageView, can be helpfull when overriding this method</param>
+            <returns></returns>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.GetRedisClient(ServiceStack.Web.IRequest)">
+            <summary>
+            Resolves <see cref="T:ServiceStack.Redis.IRedisClient"></see> based on <see cref="T:ServiceStack.Redis.IRedisClientsManager"></see>.GetClient();
+            Called by itself, <see cref="T:ServiceStack.Service"></see> and <see cref="!:ServiceStack.Razor.ViewPageBase"></see>
+            </summary>
+            <param name="req">Provided by services and pageView, can be helpfull when overriding this method</param>
+            <returns></returns>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.GetCacheClient(ServiceStack.Web.IRequest)">
+            <summary>
+            Tries to resolve <see cref="T:ServiceStack.Redis.IRedisClient"></see> through Ioc container.
+            If not registered, it falls back to <see cref="T:ServiceStack.Redis.IRedisClientsManager"></see>.GetClient();
+            Called by itself, <see cref="T:ServiceStack.Service"></see> and <see cref="!:ServiceStack.Razor.ViewPageBase"></see>
+            </summary>
+            <param name="req">Provided by services and pageView, can be helpfull when overriding this method</param>
+            <returns></returns>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.GetMemoryCacheClient(ServiceStack.Web.IRequest)">
+            <summary>
+            Returns <see cref="T:ServiceStack.Caching.MemoryCacheClient"></see>. cache is only persisted for this running app instance.
+            Called by <see cref="T:ServiceStack.Service"></see>.MemoryCacheClient
+            </summary>
+            <param name="req">Provided by services and pageView, can be helpfull when overriding this method</param>
+            <returns>Nullable MemoryCacheClient</returns>
+        </member>
+        <member name="M:ServiceStack.ServiceStackHost.GetMessageProducer(ServiceStack.Web.IRequest)">
+            <summary>
+            Returns <see cref="T:ServiceStack.Messaging.IMessageProducer"></see> from the IOC container.
+            Called by itself, <see cref="T:ServiceStack.Service"></see> and <see cref="!:ServiceStack.Razor.ViewPageBase"></see>
+            </summary>
+            <param name="req">Provided by services and PageViewBase, can be helpfull when overriding this method</param>
+            <returns></returns>
         </member>
         <member name="M:ServiceStack.ServiceStackProvider.SessionAs``1">
             <summary>
@@ -4454,6 +4651,12 @@
         <member name="P:ServiceStack.PostmanFeature.DefaultVerbsForAny">
             <summary>
             Only generate specified Verb entries for "ANY" routes
+            </summary>
+        </member>
+        <member name="T:ServiceStack.RequestContext">
+            <summary>
+            Abstraction to provide a context per request.
+            in spnet.web its equivalent to <see cref="T:System.Web.HttpContext"></see>.Current.Items falls back to CallContext
             </summary>
         </member>
         <member name="F:ServiceStack.RequestContext.UseThreadStatic">
@@ -4929,6 +5132,11 @@
             Generic + Useful IService base class
             </summary>
         </member>
+        <member name="P:ServiceStack.Service.LocalCache">
+            <summary>
+            Returns <see cref="T:ServiceStack.Caching.MemoryCacheClient"></see>. cache is only persisted for this running app instance.
+            </summary>
+        </member>
         <member name="P:ServiceStack.Service.VirtualFileSources">
             <summary>
             Cascading collection of virtual file sources, inc. Embedded Resources, File System, In Memory, S3
@@ -4947,6 +5155,23 @@
         <member name="M:ServiceStack.Service.SessionAs``1">
             <summary>
             Typed UserSession
+            </summary>
+        </member>
+        <member name="P:ServiceStack.Service.IsAuthenticated">
+            <summary>
+            If user found in session for this request is authenticated.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.Service.PublishMessage``1(``0)">
+            <summary>
+            Publish a MQ message over the <see cref="T:ServiceStack.Messaging.IMessageProducer"></see> implementation.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.Service.Dispose">
+            <summary>
+            Disposes all created disposable properties of this service
+            and executes disposing of all request <see cref="!:IDposable"></see>s 
+            (warning, manualy triggering this might lead to unwanted disposing of all request related objects and services.)
             </summary>
         </member>
         <member name="F:ServiceStack.ServiceExtensions.DefaultCache">
@@ -5399,6 +5624,11 @@
             <param name="bodySuffix">Add suffix to response body if any</param>
             <returns></returns>
         </member>
+        <member name="M:ServiceStack.HttpResponseExtensionsInternal.WriteErrorBody(ServiceStack.Web.IResponse,System.Exception)">
+            <summary>
+            When HTTP Headers have already been written and only the Body can be written
+            </summary>
+        </member>
         <member name="T:ServiceStack.AppHostHttpListenerBase">
             <summary>
             Inherit from this class if you want to host your web services inside a 
@@ -5622,6 +5852,11 @@
         <member name="M:ServiceStack.IAppHost.LoadPlugin(ServiceStack.IPlugin[])">
             <summary>
             Apply plugins to this AppHost
+            </summary>
+        </member>
+        <member name="M:ServiceStack.IAppHost.MapProjectPath(System.String)">
+            <summary>
+            Returns the Absolute File Path, relative from your AppHost's Project Path
             </summary>
         </member>
         <member name="P:ServiceStack.IAppHost.VirtualFileSources">
