@@ -284,7 +284,7 @@ namespace ServiceStack.Aws.Sqs
 
         public virtual void WaitForWorkersToStop(TimeSpan? timeout = null)
         {
-            ExecExtensions.RetryUntilTrue(
+            ExecUtils.RetryUntilTrue(
                 () => Interlocked.CompareExchange(ref status, 0, 0) == WorkerStatus.Stopped,
                 timeout);
         }
