@@ -74,6 +74,11 @@
             Run custom filter after API Key is created
             </summary>
         </member>
+        <member name="P:ServiceStack.Auth.ApiKeyAuthProvider.SessionCacheDuration">
+            <summary>
+            Cache the User Session so it can be reused between subsequent API Key Requests
+            </summary>
+        </member>
         <member name="T:ServiceStack.Auth.JwtAuthProvider">
             <summary>
             Used to Issue and process JWT Tokens and registers ConvertSessionToToken Service to convert Sessions to JWT Tokens
@@ -2471,17 +2476,17 @@
             Otherwise uses Resolve approach, which will throw an exception if resolution fails
             </summary>
         </member>
-        <member name="M:ServiceStack.Host.Cookies.AddPermanentCookie(System.String,System.String,System.Nullable{System.Boolean})">
+        <member name="M:ServiceStack.Host.NetCookies.AddPermanentCookie(System.String,System.String,System.Nullable{System.Boolean})">
             <summary>
             Sets a persistent cookie which never expires
             </summary>
         </member>
-        <member name="M:ServiceStack.Host.Cookies.AddSessionCookie(System.String,System.String,System.Nullable{System.Boolean})">
+        <member name="M:ServiceStack.Host.NetCookies.AddSessionCookie(System.String,System.String,System.Nullable{System.Boolean})">
             <summary>
             Sets a session cookie which expires after the browser session closes
             </summary>
         </member>
-        <member name="M:ServiceStack.Host.Cookies.DeleteCookie(System.String)">
+        <member name="M:ServiceStack.Host.NetCookies.DeleteCookie(System.String)">
             <summary>
             Deletes a specified cookie by setting its value to empty and expiration to -1 days
             </summary>
