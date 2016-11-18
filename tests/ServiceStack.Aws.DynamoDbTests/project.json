@@ -19,28 +19,28 @@
   "dependencies": {
     "Microsoft.NETCore.App": {
       "type": "platform",
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     "NUnitLite": "3.5.0"
   },
   "frameworks": {
-    "netcoreapp1.0": {
+    "netcoreapp1.1": {
       "imports": [
         "dnxcore50",
         "portable-net451+win8"
       ],
       "dependencies": {
         "NETStandard.Library": "1.6.0",
-        "System.Collections.Specialized": "4.0.1",
-        "System.Reflection.Extensions": "4.0.1",
-        "System.ComponentModel.TypeConverter": "4.1.0",
-        "System.ServiceModel.Primitives": "4.1.0",
-        "System.Linq.Queryable": "4.0.1",
-        "System.Threading": "4.0.11",
-        "System.Threading.Thread": "4.0.0",
-        "System.Threading.ThreadPool": "4.0.10",
-        "System.Threading.Tasks": "4.0.11",
-        "System.Data.SqlClient": "4.1.0",
+        "System.Collections.Specialized": "4.*",
+        "System.Reflection.Extensions": "4.*",
+        "System.ComponentModel.TypeConverter": "4.*",
+        "System.ServiceModel.Primitives": "4.*",
+        "System.Linq.Queryable": "4.*",
+        "System.Threading": "4.*",
+        "System.Threading.Thread": "4.*",
+        "System.Threading.ThreadPool": "4.*",
+        "System.Threading.Tasks": "4.*",
+        "System.Data.SqlClient": "4.*",
         "AWSSDK.Core": "3.3.4.1",
         "AWSSDK.DynamoDBv2": "3.3.0.2",
         "AWSSDK.S3": "3.3.1.1",
