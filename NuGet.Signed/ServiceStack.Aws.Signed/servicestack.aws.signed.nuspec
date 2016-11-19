@@ -16,10 +16,10 @@
     <copyright>ServiceStack 2016 and Contributors</copyright>
     <dependencies>
         <dependency id="ServiceStack.Signed" version="4.5" />
-        <dependency id="AWSSDK.Core" version="3.3.2.1" />
-        <dependency id="AWSSDK.DynamoDBv2" version="3.3.0.1" />
-        <dependency id="AWSSDK.S3" version="3.3.1" />
-        <dependency id="AWSSDK.SQS" version="3.3.0.1" />
+        <dependency id="AWSSDK.Core" version="3.3.4.1" />
+        <dependency id="AWSSDK.DynamoDBv2" version="3.3.0.2" />
+        <dependency id="AWSSDK.S3" version="3.3.1.1" />
+        <dependency id="AWSSDK.SQS" version="3.3.0.2" />
     </dependencies>
   </metadata>
   <files>
