@@ -1937,6 +1937,16 @@
             <param name="stateProvider"></param>
             <returns></returns>
         </member>
+        <member name="M:ServiceStack.FluentValidation.DefaultValidatorOptions.WithSeverity``2(ServiceStack.FluentValidation.IRuleBuilderOptions{``0,``1},ServiceStack.FluentValidation.Severity)">
+            <summary>
+            Specifies custom severity that should be stored alongside the validation message when validation fails for this rule.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="TProperty"></typeparam>
+            <param name="rule"></param>
+            <param name="severity"></param>
+            <returns></returns>
+        </member>
         <member name="T:ServiceStack.FluentValidation.CascadeMode">
             <summary>
             Specifies how rules should cascade when one fails.
@@ -1965,6 +1975,11 @@
         <member name="F:ServiceStack.FluentValidation.ApplyConditionTo.CurrentValidator">
             <summary>
             Applies the condition to the current validator only.
+            </summary>
+        </member>
+        <member name="T:ServiceStack.FluentValidation.Severity">
+            <summary>
+            Specifies the severity of a rule. 
             </summary>
         </member>
         <member name="T:ServiceStack.FluentValidation.InlineValidator`1">
@@ -2359,6 +2374,11 @@
         <member name="P:ServiceStack.FluentValidation.Results.ValidationFailure.CustomState">
             <summary>
             Custom state associated with the failure.
+            </summary>
+        </member>
+        <member name="P:ServiceStack.FluentValidation.Results.ValidationFailure.Severity">
+            <summary>
+            Custom severity level associated with the failure.
             </summary>
         </member>
         <member name="P:ServiceStack.FluentValidation.Results.ValidationFailure.PlaceholderValues">
