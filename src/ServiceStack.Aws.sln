@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{91F39E88
 		..\build\build.bat = ..\build\build.bat
 		..\build\build.proj = ..\build\build.proj
 		..\lib\copy.bat = ..\lib\copy.bat
+		..\NuGet.Core\ServiceStack.Aws.Core\servicestack.aws.core.nuspec = ..\NuGet.Core\ServiceStack.Aws.Core\servicestack.aws.core.nuspec
 		..\NuGet\ServiceStack.Aws\servicestack.aws.nuspec = ..\NuGet\ServiceStack.Aws\servicestack.aws.nuspec
 		..\NuGet.Signed\ServiceStack.Aws.Signed\servicestack.aws.signed.nuspec = ..\NuGet.Signed\ServiceStack.Aws.Signed\servicestack.aws.signed.nuspec
 		..\build\start-local-dynamodb.bat = ..\build\start-local-dynamodb.bat
