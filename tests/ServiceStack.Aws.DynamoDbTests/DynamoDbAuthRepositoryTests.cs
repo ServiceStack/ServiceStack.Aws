@@ -17,9 +17,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            DynamoMetadata.Reset();
-            var db = CreatePocoDynamo();
-            db.DeleteAllTables(TimeSpan.FromMinutes(1));
+            CleanUp();
 
             appHost = new BasicAppHost()
                 .Init();
@@ -29,6 +27,15 @@ namespace ServiceStack.Aws.DynamoDbTests
         public void TestFixtureTearDown()
         {
             appHost.Dispose();
+
+            CleanUp();
+        }
+
+        void CleanUp()
+        {
+            DynamoMetadata.Reset();
+            var db = CreatePocoDynamo();
+            db.DeleteAllTables(TimeSpan.FromMinutes(1));
         }
 
         IUserAuthRepository CreateAuthRepo(IPocoDynamo db)
