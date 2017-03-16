@@ -53,12 +53,12 @@ references the latest modular AWSSDK **v3.1x** dependencies **.NET 4.5+** projec
 
 This **ServiceStack.Aws** NuGet package includes implementations for the following ServiceStack providers:
 
-  - **[PocoDynamo](https://github.com/ServiceStack/PocoDynamo)** - Exciting new declarative, code-first POCO client for DynamoDB with LINQ support
-  - **[SqsMqServer](#sqsmqserver)** - A new [MQ Server](https://github.com/ServiceStack/ServiceStack/wiki/Messaging) for invoking ServiceStack Services via Amazon SQS MQ Service
-  - **[S3VirtualPathProvider](#S3virtualpathprovider)** - A read/write [Virtual FileSystem](https://github.com/ServiceStack/ServiceStack/wiki/Virtual-file-system) around Amazon's S3 Simple Storage Service
-  - **[DynamoDbAuthRepository](#dynamodbauthrepository)** - A new [UserAuth repository](https://github.com/ServiceStack/ServiceStack/wiki/Authentication-and-authorization) storing UserAuth info in DynamoDB
-  - **[DynamoDbAppSettings](#dynamodbappsettings)** - An [AppSettings provider](https://github.com/ServiceStack/ServiceStack/wiki/AppSettings) storing App configuration in DynamoDB
-  - **[DynamoDbCacheClient](#dynamodbcacheclient)** - A new [Caching Provider](https://github.com/ServiceStack/ServiceStack/wiki/Caching) for DynamoDB
+  - **[PocoDynamo](https://github.com/ServiceStack/PocoDynamo)** - Declarative, code-first POCO client for DynamoDB with LINQ support
+  - **[SqsMqServer](https://github.com/ServiceStack/ServiceStack.Aws#sqsmqserver)** - [MQ Server](http://docs.servicestack.net/messaging) for invoking ServiceStack Services via Amazon SQS MQ Service
+  - **[S3VirtualPathProvider](https://github.com/ServiceStack/ServiceStack.Aws#S3virtualpathprovider)** - A read/write [Virtual FileSystem](http://docs.servicestack.net/virtual-file-system) around Amazon's S3 Simple Storage Service
+  - **[DynamoDbAuthRepository](https://github.com/ServiceStack/ServiceStack.Aws#dynamodbauthrepository)** - A [UserAuth repository](http://docs.servicestack.net/authentication-and-authorization) storing UserAuth info in DynamoDB
+  - **[DynamoDbAppSettings](https://github.com/ServiceStack/ServiceStack.Aws#dynamodbappsettings)** - An [AppSettings provider](http://docs.servicestack.net/appsettings) storing App configuration in DynamoDB
+  - **[DynamoDbCacheClient](https://github.com/ServiceStack/ServiceStack.Aws#dynamodbcacheclient)** - A [Caching Provider](http://docs.servicestack.net/caching) for DynamoDB
 
 > We'd like to give a big thanks to [Chad Boyd](https://github.com/boydc7) from Spruce Media for contributing the SqsMqServer implementation.
 
