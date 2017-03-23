@@ -648,7 +648,7 @@ and connect to them with ServiceStack's typed .NET clients.
 
 [![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticache-redis-powered-by-aws.png)](https://github.com/ServiceStackApps/AwsGettingStarted/blob/master/docs/redis-guide.md)
 
-### [AWS ElastiCache Redis and ServiceStack](https://github.com/ServiceStackApps/AwsGettingStarted/blob/master/docs/memcached-guide.md)
+### [AWS MemCached Redis and ServiceStack](https://github.com/ServiceStackApps/AwsGettingStarted/blob/master/docs/memcached-guide.md)
 
 [![](https://github.com/ServiceStack/Assets/raw/master/img/aws/elasticache-memcached-powered-by-aws.png)](https://github.com/ServiceStackApps/AwsGettingStarted/blob/master/docs/memcached-guide.md)
 
