@@ -34,10 +34,10 @@
     "netstandard1.6": {
       "dependencies": {
         "NETStandard.Library": "1.6.0",
-        "AWSSDK.Core": "3.3.7.1",
-        "AWSSDK.DynamoDBv2": "3.3.1.5",
-        "AWSSDK.S3": "3.3.5.2",
-        "AWSSDK.SQS": "3.3.1.6"
+        "AWSSDK.Core": "3.3.10.2",
+        "AWSSDK.DynamoDBv2": "3.3.4.3",
+        "AWSSDK.S3": "3.3.5.10",
+        "AWSSDK.SQS": "3.3.1.10"
       },
       "imports": [
         "dnxcore50",
