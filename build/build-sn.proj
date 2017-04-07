@@ -81,7 +81,7 @@
     <Delete Files="@(NugetPackageFilesToDelete)" />
 
     <ItemGroup>
-      <AwsFiles Include="$(SrcDir)/ServiceStack.Aws/bin/$(Configuration)/ServiceStack.Aws.*"></AwsFiles>
+      <AwsFiles Include="$(SrcDir)/ServiceStack.Aws/bin/$(Configuration)/net45/ServiceStack.Aws.*"></AwsFiles>
     </ItemGroup>
 
     <MSBuild Projects="$(BuildSolutionDir)/src/ServiceStack.Aws/ServiceStack.Aws.Signed.csproj"
