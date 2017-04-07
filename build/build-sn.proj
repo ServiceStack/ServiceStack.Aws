@@ -18,7 +18,6 @@
     <Version>$(MajorVersion).$(MinorVersion).$(PatchVersion).0</Version>
     <UnstableTag Condition="$(RELEASE) == ''">-unstable</UnstableTag>
     <PackageVersion>$(MajorVersion).$(MinorVersion).$(PatchVersion)$(UnstableTag)</PackageVersion>
-    <EnvVersion>$(MajorVersion).$(MinorVersion)$(PatchVersion)</EnvVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -46,8 +45,8 @@
   </Target>
 
   <Target Name="BuildSolutions">
-    <!--<MSBuild Projects="$(BuildSolutionDir)/src/ServiceStack.Aws.sln" Targets="Build"
-      Properties="Configuration=$(Configuration)" />-->
+    <MSBuild Projects="$(BuildSolutionDir)/src/ServiceStack.Aws.Signed.sln" Targets="Build"
+             Properties="Configuration=$(Configuration)" />
   </Target>
 
   <Target Name="UpdateVersion">
