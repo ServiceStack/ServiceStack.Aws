@@ -1,120 +1,64 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{24709E60-D226-4A9C-9561-F3844DCD05E9}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ServiceStack.Aws.DynamoDbTests</RootNamespace>
+    <TargetFrameworks>net45;netcoreapp1.1</TargetFrameworks>
+    <DebugType>portable</DebugType>
     <AssemblyName>ServiceStack.Aws.DynamoDbTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\src\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
+    <OutputType>Library</OutputType>
+    <PackageId>ServiceStack.Aws.DynamoDbTests</PackageId>
+    <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
+    <PackageTargetFallback>$(PackageTargetFallback);portable-net45+win8+wp8+wpa81+xamarinmac</PackageTargetFallback>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="ServiceStack">
-      <HintPath>..\..\lib\ServiceStack.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Client">
-      <HintPath>..\..\lib\ServiceStack.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Common">
-      <HintPath>..\..\lib\ServiceStack.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Interfaces">
-      <HintPath>..\..\lib\ServiceStack.Interfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Text">
-      <HintPath>..\..\lib\ServiceStack.Text.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
+    <PackageReference Include="AWSSDK.Core" Version="3.3.10.2" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.4.3" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.5.10" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.1.10" />
+    <PackageReference Include="NUnit" Version="3.6.1" />
+    <Reference Include="..\..\lib\ServiceStack.Interfaces.dll" />
+    <ProjectReference Include="..\..\src\ServiceStack.Aws\ServiceStack.Aws.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <DefineConstants>$(DefineConstants);NET45</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
     <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
+    <Reference Include="System.Threading" />
+    <Reference Include="System.Threading.Tasks" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Web" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+
+    <Reference Include="..\..\lib\ServiceStack.Text.dll" />
+    <Reference Include="..\..\lib\ServiceStack.Common.dll" />
+    <Reference Include="..\..\lib\ServiceStack.Client.dll" />
+    <Reference Include="..\..\lib\ServiceStack.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AddHocPocoDynamoTests.cs" />
-    <Compile Include="DynamoDbAppSettingsTests.cs" />
-    <Compile Include="DynamoDbAsyncTests.cs" />
-    <Compile Include="DynamoDbAuthRepositoryCustomTests.cs" />
-    <Compile Include="DynamoDbAuthRepositoryTests.cs" />
-    <Compile Include="DynamoDbCacheClientTests.cs" />
-    <Compile Include="DynamoDbCustomCacheClientTests.cs" />
-    <Compile Include="DynamoDbIndexTests.cs" />
-    <Compile Include="AdhocExtensionTests.cs" />
-    <Compile Include="DynamoTestBase.cs" />
-    <Compile Include="Issues\LocalDynamoDbHangsWhenPuttingNullValue.cs" />
-    <Compile Include="PocoDynaboDbTests.cs" />
-    <Compile Include="PocoDynamoBatchTests.cs" />
-    <Compile Include="PocoDynamoCreateTables.cs" />
-    <Compile Include="PocoDynamoDbContainsTests.cs" />
-    <Compile Include="PocoDynamoDbFilterExpressionTests.cs" />
-    <Compile Include="PocoDynamoExpressionTests.cs" />
-    <Compile Include="PocoDynamoRelatedTables.cs" />
-    <Compile Include="PocoDynamoUpdateTests.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RangeKeyTests.cs" />
-    <Compile Include="SequenceGeneratorTests.cs" />
-    <Compile Include="Shared\AppSettingsTest.cs" />
-    <Compile Include="Shared\CacheClientTestsBase.cs" />
-    <Compile Include="Shared\DataModels.cs" />
-    <Compile Include="UseCases\DynamoDbCustomerOrderExample.cs" />
-    <Compile Include="UseCases\DynamoDbEnumTests.cs" />
-    <Compile Include="UseCases\DynamoDbTodoExample.cs" />
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">
+    <DefineConstants>$(DefineConstants);NETCORE_SUPPORT;NETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">
+    <PackageReference Include="System.Data.Common" Version="4.1.0" />
+
+    <Reference Include="..\..\lib\netstandard1.3\ServiceStack.Text.dll" />
+    <Reference Include="..\..\lib\netstandard1.3\ServiceStack.Common.dll" />
+    <Reference Include="..\..\lib\netstandard1.6\ServiceStack.Client.dll" />
+    <Reference Include="..\..\lib\netstandard1.6\ServiceStack.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <None Include="project.json" />
-    <None Include="ServiceStack.Aws.DynamoDbTests.project.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\ServiceStack.Aws\ServiceStack.Aws.csproj">
-      <Project>{ec090b85-e208-4b4e-ae19-bbfef51e4560}</Project>
-      <Name>ServiceStack.Aws</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

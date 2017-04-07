@@ -1,4 +1,5 @@
-﻿#if NETCORE
+﻿//NUnitLite isn't recognized in VS2017 - shouldn't need NUnitLite with NUnit 3.5+ https://github.com/nunit/dotnet-test-nunit
+#if false
 
 using NUnitLite;
 using NUnit.Common;
