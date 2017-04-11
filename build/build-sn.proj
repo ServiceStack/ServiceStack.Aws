@@ -41,12 +41,9 @@
     <Message Text="*****Before building solution*****" Importance="high"/>
   </Target>
 
-  <Target Name="UnitTests" DependsOnTargets="$(DoBuildSolutionsDependsOn)">
-  </Target>
-
   <Target Name="BuildSolutions">
-    <MSBuild Projects="$(BuildSolutionDir)/src/ServiceStack.Aws.Signed.sln" Targets="Build"
-             Properties="Configuration=$(Configuration)" />
+    <!--<MSBuild Projects="$(BuildSolutionDir)/src/ServiceStack.Aws.Signed.sln" Targets="Build"
+             Properties="Configuration=$(Configuration)" />-->
   </Target>
 
   <Target Name="UpdateVersion">
@@ -84,7 +81,8 @@
     </ItemGroup>
 
     <MSBuild Projects="$(BuildSolutionDir)/src/ServiceStack.Aws/ServiceStack.Aws.Signed.csproj"
-             Targets="Build" Properties="Configuration=$(Configuration)" />
+             Targets="Build"
+             Properties="Version=$(PackageVersion)" />
 
     <MakeDir Directories="$(NuGetPackageDir)/ServiceStack.Aws.Signed/lib/net45" Condition="!Exists('$(NuGetPackageDir)/ServiceStack.Aws.Signed/lib/net45')" />
     <Copy SourceFiles="%(AwsFiles.Identity)" DestinationFolder="$(NuGetPackageDir)/ServiceStack.Aws.Signed/lib/net45" />
