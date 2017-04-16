@@ -22,8 +22,6 @@
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.4.3" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.5.10" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.1.10" />
-
-    <Reference Include="..\..\lib\pcl\ServiceStack.Interfaces.dll" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
@@ -32,6 +30,7 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
     <Reference Include="System.Net" />
+    <Reference Include="..\..\lib\pcl\ServiceStack.Interfaces.dll" />
     <Reference Include="..\..\lib\net45\ServiceStack.Text.dll" />
     <Reference Include="..\..\lib\net45\ServiceStack.Common.dll" />
     <Reference Include="..\..\lib\net45\ServiceStack.Client.dll" />
@@ -43,15 +42,15 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="Microsoft.NETCore.Portable.Compatibility" Version="1.0.1" />
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.1.0" />
-    <PackageReference Include="System.Linq.Queryable" Version="4.0.1" />
-    <PackageReference Include="System.Threading" Version="4.0.11" />
-    <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
-    <PackageReference Include="System.Threading.ThreadPool" Version="4.0.10" />
-    <PackageReference Include="System.Threading.Tasks" Version="4.0.11" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.0.1-*" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+    <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
 
+    <Reference Include="..\..\lib\netstandard1.1\ServiceStack.Interfaces.dll" />
     <Reference Include="..\..\lib\netstandard1.3\ServiceStack.Text.dll" />
     <Reference Include="..\..\lib\netstandard1.3\ServiceStack.Common.dll" />
     <Reference Include="..\..\lib\netstandard1.6\ServiceStack.Client.dll" />
