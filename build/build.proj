@@ -15,16 +15,12 @@
     <Configuration Condition="$(Configuration) == ''">Release</Configuration>
     <NuGetPath>$(BuildSolutionDir)/src/.nuget/nuget.exe</NuGetPath>
     <NuGetPackageDir>$(BuildSolutionDir)/NuGet/</NuGetPackageDir>
-    <NuGetPackageCoreDir>$(BuildSolutionDir)/NuGet.Core/</NuGetPackageCoreDir>
     <Version>$(MajorVersion).$(MinorVersion).$(PatchVersion).0</Version>
-    <UnstableTag Condition="$(RELEASE) == ''">-unstable</UnstableTag>
-    <PackageVersion>$(MajorVersion).$(MinorVersion).$(PatchVersion)$(UnstableTag)</PackageVersion>
-    <PackageCoreVersion>1.0.$(PatchCoreVersion)$(UnstableTag)</PackageCoreVersion>
+    <PackageVersion>$(MajorVersion).$(MinorVersion).$(PatchVersion)</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <NugetPackageFilesToDelete Include="$(NuGetPackageDir)/*.nupkg"/>
-    <NugetPackageFilesToDelete Include="$(NuGetPackageCoreDir)/*.nupkg"/>
   </ItemGroup>
 
   <PropertyGroup>
@@ -42,11 +38,6 @@
 
   <Target Name="BeforeBuildSolutions">
     <Message Text="*****Before building solution*****" Importance="high"/>
-    <!--<Copy SourceFiles="Test/ci.app.config" DestinationFiles="Test/app.config" />-->
-  </Target>
-
-  <Target Name="UnitTests" DependsOnTargets="$(DoBuildSolutionsDependsOn)">
-      <Exec Command="$(BuildSolutionDir)/lib/tests/nunit-console/nunit-console-x86.exe $(BuildSolutionDir)/tests/ServiceStack.Aws.Tests/bin/$(Configuration)/ServiceStack.Aws.Tests.dll"/>
   </Target>
 
   <Target Name="BuildSolutions">
@@ -70,10 +61,6 @@
         <Find>version="4\.5[^"]*"</Find>
         <ReplaceWith>version="$(PackageVersion)"</ReplaceWith>
       </RegexTransform>
-      <RegexTransform Include="$(NuGetPackageCoreDir)/**/*.nuspec">
-        <Find>version="1\.0\.[^"]*"</Find>
-        <ReplaceWith>version="$(PackageCoreVersion)"</ReplaceWith>
-      </RegexTransform>
     </ItemGroup>
 
     <RegexTransform Items="@(RegexTransform)" />
@@ -86,7 +73,6 @@
 
     <ItemGroup>
       <AwsFiles Include="$(SrcDir)/ServiceStack.Aws/bin/$(Configuration)/net45/ServiceStack.Aws.*"></AwsFiles>
-      <AwsCoreFiles Include="$(SrcDir)/ServiceStack.Aws/bin/$(Configuration)/netstandard1.6/ServiceStack.Aws.*"></AwsCoreFiles>
     </ItemGroup>
     
     <!-- .NET 4.5 -->
@@ -99,13 +85,6 @@
 
     <Exec Command="&quot;$(NuGetPath)&quot; pack &quot;$(NuGetPackageDir)/ServiceStack.Aws/servicestack.aws.nuspec&quot; -OutputDirectory &quot;$(NuGetPackageDir)&quot; -Version $(PackageVersion) -Symbols"
             LogStandardErrorAsError="true" />
-
-    <!-- .NET Core -->
-    <MakeDir Directories="$(NuGetPackageCoreDir)/ServiceStack.Aws.Core/lib/netstandard1.6" Condition="!Exists('$(NuGetPackageCoreDir)/ServiceStack.Aws.Core/lib/netstandard1.6')" />
-    <Copy SourceFiles="%(AwsCoreFiles.Identity)" DestinationFolder="$(NuGetPackageCoreDir)/ServiceStack.Aws.Core/lib/netstandard1.6" />
-
-    <Exec Command="&quot;$(NuGetPath)&quot; pack &quot;$(NuGetPackageCoreDir)/ServiceStack.Aws.Core/servicestack.aws.core.nuspec&quot; -OutputDirectory &quot;$(NuGetPackageCoreDir)&quot; -Version $(PackageCoreVersion) -Symbols"
-          LogStandardErrorAsError="true" />
 
   </Target>
 </Project>

@@ -3,7 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net45</TargetFrameworks>
     <AssemblyName>ServiceStack.Aws</AssemblyName>
-    <PackageId>ServiceStack.Aws</PackageId>
+    <PackageId>ServiceStack.Aws.Signed</PackageId>
+    <Configuration>Signed</Configuration>
     <PackageTargetFallback>$(PackageTargetFallback);portable-net451+win8</PackageTargetFallback>
     <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
@@ -17,6 +18,11 @@
     <SignAssembly>True</SignAssembly>
     <DelaySign>False</DelaySign>
     <AssemblyOriginatorKeyFile>servicestack-sn.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' != 'Debug' ">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
