@@ -402,9 +402,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         public bool ExcludeNullValue { get; set; }
 
-        public PropertyGetterDelegate GetValueFn { get; set; }
+        public GetMemberDelegate GetValueFn { get; set; }
 
-        public PropertySetterDelegate SetValueFn { get; set; }
+        public SetMemberDelegate SetValueFn { get; set; }
 
         public object GetValue(object onInstance)
         {
