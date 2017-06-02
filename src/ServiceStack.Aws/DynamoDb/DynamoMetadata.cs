@@ -173,8 +173,8 @@ namespace ServiceStack.Aws.DynamoDb
                     Name = Converters.GetFieldName(p),
                     DbType = Converters.GetFieldType(p.PropertyType),
                     IsAutoIncrement = p.HasAttribute<AutoIncrementAttribute>(),
-                    SetValueFn = p.GetPropertySetterFn(),
-                    GetValueFn = p.GetPropertyGetterFn(),
+                    SetValueFn = p.CreateSetter(),
+                    GetValueFn = p.CreateGetter(),
                 }).ToArray();
 
             return metadata;
