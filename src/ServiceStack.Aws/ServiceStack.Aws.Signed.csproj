@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net45</TargetFrameworks>
     <AssemblyName>ServiceStack.Aws</AssemblyName>
+    <RootNamespace>ServiceStack.Aws</RootNamespace>
     <PackageId>ServiceStack.Aws.Signed</PackageId>
     <Configuration>Signed</Configuration>
     <PackageTargetFallback>$(PackageTargetFallback);portable-net451+win8</PackageTargetFallback>
