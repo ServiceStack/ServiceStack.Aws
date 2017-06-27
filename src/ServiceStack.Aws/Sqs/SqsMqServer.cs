@@ -26,7 +26,7 @@ namespace ServiceStack.Aws.Sqs
 
             this.sqsMqMessageFactory = sqsMqMessageFactory;
         }
-        
+
         public override IMessageFactory MessageFactory => sqsMqMessageFactory;
 
         public SqsConnectionFactory ConnectionFactory => sqsMqMessageFactory.ConnectionFactory;
@@ -36,8 +36,8 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public int RetryCount
         {
-            get { return sqsMqMessageFactory.RetryCount; }
-            set { sqsMqMessageFactory.RetryCount = value; }
+            get => sqsMqMessageFactory.RetryCount;
+            set => sqsMqMessageFactory.RetryCount = value;
         }
 
         /// <summary>
@@ -48,8 +48,8 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public int BufferFlushIntervalSeconds
         {
-            get { return sqsMqMessageFactory.BufferFlushIntervalSeconds; }
-            set { sqsMqMessageFactory.BufferFlushIntervalSeconds = value; }
+            get => sqsMqMessageFactory.BufferFlushIntervalSeconds;
+            set => sqsMqMessageFactory.BufferFlushIntervalSeconds = value;
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public int VisibilityTimeout
         {
-            get { return sqsMqMessageFactory.QueueManager.DefaultVisibilityTimeout; }
+            get => sqsMqMessageFactory.QueueManager.DefaultVisibilityTimeout;
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxVisibilityTimeoutSeconds,
@@ -76,7 +76,7 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public int ReceiveWaitTime
         {
-            get { return sqsMqMessageFactory.QueueManager.DefaultReceiveWaitTime; }
+            get => sqsMqMessageFactory.QueueManager.DefaultReceiveWaitTime;
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxWaitTimeSeconds,
@@ -91,8 +91,8 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public bool DisableBuffering
         {
-            get { return sqsMqMessageFactory.QueueManager.DisableBuffering; }
-            set { sqsMqMessageFactory.QueueManager.DisableBuffering = value; }
+            get => sqsMqMessageFactory.QueueManager.DisableBuffering;
+            set => sqsMqMessageFactory.QueueManager.DisableBuffering = value;
         }
 
         /// <summary>
@@ -124,6 +124,11 @@ namespace ServiceStack.Aws.Sqs
             RegisterHandler(processMessageFn, null, noOfThreads: 1);
         }
 
+        public override void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn, int noOfThreads)
+        {
+            RegisterHandler(processMessageFn, null, noOfThreads: noOfThreads);
+        }
+
         public void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn, int noOfThreads,
                                        int? retryCount = null, int? visibilityTimeoutSeconds = null,
                                        int? receiveWaitTimeSeconds = null)
@@ -135,6 +140,11 @@ namespace ServiceStack.Aws.Sqs
                                                 Action<IMessageHandler, IMessage<T>, Exception> processExceptionEx)
         {
             RegisterHandler(processMessageFn, processExceptionEx, noOfThreads: 1);
+        }
+
+        public override void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn, Action<IMessageHandler, IMessage<T>, Exception> processExceptionEx, int noOfThreads)
+        {
+            RegisterHandler(processMessageFn, processExceptionEx, noOfThreads: noOfThreads);
         }
 
         public void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn,

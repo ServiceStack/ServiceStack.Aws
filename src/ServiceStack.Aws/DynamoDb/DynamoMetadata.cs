@@ -218,8 +218,8 @@ namespace ServiceStack.Aws.DynamoDb
                     IsRangeKey = p == range,
                     ExcludeNullValue = p.HasAttribute<IndexAttribute>() || p.HasAttribute<ExcludeNullValueAttribute>(),
                     IsAutoIncrement = p.HasAttribute<AutoIncrementAttribute>(),
-                    SetValueFn = p.GetPropertySetterFn(),
-                    GetValueFn = p.GetPropertyGetterFn(),
+                    SetValueFn = p.CreateSetter(),
+                    GetValueFn = p.CreateGetter(),
                 }).ToArray();
 
             metadata.HashKey = metadata.Fields.FirstOrDefault(x => x.IsHashKey);

@@ -42,9 +42,12 @@ namespace ServiceStack.Aws.Sqs
         protected abstract void Init();
 
         public abstract void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn);
+        public abstract void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn, int noOfThreads);
 
         public abstract void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn,
                                                 Action<IMessageHandler, IMessage<T>, Exception> processExceptionEx);
+
+        public abstract void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn, Action<IMessageHandler, IMessage<T>, Exception> processExceptionEx, int noOfThreads);
 
         /// <summary>
         /// The Message Factory used by this MQ Server
