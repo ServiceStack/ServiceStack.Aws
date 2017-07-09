@@ -13,6 +13,12 @@ using ServiceStack.VirtualPath;
 
 namespace ServiceStack.Aws.S3
 {
+    public class S3VirtualFiles : S3VirtualPathProvider
+    {
+        public S3VirtualFiles(IAmazonS3 client, string bucketName) : base(client, bucketName) {}
+    }
+
+    [Obsolete("Renamed to S3VirtualFiles")]
     public partial class S3VirtualPathProvider : AbstractVirtualPathProviderBase, IVirtualFiles
     {
         public const int MultiObjectLimit = 1000;

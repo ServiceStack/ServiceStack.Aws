@@ -19,7 +19,7 @@ namespace ServiceStack.Aws.Tests.S3
 
         public override IVirtualPathProvider GetPathProvider()
         {
-            return new S3VirtualPathProvider(client, BucketName);
+            return new S3VirtualFiles(client, BucketName);
         }
     }
 
@@ -43,7 +43,7 @@ namespace ServiceStack.Aws.Tests.S3
 
         public override IVirtualPathProvider GetPathProvider()
         {
-            return new FileSystemVirtualPathProvider(RootDir);
+            return new FileSystemVirtualFiles(RootDir);
         }
     }
 
