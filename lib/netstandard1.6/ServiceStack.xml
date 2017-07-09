@@ -786,6 +786,11 @@
             Vary cache for users in these roles
             </summary>
         </member>
+        <member name="P:ServiceStack.CacheResponseAttribute.VaryByHeaders">
+            <summary>
+            Vary cache for different HTTP Headers
+            </summary>
+        </member>
         <member name="P:ServiceStack.CacheResponseAttribute.LocalCache">
             <summary>
             Use HostContext.LocalCache or HostContext.Cache
@@ -4293,19 +4298,6 @@
             Deletes a specified cookie by setting its value to empty and expiration to -1 days
             </summary>
         </member>
-        <member name="M:ServiceStack.Host.Handlers.IndexPageHttpHandler.ProcessRequest(ServiceStack.Web.IRequest,ServiceStack.Web.IResponse,System.String)">
-            <summary>
-            Non ASP.NET requests
-            </summary>
-        </member>
-        <member name="M:ServiceStack.Host.Handlers.RedirectHttpHandler.ProcessRequest(ServiceStack.Web.IRequest,ServiceStack.Web.IResponse,System.String)">
-            <summary>
-            Non ASP.NET requests
-            </summary>
-            <param name="request"></param>
-            <param name="response"></param>
-            <param name="operationName"></param>
-        </member>
         <member name="M:ServiceStack.Host.Handlers.StaticFileHandler.#ctor(System.String)">
             <summary>
             Return File at specified virtualPath from AppHost.VirtualFiles ContentRootPath
@@ -4681,7 +4673,7 @@
             Deletes a specified cookie by setting its value to empty and expiration to -1 days
             </summary>
         </member>
-        <member name="M:ServiceStack.HttpResponseExtensionsInternal.WriteToResponse(ServiceStack.Web.IResponse,System.Object,ServiceStack.Web.ResponseSerializerDelegate,ServiceStack.Web.IRequest,System.Byte[],System.Byte[])">
+        <member name="M:ServiceStack.HttpResponseExtensionsInternal.WriteToResponse(ServiceStack.Web.IResponse,System.Object,ServiceStack.Web.ResponseSerializerDelegate,ServiceStack.Web.IRequest,System.Byte[],System.Byte[],System.Threading.CancellationToken)">
             <summary>
             Writes to response.
             Response headers are customizable by implementing IHasOptions an returning Dictionary of Http headers.
@@ -4751,6 +4743,11 @@
             </summary>
         </member>
         <member name="M:ServiceStack.HttpResultUtils.WritePartialTo(System.IO.Stream,System.IO.Stream,System.Int64,System.Int64)">
+            <summary>
+            Writes partial range as specified by start-end, from fromStream to toStream.
+            </summary>
+        </member>
+        <member name="M:ServiceStack.HttpResultUtils.WritePartialToAsync(System.IO.Stream,System.IO.Stream,System.Int64,System.Int64,System.Threading.CancellationToken)">
             <summary>
             Writes partial range as specified by start-end, from fromStream to toStream.
             </summary>
@@ -5521,6 +5518,11 @@
             Turn On/Off Tracking of Exceptions
             </summary>
         </member>
+        <member name="P:ServiceStack.RequestLogsFeature.SkipLogging">
+            <summary>
+            Don't log matching requests
+            </summary>
+        </member>
         <member name="P:ServiceStack.RequestLogsFeature.Capacity">
             <summary>
             Size of InMemoryRollingRequestLogger circular buffer
@@ -6000,16 +6002,6 @@
             </summary>
             <param name="container">The IoC container</param>
             <param name="assemblies">The assemblies to scan for a validator</param>
-        </member>
-        <member name="T:ServiceStack.VirtualPath.InMemoryVirtualPathProvider">
-            <summary>
-            In Memory Virtual Path Provider.
-            </summary>
-        </member>
-        <member name="M:ServiceStack.VirtualFileExtensions.Refresh(ServiceStack.IO.IVirtualFile)">
-            <summary>
-            Refresh file stats for this node if supported
-            </summary>
         </member>
         <member name="T:Funq.Container">
             <summary>

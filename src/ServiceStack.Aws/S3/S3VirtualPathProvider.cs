@@ -21,8 +21,7 @@ namespace ServiceStack.Aws.S3
         public string BucketName { get; private set; }
         private readonly S3VirtualDirectory rootDirectory;
 
-        public S3VirtualPathProvider(IAmazonS3 client, string bucketName, IAppHost appHost)
-            : base(appHost)
+        public S3VirtualPathProvider(IAmazonS3 client, string bucketName)
         {
             this.AmazonS3 = client;
             this.BucketName = bucketName;
