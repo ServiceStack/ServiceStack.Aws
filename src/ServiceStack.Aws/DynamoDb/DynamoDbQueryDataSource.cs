@@ -219,7 +219,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (q.Conditions.Count == 0)
                 return;
 
-            var dbConditions = new List<ConditionExpression>();
+            var dbConditions = new List<DataConditionExpression>();
             var args = new Dictionary<string, object>();
             var sb = StringBuilderCache.Allocate();
             var isMultipleWithOrTerm = q.Conditions.Any(x => x.Term == QueryTerm.Or)
@@ -265,7 +265,7 @@ namespace ServiceStack.Aws.DynamoDb
             q.Conditions.RemoveAll(dbConditions.Contains);
         }
 
-        public virtual string GetMultiConditionExpression(IDynamoCommonQuery dynamoQ, ConditionExpression condition, string multiFmt, Dictionary<string, object> args, string argPrefix = "p")
+        public virtual string GetMultiConditionExpression(IDynamoCommonQuery dynamoQ, DataConditionExpression condition, string multiFmt, Dictionary<string, object> args, string argPrefix = "p")
         {
             if (multiFmt == null)
                 return null;
