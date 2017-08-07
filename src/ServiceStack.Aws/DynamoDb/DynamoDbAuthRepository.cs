@@ -588,6 +588,8 @@ namespace ServiceStack.Aws.DynamoDb
                 new ReferencesAttribute(typeof(UsernameUserAuthIndex)));
 
             Db.RegisterTable<TUserAuth>();
+            var metadata = Db.GetTableMetadata<TUserAuth>();
+            metadata.LocalIndexes.Clear();
 
             typeof(TUserAuthDetails).AddAttributes(
                 new ReferencesAttribute(typeof(UserIdUserAuthDetailsIndex)),
