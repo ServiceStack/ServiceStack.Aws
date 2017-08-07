@@ -121,6 +121,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<UserAuth>();
+            db.GetTableMetadata<UserAuth>().LocalIndexes.Clear();
             db.InitSchema();
 
             db.PutItem(new UserAuth
@@ -138,6 +139,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<CustomUserAuth>();
+            db.GetTableMetadata<CustomUserAuth>().LocalIndexes.Clear();
             db.InitSchema();
 
             db.PutItem(new CustomUserAuth
