@@ -584,27 +584,40 @@ namespace ServiceStack.Aws.DynamoDb
 
             hasInitSchema = true;
 
-            typeof(TUserAuth).AddAttributes(
-                new ReferencesAttribute(typeof(UsernameUserAuthIndex)));
+            var alreadyAddedAttributes = typeof(TUserAuth).HasAttribute<ReferencesAttribute>();
+            if (!alreadyAddedAttributes)
+            {
+                typeof(TUserAuth).AddAttributes(
+                    new ReferencesAttribute(typeof(UsernameUserAuthIndex)));
+            }
 
             Db.RegisterTable<TUserAuth>();
             var metadata = Db.GetTableMetadata<TUserAuth>();
             metadata.LocalIndexes.Clear();
 
-            typeof(TUserAuthDetails).AddAttributes(
-                new ReferencesAttribute(typeof(UserIdUserAuthDetailsIndex)),
-                new CompositeKeyAttribute("UserAuthId", "Id"));
+            if (!alreadyAddedAttributes)
+            {
+                typeof(TUserAuthDetails).AddAttributes(
+                    new ReferencesAttribute(typeof(UserIdUserAuthDetailsIndex)),
+                    new CompositeKeyAttribute("UserAuthId", "Id"));
+            }
 
             Db.RegisterTable<TUserAuthDetails>();
 
-            typeof(UserAuthRole).AddAttributes(
-                new CompositeKeyAttribute("UserAuthId", "Id"));
+            if (!alreadyAddedAttributes)
+            {
+                typeof(UserAuthRole).AddAttributes(
+                    new CompositeKeyAttribute("UserAuthId", "Id"));
+            }
 
             Db.RegisterTable<UserAuthRole>();
 
-            typeof(ApiKey).AddAttributes(
-                new ReferencesAttribute(typeof(ApiKeyIdIndex)),
-                new CompositeKeyAttribute("UserAuthId", "Id"));
+            if (!alreadyAddedAttributes)
+            {
+                typeof(ApiKey).AddAttributes(
+                    new ReferencesAttribute(typeof(ApiKeyIdIndex)),
+                    new CompositeKeyAttribute("UserAuthId", "Id"));
+            }
 
             Db.RegisterTable<ApiKey>();
 
