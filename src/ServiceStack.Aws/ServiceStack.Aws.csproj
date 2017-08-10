@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard1.6;netstandard2.0</TargetFrameworks>
     <!--<TargetFrameworks>netstandard1.6</TargetFrameworks>-->
     <AssemblyName>ServiceStack.Aws</AssemblyName>
     <PackageId>ServiceStack.Aws</PackageId>
-    <PackageTargetFallback>$(PackageTargetFallback);portable-net451+win8</PackageTargetFallback>
-    <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
@@ -16,6 +15,10 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
+      <PackageTargetFallback>$(PackageTargetFallback);portable-net451+win8</PackageTargetFallback>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' != 'Debug' ">
@@ -55,6 +58,20 @@
     <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
     <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+
+    <Reference Include="..\..\lib\netstandard1.1\ServiceStack.Interfaces.dll" />
+    <Reference Include="..\..\lib\netstandard1.3\ServiceStack.Text.dll" />
+    <Reference Include="..\..\lib\netstandard1.3\ServiceStack.Common.dll" />
+    <Reference Include="..\..\lib\netstandard1.6\ServiceStack.Client.dll" />
+    <Reference Include="..\..\lib\netstandard1.6\ServiceStack.dll" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <DefineConstants>$(DefineConstants);NETSTANDARD1_6;NETSTANDARD2_0</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.3.0" />
 
     <Reference Include="..\..\lib\netstandard1.1\ServiceStack.Interfaces.dll" />
     <Reference Include="..\..\lib\netstandard1.3\ServiceStack.Text.dll" />
