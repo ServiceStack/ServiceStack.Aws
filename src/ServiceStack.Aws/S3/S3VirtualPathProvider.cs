@@ -50,7 +50,7 @@ namespace ServiceStack.Aws.S3
                     BucketName = BucketName,
                 });
 
-                return new S3VirtualFile(this, GetDirectory(GetDirPath(filePath))).Init(response);
+                return new S3VirtualFile(this, new S3VirtualDirectory(this, GetDirPath(filePath))).Init(response);
             }
             catch (AmazonS3Exception ex)
             {
@@ -63,12 +63,31 @@ namespace ServiceStack.Aws.S3
 
         public IVirtualDirectory GetDirectory(string dirPath)
         {
+            if (dirPath == null)
+                return null;
+            if (dirPath == "")
+                return RootDirectory;
+
+            var seekPath = dirPath[dirPath.Length - 1] != DirSep
+                ? dirPath + DirSep
+                : dirPath;
+
+            var response = AmazonS3.ListObjects(new ListObjectsRequest
+            {
+                BucketName = BucketName,
+                Prefix = seekPath,
+                MaxKeys = 1,
+            });
+
+            if (response.S3Objects.Count == 0)
+                return null;
+
             return new S3VirtualDirectory(this, dirPath);
         }
 
         public override bool DirectoryExists(string virtualPath)
         {
-            return GetDirectory(virtualPath).Files.Any();
+            return GetDirectory(virtualPath) != null;
         }
 
         public void WriteFile(string filePath, string contents)
@@ -154,7 +173,7 @@ namespace ServiceStack.Aws.S3
             {
                 var filePath = SanitizePath(file.Key);
 
-                yield return new S3VirtualFile(this, GetDirectory(GetDirPath(filePath)))
+                yield return new S3VirtualFile(this, new S3VirtualDirectory(this, GetDirPath(filePath)))
                 {
                     FilePath = filePath,
                     ContentLength = file.Size,

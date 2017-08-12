@@ -272,6 +272,9 @@ namespace ServiceStack.Aws.Tests.S3
             allFiles = pathProvider.GetAllFiles().Map(x => x.VirtualPath);
             Assert.That(allFiles, Is.EquivalentTo(allFilePaths));
 
+            Assert.That(pathProvider.DirectoryExists("a"));
+            Assert.That(!pathProvider.DirectoryExists("f"));
+
             pathProvider.DeleteFile("testfile.txt");
             pathProvider.DeleteFolder("a");
             pathProvider.DeleteFolder("e");
@@ -296,5 +299,6 @@ namespace ServiceStack.Aws.Tests.S3
             Assert.That(dirNames, Is.EquivalentTo(expectedDirPaths.Map(x =>
                 x.SplitOnLast('/').Last())));
         }
+
     }
 }
