@@ -17,8 +17,8 @@ namespace ServiceStack.Aws.S3
     {
         internal S3VirtualPathProvider PathProvider { get; private set; }
 
-        public S3VirtualDirectory(S3VirtualPathProvider pathProvider, string dirPath)
-            : base(pathProvider)
+        public S3VirtualDirectory(S3VirtualPathProvider pathProvider, string dirPath, S3VirtualDirectory parentDir)
+            : base(pathProvider, parentDir)
         {
             this.PathProvider = pathProvider;
             this.DirPath = dirPath;
@@ -91,7 +91,7 @@ namespace ServiceStack.Aws.S3
 
         protected override IVirtualDirectory GetDirectoryFromBackingDirectoryOrDefault(string directoryName)
         {
-            return new S3VirtualDirectory(PathProvider, PathProvider.SanitizePath(DirPath.CombineWith(directoryName)));
+            return new S3VirtualDirectory(PathProvider, PathProvider.SanitizePath(DirPath.CombineWith(directoryName)), this);
         }
 
         public void AddFile(string filePath, string contents)

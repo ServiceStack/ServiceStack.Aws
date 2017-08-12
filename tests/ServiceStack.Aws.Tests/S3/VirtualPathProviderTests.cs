@@ -1,13 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Threading;
 using Amazon.S3;
 using NUnit.Framework;
 using ServiceStack.IO;
 using ServiceStack.Testing;
-using ServiceStack.Text;
-using ServiceStack.VirtualPath;
 
 namespace ServiceStack.Aws.Tests.S3
 {
@@ -274,6 +271,10 @@ namespace ServiceStack.Aws.Tests.S3
 
             Assert.That(pathProvider.DirectoryExists("a"));
             Assert.That(!pathProvider.DirectoryExists("f"));
+            Assert.That(!pathProvider.GetDirectory("a/b/c").IsRoot);
+            Assert.That(!pathProvider.GetDirectory("a/b").IsRoot);
+            Assert.That(!pathProvider.GetDirectory("a").IsRoot);
+            Assert.That(pathProvider.GetDirectory("").IsRoot);
 
             pathProvider.DeleteFile("testfile.txt");
             pathProvider.DeleteFolder("a");
