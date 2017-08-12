@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using Amazon.S3;
 using NUnit.Framework;
-using ServiceStack.Aws.S3;
 using ServiceStack.IO;
 using ServiceStack.Testing;
 using ServiceStack.Text;
