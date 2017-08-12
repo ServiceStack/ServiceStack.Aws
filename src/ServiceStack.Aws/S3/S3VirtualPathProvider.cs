@@ -8,11 +8,10 @@ using System.Linq;
 using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
-using ServiceStack.Aws;
 using ServiceStack.IO;
 using ServiceStack.VirtualPath;
 
-namespace ServiceStack.IO
+namespace ServiceStack.Aws.S3
 {
     [Obsolete("Renamed to S3VirtualFiles")]
     public partial class S3VirtualPathProvider : AbstractVirtualPathProviderBase, IVirtualFiles

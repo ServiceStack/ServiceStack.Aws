@@ -6,11 +6,10 @@ using System.IO;
 using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
-using ServiceStack.Aws;
 using ServiceStack.IO;
 using ServiceStack.VirtualPath;
 
-namespace ServiceStack.IO
+namespace ServiceStack.Aws.S3
 {
     public class S3VirtualFile : AbstractVirtualFileBase
     {

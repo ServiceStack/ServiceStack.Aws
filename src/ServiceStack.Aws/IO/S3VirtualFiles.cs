@@ -1,4 +1,5 @@
 using Amazon.S3;
+using ServiceStack.Aws.S3;
 
 namespace ServiceStack.IO
 {
