@@ -41,6 +41,9 @@ namespace ServiceStack.Aws.S3
 
         public override IVirtualFile GetFile(string virtualPath)
         {
+            if (string.IsNullOrEmpty(virtualPath))
+                return null;
+
             var filePath = SanitizePath(virtualPath);
             try
             {
@@ -73,11 +76,13 @@ namespace ServiceStack.Aws.S3
                 : (S3VirtualDirectory)RootDirectory;
         }
 
-        public IVirtualDirectory GetDirectory(string dirPath)
+        public IVirtualDirectory GetDirectory(string virtualPath)
         {
-            if (dirPath == null)
+            if (virtualPath == null)
                 return null;
-            if (dirPath == "")
+
+            var dirPath = SanitizePath(virtualPath);
+            if (string.IsNullOrEmpty(dirPath))
                 return RootDirectory;
 
             var seekPath = dirPath[dirPath.Length - 1] != DirSep
@@ -100,6 +105,11 @@ namespace ServiceStack.Aws.S3
         public override bool DirectoryExists(string virtualPath)
         {
             return GetDirectory(virtualPath) != null;
+        }
+
+        public override bool FileExists(string virtualPath)
+        {
+            return GetFile(virtualPath) != null;
         }
 
         public void WriteFile(string filePath, string contents)
