@@ -121,7 +121,7 @@ namespace ServiceStack.Aws.Sqs
                     StartPolling();
                 }
             }
-#if !NETSTANDARD1_6            
+#if !NETSTANDARD2_0            
             catch(ThreadInterruptedException)
             {   // Expected exceptions from Kill()
                 log.Warn($"Received ThreadInterruptedException in Worker: {QueueName}");

@@ -68,7 +68,7 @@
     <Delete Files="@(NugetPackageFilesToDelete)" />
 
     <ItemGroup>
-      <AwsCoreFiles Include="$(SrcDir)/ServiceStack.Aws/bin/$(Configuration)/netstandard1.6/ServiceStack.Aws.*"></AwsCoreFiles>
+      <AwsCoreFiles Include="$(SrcDir)/ServiceStack.Aws/bin/$(Configuration)/netstandard2.0/ServiceStack.Aws.*"></AwsCoreFiles>
     </ItemGroup>
     
     <!-- .NET 4.5 -->
@@ -76,8 +76,8 @@
             Targets="Build"
             Properties="Version=$(PackageVersion);Configuration=$(Configuration)" />
       
-    <MakeDir Directories="$(NuGetPackageDir)/ServiceStack.Aws.Core/lib/netstandard1.6" Condition="!Exists('$(NuGetPackageDir)/ServiceStack.Aws.Core/lib/netstandard1.6')" />
-    <Copy SourceFiles="%(AwsCoreFiles.Identity)" DestinationFolder="$(NuGetPackageDir)/ServiceStack.Aws.Core/lib/netstandard1.6" />
+    <MakeDir Directories="$(NuGetPackageDir)/ServiceStack.Aws.Core/lib/netstandard2.0" Condition="!Exists('$(NuGetPackageDir)/ServiceStack.Aws.Core/lib/netstandard2.0')" />
+    <Copy SourceFiles="%(AwsCoreFiles.Identity)" DestinationFolder="$(NuGetPackageDir)/ServiceStack.Aws.Core/lib/netstandard2.0" />
 
     <Exec Command="&quot;$(NuGetPath)&quot; pack &quot;$(NuGetPackageDir)/ServiceStack.Aws.Core/servicestack.aws.core.nuspec&quot; -OutputDirectory &quot;$(NuGetPackageDir)&quot; -Version $(PackageVersion)"
           LogStandardErrorAsError="true" />
