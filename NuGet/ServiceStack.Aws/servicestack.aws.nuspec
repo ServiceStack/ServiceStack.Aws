@@ -2,7 +2,7 @@
 <package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>ServiceStack.Aws</id> 
-    <version>4.5.0</version>
+    <version>5.0.0</version>
     <authors>ServiceStack</authors> 
     <owners>ServiceStack</owners>
     <description>
@@ -15,7 +15,7 @@
     <language>en-US</language> 
     <copyright>ServiceStack 2016 and Contributors</copyright>
     <dependencies>
-        <dependency id="ServiceStack" version="4.5" />
+        <dependency id="ServiceStack" version="5.0" />
         <dependency id="AWSSDK.Core" version="3.3.17.6" />
         <dependency id="AWSSDK.DynamoDBv2" version="3.3.4.17" />
         <dependency id="AWSSDK.S3" version="3.3.10.2" />
