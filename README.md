@@ -55,7 +55,7 @@ This **ServiceStack.Aws** NuGet package includes implementations for the followi
 
   - **[PocoDynamo](https://github.com/ServiceStack/PocoDynamo)** - Declarative, code-first POCO client for DynamoDB with LINQ support
   - **[SqsMqServer](https://github.com/ServiceStack/ServiceStack.Aws#sqsmqserver)** - [MQ Server](http://docs.servicestack.net/messaging) for invoking ServiceStack Services via Amazon SQS MQ Service
-  - **[S3VirtualPathProvider](https://github.com/ServiceStack/ServiceStack.Aws#S3virtualpathprovider)** - A read/write [Virtual FileSystem](http://docs.servicestack.net/virtual-file-system) around Amazon's S3 Simple Storage Service
+  - **[S3VirtualFiles](https://github.com/ServiceStack/ServiceStack.Aws#s3virtualfiles)** - A read/write [Virtual FileSystem](http://docs.servicestack.net/virtual-file-system) around Amazon's S3 Simple Storage Service
   - **[DynamoDbAuthRepository](https://github.com/ServiceStack/ServiceStack.Aws#dynamodbauthrepository)** - A [UserAuth repository](http://docs.servicestack.net/authentication-and-authorization) storing UserAuth info in DynamoDB
   - **[DynamoDbAppSettings](https://github.com/ServiceStack/ServiceStack.Aws#dynamodbappsettings)** - An [AppSettings provider](http://docs.servicestack.net/appsettings) storing App configuration in DynamoDB
   - **[DynamoDbCacheClient](https://github.com/ServiceStack/ServiceStack.Aws#dynamodbcacheclient)** - A [Caching Provider](http://docs.servicestack.net/caching) for DynamoDB
@@ -109,7 +109,7 @@ is that all the content for the App is **not** contained within project as all i
 js, css, etc. are instead being served **directly from an S3 Bucket** :) 
 
 This is simply enabled by overriding `GetVirtualFileSources()` and adding the new 
-`S3VirtualPathProvider` to the list of file sources:
+`S3VirtualFiles` to the list of file sources:
 
 ```csharp
 public class AppHost : AppHostBase
@@ -118,7 +118,7 @@ public class AppHost : AppHostBase
     {
         //All Razor Views, Markdown Content, imgs, js, css, etc are served from an S3 Bucket
         var s3 = new AmazonS3Client(AwsConfig.AwsAccessKey, AwsConfig.AwsSecretKey, RegionEndpoint.USEast1);
-        VirtualFiles = new S3VirtualPathProvider(s3, AwsConfig.S3BucketName, this);
+        VirtualFiles = new S3VirtualFiles(s3, AwsConfig.S3BucketName, this);
     }
     
     public override List<IVirtualPathProvider> GetVirtualFileSources()
@@ -137,7 +137,7 @@ S3 VirtualFiles Provider:
 
 ```csharp
 var s3Client = new AmazonS3Client(AwsConfig.AwsAccessKey, AwsConfig.AwsSecretKey, RegionEndpoint.USEast1);
-var s3 = new S3VirtualPathProvider(s3Client, AwsConfig.S3BucketName, appHost);
+var s3 = new S3VirtualFiles(s3Client, AwsConfig.S3BucketName, appHost);
             
 var fs = new FileSystemVirtualPathProvider(appHost, "~/../RazorRockstars.WebHost".MapHostAbsolutePath());
 
@@ -228,7 +228,7 @@ Live Demos server that's running on a **m1.small** instance shared with 25 other
 
 [![](https://raw.githubusercontent.com/ServiceStack/Assets/master/img/aws/apps/screenshots/imgur.png)](http://awsapps.servicestack.net/imgur/)
 
-### S3VirtualPathProvider 
+### S3VirtualFiles 
 
 The backend 
 [ImageService.cs](https://github.com/ServiceStackApps/AwsApps/blob/master/src/AwsApps/imgur/ImageService.cs) 
@@ -240,7 +240,7 @@ we can have files written to an S3 Bucket instead:
 
 ```csharp
 var s3Client = new AmazonS3Client(AwsConfig.AwsAccessKey, AwsConfig.AwsSecretKey, RegionEndpoint.USEast1);
-VirtualFiles = new S3VirtualPathProvider(s3Client, AwsConfig.S3BucketName, this);
+VirtualFiles = new S3VirtualFiles(s3Client, AwsConfig.S3BucketName, this);
 ```
 
 If we comment out the above configuration any saved files are instead written to the local FileSystem (default).
