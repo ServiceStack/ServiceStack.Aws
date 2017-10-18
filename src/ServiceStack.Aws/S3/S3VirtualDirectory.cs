@@ -42,7 +42,7 @@ namespace ServiceStack.Aws.S3
 
         public override string VirtualPath => DirPath;
 
-        public override string Name => DirPath?.SplitOnLast(InMemoryVirtualPathProvider.DirSep).Last();
+        public override string Name => DirPath?.SplitOnLast(MemoryVirtualFiles.DirSep).Last();
 
         public override IVirtualFile GetFile(string virtualPath)
         {
