@@ -14,7 +14,7 @@ using ServiceStack.VirtualPath;
 namespace ServiceStack.Aws.S3
 {
     [Obsolete("Renamed to S3VirtualFiles")]
-    public partial class S3VirtualPathProvider : AbstractVirtualPathProviderBase, IVirtualFiles
+    public abstract partial class S3VirtualPathProvider : AbstractVirtualPathProviderBase, IVirtualFiles
     {
         public const int MultiObjectLimit = 1000;
 
