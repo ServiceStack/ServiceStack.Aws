@@ -21,10 +21,12 @@ namespace ServiceStack.Aws.Support
             }
         }
 
-        internal static void SleepBackOffMultiplier(this int i)
-        {
-            var nextTryMs = (2 ^ i) * 50;
-            Thread.Sleep(nextTryMs);
-        }
+        /// <summary>
+        /// Sleep using AWS's recommended Exponential BackOff with Full Jitter from:
+        /// https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+        /// </summary>
+        /// <param name="retriesAttempted"></param>
+        internal static void SleepBackOffMultiplier(this int retriesAttempted) => 
+            Thread.Sleep(ExecUtils.CalculateFullJitterBackOffDelay(retriesAttempted));
     }
 }
