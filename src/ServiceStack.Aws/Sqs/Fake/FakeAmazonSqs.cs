@@ -527,6 +527,16 @@ namespace ServiceStack.Aws.Sqs.Fake
             return ListQueues(request).AsTaskResult();
         }
 
+        public ListQueueTagsResponse ListQueueTags(ListQueueTagsRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ListQueueTagsResponse> ListQueueTagsAsync(ListQueueTagsRequest request, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public PurgeQueueResponse PurgeQueue(string queueUrl)
         {
             return PurgeQueue(new PurgeQueueRequest
@@ -777,6 +787,26 @@ namespace ServiceStack.Aws.Sqs.Fake
         public Task<SetQueueAttributesResponse> SetQueueAttributesAsync(SetQueueAttributesRequest request, CancellationToken token = default(CancellationToken))
         {
             return SetQueueAttributes(request).AsTaskResult();
+        }
+
+        public TagQueueResponse TagQueue(TagQueueRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<TagQueueResponse> TagQueueAsync(TagQueueRequest request, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
+        public UntagQueueResponse UntagQueue(UntagQueueRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<UntagQueueResponse> UntagQueueAsync(UntagQueueRequest request, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
         }
 
         public string AuthorizeS3ToSendMessage(string queueUrl, string bucket)

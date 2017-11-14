@@ -21,10 +21,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Core" Version="3.3.17.6" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.4.17" />
-    <PackageReference Include="AWSSDK.S3" Version="3.3.10.2" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.2.7" />
+    <PackageReference Include="AWSSDK.Core" Version="3.3.19" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.4.20" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.12.1" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.2" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.4.0" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
