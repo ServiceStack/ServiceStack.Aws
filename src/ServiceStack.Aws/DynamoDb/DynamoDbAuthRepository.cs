@@ -114,13 +114,9 @@ namespace ServiceStack.Aws.DynamoDb
 
             AssertNoExistingUser(newUser);
 
-            HostContext.Resolve<IHashProvider>().GetHashAndSaltString(password, out var hash, out var salt);
-
             Sanitize(newUser);
 
-            newUser.PasswordHash = hash;
-            newUser.Salt = salt;
-            newUser.DigestHa1Hash = new DigestAuthFunctions().CreateHa1(newUser.UserName, DigestAuthProvider.Realm, password);
+            newUser.PopulatePasswordHashes(password);
             newUser.CreatedDate = DateTime.UtcNow;
             newUser.ModifiedDate = newUser.CreatedDate;
 
