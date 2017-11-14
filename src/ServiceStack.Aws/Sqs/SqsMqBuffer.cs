@@ -98,9 +98,7 @@ namespace ServiceStack.Aws.Sqs
 
             while (result.Count < count)
             {
-                ChangeMessageVisibilityRequest request;
-
-                if (!cvBuffer.TryDequeue(out request))
+                if (!cvBuffer.TryDequeue(out var request))
                     return result.Values;
 
                 var hashId = request.ReceiptHandle.ToSha256HashString64();
@@ -172,9 +170,7 @@ namespace ServiceStack.Aws.Sqs
 
             while (results < count)
             {
-                SendMessageRequest request;
-
-                if (!sendBuffer.TryDequeue(out request))
+                if (!sendBuffer.TryDequeue(out var request))
                     yield break;
 
                 yield return new SendMessageBatchRequestEntry
@@ -242,9 +238,7 @@ namespace ServiceStack.Aws.Sqs
 
             while (result.Count < count)
             {
-                DeleteMessageRequest request;
-
-                if (!deleteBuffer.TryDequeue(out request))
+                if (!deleteBuffer.TryDequeue(out var request))
                     return result.Values;
 
                 var hashId = request.ReceiptHandle.ToSha256HashString64();
@@ -288,9 +282,7 @@ namespace ServiceStack.Aws.Sqs
             if (request == null)
                 return null;
 
-            Message toReturn = null;
-
-            if (receiveBuffer.Count > 0 && receiveBuffer.TryDequeue(out toReturn))
+            if (receiveBuffer.Count > 0 && receiveBuffer.TryDequeue(out var toReturn))
                 return toReturn;
 
             request.MaxNumberOfMessages = Math.Min(SqsQueueDefinition.MaxBatchReceiveItems, Math.Max(request.MaxNumberOfMessages, 1));

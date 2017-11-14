@@ -85,8 +85,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.IsTrue(sqsQueueManager.QueueExists(qd.QueueName));
 
             // Remove from the cache in the manager
-            SqsQueueDefinition removedQd;
-            Assert.IsTrue(sqsQueueManager.QueueNameMap.TryRemove(qd.QueueName, out removedQd));
+            Assert.IsTrue(sqsQueueManager.QueueNameMap.TryRemove(qd.QueueName, out var removedQd));
             Assert.IsTrue(ReferenceEquals(qd, removedQd));
 
             // Should still show exists without being forced
@@ -111,8 +110,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.AreEqual(qd.QueueUrl, url, "QueueUrl not equal");
 
             // Remove from the cache in the manager
-            SqsQueueDefinition removedQd;
-            Assert.IsTrue(sqsQueueManager.QueueNameMap.TryRemove(qd.QueueName, out removedQd));
+            Assert.IsTrue(sqsQueueManager.QueueNameMap.TryRemove(qd.QueueName, out var removedQd));
             Assert.IsTrue(ReferenceEquals(qd, removedQd));
 
             Assert.That(sqsQueueManager.GetQueueUrl(qd.QueueName), Is.Not.Null.Or.Empty);
@@ -164,8 +162,7 @@ namespace ServiceStack.Aws.Tests.Sqs
             Assert.IsTrue(ReferenceEquals(qd, returnedQd));
 
             // Remove from the cache in the manager
-            SqsQueueDefinition removedQd;
-            Assert.IsTrue(sqsQueueManager.QueueNameMap.TryRemove(qd.QueueName, out removedQd));
+            Assert.IsTrue(sqsQueueManager.QueueNameMap.TryRemove(qd.QueueName, out var removedQd));
             Assert.IsTrue(ReferenceEquals(qd, removedQd));
 
             var newQd = sqsQueueManager.GetQueueDefinition(qd.QueueName);
@@ -335,8 +332,7 @@ namespace ServiceStack.Aws.Tests.Sqs
 
             if (!SqsTestAssert.IsFakeClient)
             {   // List queue doesn't return newly created queues for a bit, so if this a "real", we skip this part
-                SqsQueueDefinition qd;
-                sqsQueueManager.QueueNameMap.TryRemove(emptyTempQueueNotCached.QueueName, out qd);
+                sqsQueueManager.QueueNameMap.TryRemove(emptyTempQueueNotCached.QueueName, out _);
             }
 
             var countOfQueuesRemoved = sqsQueueManager.RemoveEmptyTemporaryQueues(DateTime.UtcNow.AddDays(5).ToUnixTime());

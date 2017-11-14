@@ -114,8 +114,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             AssertNoExistingUser(newUser);
 
-            string salt, hash;
-            HostContext.Resolve<IHashProvider>().GetHashAndSaltString(password, out hash, out salt);
+            HostContext.Resolve<IHashProvider>().GetHashAndSaltString(password, out var hash, out var salt);
 
             Sanitize(newUser);
 

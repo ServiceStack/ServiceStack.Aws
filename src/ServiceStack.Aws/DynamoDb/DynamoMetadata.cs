@@ -184,17 +184,16 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var alias = type.FirstAttribute<AliasAttribute>();
             var props = GetTableProperties(type);
-            PropertyInfo hash, range;
-            Converters.GetHashAndRangeKeyFields(type, props, out hash, out range);
+            Converters.GetHashAndRangeKeyFields(type, props, out var hash, out var range);
 
             var provision = type.FirstAttribute<ProvisionedThroughputAttribute>();
 
             // If its a generic type, the type name will contain illegal characters (not accepted as DynamoDB table name)
             // so, remove the Tilde and make the type name unique to the runtime type of the generic
             string genericTypeNameAlias = null;
-            if (type.IsGenericType())
+            if (type.IsGenericType)
             {
-                var indexOfTilde = type.Name.IndexOf("`");
+                var indexOfTilde = type.Name.IndexOf("`", StringComparison.Ordinal);
                 indexOfTilde = indexOfTilde < 1 ? type.Name.Length - 1 : indexOfTilde;
                 genericTypeNameAlias = type.Name.Substring(0, indexOfTilde) + type.GetGenericArguments().Select(t => t.Name).Join();
             }
@@ -297,8 +296,7 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var indexProps = indexType.GetPublicProperties();
 
-            PropertyInfo indexHash, indexRange;
-            Converters.GetHashAndRangeKeyFields(indexType, indexProps, out indexHash, out indexRange);
+            Converters.GetHashAndRangeKeyFields(indexType, indexProps, out var indexHash, out var indexRange);
 
             var hashKey = metadata.GetField(indexHash.Name);
             if (hashKey == null)

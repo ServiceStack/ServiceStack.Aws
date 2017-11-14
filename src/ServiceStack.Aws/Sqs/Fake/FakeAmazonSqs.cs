@@ -23,9 +23,7 @@ namespace ServiceStack.Aws.Sqs.Fake
 
         private FakeSqsQueue GetQueue(string queueUrl)
         {
-            FakeSqsQueue q;
-
-            if (!queues.TryGetValue(queueUrl, out q))
+            if (!queues.TryGetValue(queueUrl, out var q))
             {
                 throw new QueueDoesNotExistException($"Queue does not exist for url [{queueUrl}]");
             }
@@ -392,9 +390,7 @@ namespace ServiceStack.Aws.Sqs.Fake
 
         public DeleteQueueResponse DeleteQueue(DeleteQueueRequest request)
         {
-            FakeSqsQueue q;
-
-            queues.TryRemove(request.QueueUrl, out q);
+            queues.TryRemove(request.QueueUrl, out _);
 
             return new DeleteQueueResponse();
         }
@@ -430,10 +426,8 @@ namespace ServiceStack.Aws.Sqs.Fake
                     { QueueAttributeName.ReceiveMessageWaitTimeSeconds, q.QueueDefinition.ReceiveWaitTime.ToString() },
                     { QueueAttributeName.CreatedTimestamp, q.QueueDefinition.CreatedTimestamp.ToString() },
                     { QueueAttributeName.ApproximateNumberOfMessages, q.Count.ToString() },
-                    { QueueAttributeName.QueueArn, q.QueueDefinition.QueueArn.ToString() },
-                    { QueueAttributeName.RedrivePolicy, q.QueueDefinition.RedrivePolicy == null
-                        ? null
-                        : q.QueueDefinition.RedrivePolicy.ToJson() }
+                    { QueueAttributeName.QueueArn, q.QueueDefinition.QueueArn },
+                    { QueueAttributeName.RedrivePolicy, q.QueueDefinition.RedrivePolicy?.ToJson() }
                 }
             };
         }

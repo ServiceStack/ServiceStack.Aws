@@ -177,8 +177,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var response = Exec(() => DynamoDb.BatchGetItem(request));
 
-            List<Dictionary<string, AttributeValue>> results;
-            if (response.Responses.TryGetValue(table.Name, out results))
+            if (response.Responses.TryGetValue(table.Name, out var results))
                 results.Each(x => to.Add(Converters.FromAttributeValues<T>(table, x)));
 
             var i = 0;

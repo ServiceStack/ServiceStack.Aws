@@ -59,10 +59,9 @@ namespace ServiceStack.Aws.DynamoDb
             var to = new HashSet<string>();
             foreach (Dictionary<string, AttributeValue> values in response.Items)
             {
-                AttributeValue attrId;
-                values.TryGetValue(fieldName, out attrId);
+                values.TryGetValue(fieldName, out var attrId);
 
-                if (attrId != null && attrId.S != null)
+                if (attrId?.S != null)
                     to.Add(attrId.S);
             }
             return to;

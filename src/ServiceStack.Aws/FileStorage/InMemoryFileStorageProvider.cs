@@ -70,8 +70,7 @@ namespace ServiceStack.Aws.FileStorage
         
         public override void Delete(FileSystemObject fso)
         {
-            MemoryFileMeta map;
-            fileMap.TryRemove(fso.FullName, out map);
+            fileMap.TryRemove(fso.FullName, out _);
         }
 
         public override void Delete(IEnumerable<FileSystemObject> fsos)
@@ -166,16 +165,12 @@ namespace ServiceStack.Aws.FileStorage
             if (targetProvider == null)
                 return true;
 
-            var provider = targetProvider as InMemoryFileStorageProvider;
-
-            return provider != null;
+            return targetProvider is InMemoryFileStorageProvider provider;
         }
 
         private MemoryFileMeta TryGetMap(string key)
         {
-            MemoryFileMeta item;
-
-            return fileMap.TryGetValue(key, out item)
+            return fileMap.TryGetValue(key, out var item)
                 ? item
                 : null;
         }

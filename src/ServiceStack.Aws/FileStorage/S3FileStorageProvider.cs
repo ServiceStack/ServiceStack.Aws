@@ -15,10 +15,7 @@ namespace ServiceStack.Aws.FileStorage
 
         public S3FileStorageProvider(S3ConnectionFactory s3ConnFactory)
         {
-            if (s3ConnFactory == null)
-                throw new ArgumentNullException(nameof(s3ConnFactory));
-
-            s3ConnectionFactory = s3ConnFactory;
+            s3ConnectionFactory = s3ConnFactory ?? throw new ArgumentNullException(nameof(s3ConnFactory));
         }
 
         public void Dispose()

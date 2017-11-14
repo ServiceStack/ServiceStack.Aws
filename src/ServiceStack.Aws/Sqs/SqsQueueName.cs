@@ -9,9 +9,7 @@ namespace ServiceStack.Aws.Sqs
 
         public static SqsQueueName GetSqsQueueName(string originalQueueName)
         {
-            SqsQueueName sqn;
-
-            if (queueNameMap.TryGetValue(originalQueueName, out sqn))
+            if (queueNameMap.TryGetValue(originalQueueName, out var sqn))
                 return sqn;
 
             sqn = new SqsQueueName(originalQueueName);
@@ -47,9 +45,7 @@ namespace ServiceStack.Aws.Sqs
             if (ReferenceEquals(this, obj))
                 return true;
 
-            var asQueueName = obj as SqsQueueName;
-
-            return asQueueName != null && Equals((SqsQueueName)obj);
+            return obj is SqsQueueName asQueueName && Equals(asQueueName);
         }
 
         public override int GetHashCode()

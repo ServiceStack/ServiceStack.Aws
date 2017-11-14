@@ -289,8 +289,7 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 if (item == null) continue;
 
-                var arr = item as IEnumerable;
-                if (arr != null && !(item is string))
+                if (item is IEnumerable arr && !(item is string))
                 {
                     ret.AddRange(arr.Cast<object>());
                 }
@@ -407,8 +406,7 @@ namespace ServiceStack.Aws.DynamoDb
             var modelType = m.Expression.Type;
             if (m.Expression.NodeType == ExpressionType.Convert)
             {
-                var unaryExpr = m.Expression as UnaryExpression;
-                if (unaryExpr != null)
+                if (m.Expression is UnaryExpression unaryExpr)
                 {
                     modelType = unaryExpr.Operand.Type;
                 }
@@ -422,7 +420,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             var memberName = GetMemberName(m.Member.Name);
 
-            if (propertyInfo != null && propertyInfo.PropertyType.IsEnum())
+            if (propertyInfo != null && propertyInfo.PropertyType.IsEnum)
                 return new EnumMemberAccess(memberName, propertyInfo.PropertyType);
 
             return new PartialString(memberName);
@@ -547,10 +545,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (VisitedExpressionIsTable || (originalRight is DateTimeOffset))
                 return;
 
-            var leftEnum = originalLeft as EnumMemberAccess;
-            var rightEnum = originalRight as EnumMemberAccess;
-
-            if (leftEnum != null && rightEnum != null)
+            if (originalLeft is EnumMemberAccess leftEnum && originalRight is EnumMemberAccess rightEnum)
                 return;
 
             if (operand == "AND" || operand == "OR" || operand == "is" || operand == "is not")
@@ -568,8 +563,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         protected void ConvertToPlaceholderAndParameter(ref object right)
         {
-            var partialString = right as PartialString;
-            if (partialString != null && partialString.Text == "null")
+            if (right is PartialString partialString && partialString.Text == "null")
             {
                 right = GetNullParam();
             }
@@ -724,7 +718,7 @@ namespace ServiceStack.Aws.DynamoDb
         public EnumMemberAccess(string text, Type enumType)
             : base(text)
         {
-            if (!enumType.IsEnum())
+            if (!enumType.IsEnum)
                 throw new ArgumentException("Type not valid", nameof(enumType));
 
             EnumType = enumType;

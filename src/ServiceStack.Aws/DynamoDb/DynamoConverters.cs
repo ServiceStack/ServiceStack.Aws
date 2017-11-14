@@ -83,12 +83,10 @@ namespace ServiceStack.Aws.DynamoDb
             if (to != null)
                 return to;
 
-            var mapValue = value as Dictionary<string, AttributeValue>;
-            if (mapValue != null)
+            if (value is Dictionary<string, AttributeValue> mapValue)
                 return FromMapAttributeValue(mapValue, type);
 
-            var listValue = value as List<AttributeValue>;
-            if (listValue != null)
+            if (value is List<AttributeValue> listValue)
                 return FromListAttributeValue(listValue, type);
 
             return value.ConvertTo(type);
@@ -301,9 +299,7 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 case DynamoType.String:
                     var str = value as string 
-                        ?? (value is DateTimeOffset
-                            ? ((DateTimeOffset)value).ToString(CultureInfo.InvariantCulture)
-                            : value.ToString());
+                        ?? ((value as DateTimeOffset?)?.ToString(CultureInfo.InvariantCulture) ?? value.ToString());
                     return str == "" //DynamoDB throws on String.Empty
                         ? new AttributeValue { NULL = true } 
                         : new AttributeValue { S = str };
@@ -312,8 +308,8 @@ namespace ServiceStack.Aws.DynamoDb
                 case DynamoType.Bool:
                     return new AttributeValue { BOOL = (bool)value };
                 case DynamoType.Binary:
-                    return value is MemoryStream
-                        ? new AttributeValue { B = (MemoryStream)value }
+                    return value is MemoryStream stream
+                        ? new AttributeValue { B = stream }
                         : value is Stream
                             ? new AttributeValue { B = new MemoryStream(((Stream)value).ReadFully()) }
                             : new AttributeValue { B = new MemoryStream((byte[])value) };
@@ -406,8 +402,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             foreach (var field in metaType.Fields)
             {
-                AttributeValue attrValue;
-                if (!map.TryGetValue(field.Name, out attrValue))
+                if (!map.TryGetValue(field.Name, out var attrValue))
                     continue;
 
                 from[field.Name] = FromAttributeValue(attrValue, field.Type);
@@ -486,10 +481,9 @@ namespace ServiceStack.Aws.DynamoDb
         {
             type = Nullable.GetUnderlyingType(type) ?? type;
 
-            IAttributeValueConverter valueConverter;
-            if (!ValueConverters.TryGetValue(type, out valueConverter))
+            if (!ValueConverters.TryGetValue(type, out var valueConverter))
             {
-                if (type.IsEnum())
+                if (type.IsEnum)
                     return EnumConverter;
             }
             return valueConverter;

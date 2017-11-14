@@ -40,9 +40,7 @@ namespace ServiceStack.Aws.Sqs
 
         private SqsQueueName GetSqsQueueName(string queueName)
         {
-            SqsQueueDefinition qd;
-
-            return queueNameMap.TryGetValue(queueName, out qd)
+            return queueNameMap.TryGetValue(queueName, out var qd)
                 ? qd.SqsQueueName
                 : SqsQueueNames.GetSqsQueueName(queueName);
         }
@@ -86,9 +84,7 @@ namespace ServiceStack.Aws.Sqs
 
         private string GetQueueUrl(SqsQueueName queueName, bool forceRecheck = false)
         {
-            SqsQueueDefinition qd = null;
-
-            if (!forceRecheck && queueNameMap.TryGetValue(queueName.QueueName, out qd))
+            if (!forceRecheck && queueNameMap.TryGetValue(queueName.QueueName, out var qd))
             {
                 if (!string.IsNullOrEmpty(qd.QueueUrl))
                     return qd.QueueUrl;
@@ -107,9 +103,7 @@ namespace ServiceStack.Aws.Sqs
 
         private SqsQueueDefinition GetQueueDefinition(SqsQueueName queueName, bool forceRecheck = false)
         {
-            SqsQueueDefinition qd;
-
-            if (!forceRecheck && queueNameMap.TryGetValue(queueName.QueueName, out qd))
+            if (!forceRecheck && queueNameMap.TryGetValue(queueName.QueueName, out var qd))
                 return qd;
 
             var queueUrl = GetQueueUrl(queueName);
@@ -141,9 +135,7 @@ namespace ServiceStack.Aws.Sqs
         public SqsQueueDefinition GetOrCreate(string queueName, int? visibilityTimeoutSeconds = null,
                                               int? receiveWaitTimeSeconds = null, bool? disasbleBuffering = null)
         {
-            SqsQueueDefinition qd;
-
-            if (QueueExists(queueName) && queueNameMap.TryGetValue(queueName, out qd))
+            if (QueueExists(queueName) && queueNameMap.TryGetValue(queueName, out var qd))
                 return qd;
 
             qd = CreateQueue(GetSqsQueueName(queueName), visibilityTimeoutSeconds,
@@ -183,8 +175,7 @@ namespace ServiceStack.Aws.Sqs
 
             var response = SqsClient.DeleteQueue(request);
 
-            SqsQueueDefinition qd;
-            queueNameMap.TryRemove(queueName.QueueName, out qd);
+            queueNameMap.TryRemove(queueName.QueueName, out _);
         }
 
         public SqsQueueDefinition CreateQueue(string queueName, SqsMqWorkerInfo info, string redriveArn = null)

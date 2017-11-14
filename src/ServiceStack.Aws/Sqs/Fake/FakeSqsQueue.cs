@@ -19,13 +19,11 @@ namespace ServiceStack.Aws.Sqs.Fake
 
         private FakeSqsQueueItem GetInFlightItem(string receiptHandle)
         {
-            FakeSqsQueueItem item;
-
             // Certainly plenty of room here for race-conditions in terms of multiple threads getting the same
             // item and dealing with it, but since this is a fake service for testing, I'm not handling those
             // kinds of things at the moment...
 
-            if (!inFlighItems.TryGetValue(receiptHandle, out item))
+            if (!inFlighItems.TryGetValue(receiptHandle, out var item))
             {
                 throw new ReceiptHandleIsInvalidException($"Handle [{receiptHandle}] does not exist");
             }
@@ -79,9 +77,7 @@ namespace ServiceStack.Aws.Sqs.Fake
 
         private void RequeueInFlightMessage(string receiptHandle, bool force = false)
         {
-            FakeSqsQueueItem item;
-
-            if (!inFlighItems.TryRemove(receiptHandle, out item))
+            if (!inFlighItems.TryRemove(receiptHandle, out var item))
             {
                 return;
             }
@@ -137,9 +133,7 @@ namespace ServiceStack.Aws.Sqs.Fake
             var timeoutAt = DateTime.UtcNow.AddSeconds(request.WaitTimeSeconds).ToUnixTime();
             do
             {
-                FakeSqsQueueItem qi;
-
-                foundItem = qItems.TryDequeue(out qi);
+                foundItem = qItems.TryDequeue(out var qi);
 
                 if (!foundItem)
                 {
@@ -185,9 +179,7 @@ namespace ServiceStack.Aws.Sqs.Fake
         {
             while (qItems.Count > 0)
             {
-                FakeSqsQueueItem qi;
-
-                while (qItems.TryDequeue(out qi))
+                while (qItems.TryDequeue(out _))
                 {
                     continue;
                 }

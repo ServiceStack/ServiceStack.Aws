@@ -48,10 +48,8 @@ namespace ServiceStack.Aws.DynamoDb
 
         public PocoDynamo(IAmazonDynamoDB dynamoDb)
         {
-            if (dynamoDb == null)
-                throw new ArgumentNullException("dynamoDb");
+            this.DynamoDb = dynamoDb ?? throw new ArgumentNullException(nameof(dynamoDb));
 
-            this.DynamoDb = dynamoDb;
             this.Sequences = new DynamoDbSequenceSource(this);
             this.Converters = DynamoMetadata.Converters;
             PollTableStatus = TimeSpan.FromSeconds(2);
@@ -132,8 +130,7 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 try
                 {
-                    Table awsTable;
-                    Table.TryLoadTable(DynamoDb, table.Name, out awsTable);
+                    Table.TryLoadTable(DynamoDb, table.Name, out var awsTable);
                     return awsTable;
                 }
                 catch (ResourceNotFoundException)

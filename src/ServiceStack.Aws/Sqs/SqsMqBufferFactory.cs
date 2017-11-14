@@ -71,9 +71,7 @@ namespace ServiceStack.Aws.Sqs
         {
             var queueName = queueDefinition.QueueName;
 
-            ISqsMqBuffer buffer;
-
-            if (queueNameBuffers.TryGetValue(queueName, out buffer))
+            if (queueNameBuffers.TryGetValue(queueName, out var buffer))
                 return buffer;
 
             buffer = queueDefinition.DisableBuffering
