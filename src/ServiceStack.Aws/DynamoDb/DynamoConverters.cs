@@ -304,7 +304,12 @@ namespace ServiceStack.Aws.DynamoDb
                         ? new AttributeValue { NULL = true } 
                         : new AttributeValue { S = str };
                 case DynamoType.Number:
-                    return new AttributeValue { N = DynamicNumber.GetNumber(value.GetType()).ToString(value) };
+                    return new AttributeValue
+                    {
+                        N = value is string numStr
+                            ? numStr
+                            : DynamicNumber.GetNumber(value.GetType()).ToString(value)
+                    };
                 case DynamoType.Bool:
                     return new AttributeValue { BOOL = (bool)value };
                 case DynamoType.Binary:
