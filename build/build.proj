@@ -85,5 +85,12 @@
     <Exec Command="&quot;$(NuGetPath)&quot; pack &quot;$(NuGetPackageDir)/ServiceStack.Aws/servicestack.aws.nuspec&quot; -OutputDirectory &quot;$(NuGetPackageDir)&quot; -Version $(PackageVersion) -Symbols"
             LogStandardErrorAsError="true" />
 
+    <!-- ServiceStack.Aws.Core -->
+    <MakeDir Directories="$(NuGetPackageDir)/ServiceStack.Aws.Core/lib/netstandard2.0" Condition="!Exists('$(NuGetPackageDir)/ServiceStack.Aws.Core/lib/netstandard2.0')" />
+    <Copy SourceFiles="%(AwsCoreFiles.Identity)" DestinationFolder="$(NuGetPackageDir)/ServiceStack.Aws.Core/lib/netstandard2.0" />
+
+    <Exec Command="&quot;$(NuGetPath)&quot; pack &quot;$(NuGetPackageDir)/ServiceStack.Aws.Core/servicestack.aws.core.nuspec&quot; -OutputDirectory &quot;$(NuGetPackageDir)&quot; -Version $(PackageVersion) -Symbols"
+          LogStandardErrorAsError="true" />
+
   </Target>
 </Project>
