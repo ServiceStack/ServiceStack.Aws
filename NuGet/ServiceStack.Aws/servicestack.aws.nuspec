@@ -16,17 +16,17 @@
     <copyright>ServiceStack and contributors</copyright>
     <dependencies>
       <group targetFramework="net45">
-        <dependency id="AWSSDK.Core" version="[3.3.21, )" />
+        <dependency id="AWSSDK.Core" version="[3.3.21.6, )" />
         <dependency id="AWSSDK.DynamoDBv2" version="[3.3.5, )" />
-        <dependency id="AWSSDK.S3" version="[3.3.15, )" />
+        <dependency id="AWSSDK.S3" version="[3.3.16.2, )" />
         <dependency id="AWSSDK.SQS" version="[3.3.3.2, )" />
         <dependency id="ServiceStack" version="5.0" />
       </group>
       <group targetFramework=".netstandard2.0">
-        <dependency id="System.ServiceModel.Primitives" version="[4.3.0, )" />
-        <dependency id="AWSSDK.Core" version="[3.3.21, )" />
+        <dependency id="System.ServiceModel.Primitives" version="[4.4.0, )" />
+        <dependency id="AWSSDK.Core" version="[3.3.21.6, )" />
         <dependency id="AWSSDK.DynamoDBv2" version="[3.3.5, )" />
-        <dependency id="AWSSDK.S3" version="[3.3.15, )" />
+        <dependency id="AWSSDK.S3" version="[3.3.16.2, )" />
         <dependency id="AWSSDK.SQS" version="[3.3.3.2, )" />
         <dependency id="ServiceStack" version="5.0" />
       </group>
