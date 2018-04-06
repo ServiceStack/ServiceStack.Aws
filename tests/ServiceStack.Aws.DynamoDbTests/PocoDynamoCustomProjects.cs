@@ -3,6 +3,8 @@ using System.Linq;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
 using ServiceStack.Aws.DynamoDbTests.Shared;
+using ServiceStack.DataAnnotations;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDbTests
 {
@@ -28,5 +30,23 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(results.All(x => x.Age == null));
             Assert.That(results.Map(x => x.Name), Is.EquivalentTo(new[]{ "John", "Jill" }));
         }
+
+        public class ReservedWords
+        {
+            [PrimaryKey]
+            public string Path { get; set; }
+        }
+        
+        [Test]
+        public void Does_include_aliases_for_queries_using_reserved_words()
+        {
+            var db = CreatePocoDynamo();
+            db.DeleteAllTables(TimeSpan.FromMinutes(1));
+            db.RegisterTable<ReservedWords>();
+            db.InitSchema();
+
+            var results = db.FromScan<ReservedWords>(f => f.Path.StartsWith("foo")).Exec().ToList();
+        }
+
     }
 }

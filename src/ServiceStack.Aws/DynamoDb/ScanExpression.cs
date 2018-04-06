@@ -122,7 +122,9 @@ namespace ServiceStack.Aws.DynamoDb
             return this;
         }
 
-        public ScanExpression<T> Filter(string filterExpression, Dictionary<string, object> args = null)
+        public ScanExpression<T> Filter(PocoDynamoExpression q) => Filter(q.FilterExpression, q.Params, q.Aliases);
+        
+        public ScanExpression<T> Filter(string filterExpression, Dictionary<string, object> args = null, Dictionary<string, string> aliases = null)
         {
             AddFilterExpression(filterExpression);
 
@@ -130,6 +132,11 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 Db.ToExpressionAttributeValues(args).Each(x =>
                     this.ExpressionAttributeValues[x.Key] = x.Value);
+            }
+
+            if (aliases != null)
+            {
+                this.ExpressionAttributeNames = aliases;
             }
 
             return this;
@@ -143,7 +150,7 @@ namespace ServiceStack.Aws.DynamoDb
         public ScanExpression<T> Filter(Expression<Func<T, bool>> filterExpression)
         {
             var q = PocoDynamoExpression.Create(typeof(T), filterExpression, paramPrefix: "p");
-            return Filter(q.FilterExpression, q.Params);
+            return Filter(q);
         }
         
         public ScanExpression<T> PagingLimit(int limit)
