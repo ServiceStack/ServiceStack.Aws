@@ -54,7 +54,10 @@ namespace ServiceStack.Aws.DynamoDb
             }
             if (aliases != null)
             {
-                this.ExpressionAttributeNames = aliases;
+                foreach (var entry in aliases)
+                {
+                    this.ExpressionAttributeNames[entry.Key] = entry.Value;
+                }
             }
 
             return this;
