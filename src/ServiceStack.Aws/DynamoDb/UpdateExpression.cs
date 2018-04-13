@@ -40,10 +40,10 @@ namespace ServiceStack.Aws.DynamoDb
         public UpdateExpression<T> Condition(Expression<Func<T, bool>> conditionExpression)
         {
             var q = PocoDynamoExpression.Create(typeof(T), conditionExpression, paramPrefix: "p");
-            return Condition(q.FilterExpression, q.Params);
+            return Condition(q.FilterExpression, q.Params, q.Aliases);
         }
 
-        public UpdateExpression<T> Condition(string conditionExpression, Dictionary<string, object> args = null)
+        public UpdateExpression<T> Condition(string conditionExpression, Dictionary<string, object> args = null, Dictionary<string, string> aliases = null)
         {
             AddConditionExpression(conditionExpression);
 
@@ -51,6 +51,10 @@ namespace ServiceStack.Aws.DynamoDb
             {
                 Db.ToExpressionAttributeValues(args).Each(x =>
                     this.ExpressionAttributeValues[x.Key] = x.Value);
+            }
+            if (aliases != null)
+            {
+                this.ExpressionAttributeNames = aliases;
             }
 
             return this;

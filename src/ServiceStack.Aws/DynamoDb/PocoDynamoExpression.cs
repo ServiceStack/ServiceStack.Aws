@@ -339,10 +339,13 @@ namespace ServiceStack.Aws.DynamoDb
             var wildcardArg = args.Count > 0 ? args[0].ToString() : "";
             switch (m.Method.Name)
             {
-                case "StartsWith":
+                case nameof(string.Equals):
+                    statement = $"{quotedColName} = {GetValueAsParam(wildcardArg)}";
+                    break;
+                case nameof(string.StartsWith):
                     statement = $"begins_with({quotedColName}, {GetValueAsParam(wildcardArg)})";
                     break;
-                case "Contains":
+                case nameof(string.Contains):
                     statement = $"contains({quotedColName}, {GetValueAsParam(wildcardArg)})";
                     break;
                 default:

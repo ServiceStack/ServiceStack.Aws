@@ -47,6 +47,58 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var results = db.FromScan<ReservedWords>(f => f.Path.StartsWith("foo")).Exec().ToList();
         }
+        
+        public class FilePathIndex : ILocalIndex<File>
+        {
+            public Guid Account { get; set; }
+            public string S3Location { get; set; }
+            [Index]
+            public string Path { get; set; }
+            public DateTime ModifiedUtc { get; set; }
+        }
+
+        [References(typeof(FilePathIndex))]
+        [CompositeKey("Account", "S3Location")]
+        public class File
+        {
+            public Guid Account { get; set; }
+            public string S3Location { get; set; }
+
+            public string Path { get; set; }
+            public DateTime ModifiedUtc { get; set; }
+        }
+         
+        [Test]
+        public void Can_query_reserved_word_using_Equals_method()
+        {
+            var db = CreatePocoDynamo();
+            db.DeleteAllTables(TimeSpan.FromMinutes(1));
+            db.RegisterTable<File>();
+            db.InitSchema();
+
+            var existingFile = db.FromQueryIndex<FilePathIndex>(f => f.Account == Guid.NewGuid() && f.Path.Equals("/the/path")).Exec().ToList();
+        }
+       
+        [Test]
+        public void Can_update_with_Reserved_word()
+        {
+            var db = CreatePocoDynamo();
+            db.DeleteAllTables(TimeSpan.FromMinutes(1));
+            db.RegisterTable<File>();
+            db.InitSchema();
+
+            var request = new File {Account = Guid.NewGuid(), S3Location = "S3", Path = "/the/path"};
+            db.PutItem(request);
+            
+            var updateFile = db.UpdateExpression<File>(request.Account, request.S3Location)
+                .Set(() => new File
+                {
+                    ModifiedUtc = DateTime.UtcNow
+                })
+                .Condition(f => f.Path.StartsWith("/the/path"));
+
+            db.UpdateItem(updateFile);
+        }
 
     }
 }
