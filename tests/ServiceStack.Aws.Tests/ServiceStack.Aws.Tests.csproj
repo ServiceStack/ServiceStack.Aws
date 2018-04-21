@@ -19,10 +19,10 @@
 
   <ItemGroup>
     <PackageReference Include="NUnitLite" Version="3.9.0" />
-    <PackageReference Include="AWSSDK.Core" Version="3.3.21.6" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.5" />
-    <PackageReference Include="AWSSDK.S3" Version="3.3.16.2" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.2" />
+    <PackageReference Include="AWSSDK.Core" Version="3.3.22" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.7.2" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.18.1" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.6" />
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
     <ProjectReference Include="..\..\src\ServiceStack.Aws\ServiceStack.Aws.csproj" />
   </ItemGroup>
