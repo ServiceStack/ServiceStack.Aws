@@ -196,6 +196,7 @@ namespace ServiceStack.Aws.Tests.S3
                 "a/b/c/testfile-abc2.txt",
                 "a/d/testfile-ad1.txt",
                 "e/testfile-e1.txt",
+                "a/b/c/x/y/z/testfile-abcxyz1.txt",
             };
 
             allFilePaths.Each(x => pathProvider.WriteFile(x, x.SplitOnLast('.').First().SplitOnLast('/').Last()));
@@ -257,9 +258,12 @@ namespace ServiceStack.Aws.Tests.S3
             Assert.That(pathProvider.GetDirectory("a/b").GetFile("c/testfile-abc1.txt").ReadAllText(), Is.EqualTo("testfile-abc1"));
             Assert.That(pathProvider.GetDirectory("a").GetDirectory("b").GetDirectory("c").GetFile("testfile-abc1.txt").ReadAllText(), Is.EqualTo("testfile-abc1"));
 
-            Assert.That(pathProvider.GetDirectory("a/b/c").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a/b").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b/c/x/y/z").GetAllMatchingFiles("testfile-abcxyz1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b/c/x/y").GetAllMatchingFiles("testfile-abcxyz1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b/c/x").GetAllMatchingFiles("testfile-abcxyz1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b/c").GetAllMatchingFiles("testfile-abcxyz1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b").GetAllMatchingFiles("testfile-abcxyz1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a").GetAllMatchingFiles("testfile-abcxyz1.txt").Count(), Is.EqualTo(1));
             
             var dirs = pathProvider.RootDirectory.Directories.Map(x => x.VirtualPath);
             Assert.That(dirs, Is.EquivalentTo(new[] { "a", "e" }));
