@@ -261,6 +261,10 @@ namespace ServiceStack.Aws.Tests.S3
             Assert.That(pathProvider.GetDirectory("a/b").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
             Assert.That(pathProvider.GetDirectory("a").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
 
+            Assert.That(pathProvider.GetDirectory("a/b/c").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
+            
             var dirs = pathProvider.RootDirectory.Directories.Map(x => x.VirtualPath);
             Assert.That(dirs, Is.EquivalentTo(new[] { "a", "e" }));
 
