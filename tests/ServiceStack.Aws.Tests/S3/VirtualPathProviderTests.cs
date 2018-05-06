@@ -196,7 +196,6 @@ namespace ServiceStack.Aws.Tests.S3
                 "a/b/c/testfile-abc2.txt",
                 "a/d/testfile-ad1.txt",
                 "e/testfile-e1.txt",
-                "a/b/c/d/e/f/g/testfile-abcdefg1.txt",
             };
 
             allFilePaths.Each(x => pathProvider.WriteFile(x, x.SplitOnLast('.').First().SplitOnLast('/').Last()));
@@ -258,18 +257,6 @@ namespace ServiceStack.Aws.Tests.S3
             Assert.That(pathProvider.GetDirectory("a/b").GetFile("c/testfile-abc1.txt").ReadAllText(), Is.EqualTo("testfile-abc1"));
             Assert.That(pathProvider.GetDirectory("a").GetDirectory("b").GetDirectory("c").GetFile("testfile-abc1.txt").ReadAllText(), Is.EqualTo("testfile-abc1"));
             
-            Assert.That(pathProvider.GetDirectory("a/b/c").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a/b").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
-
-            Assert.That(pathProvider.GetDirectory("a/b/c/d/e/f/g").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a/b/c/d/e/f").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a/b/c/d/e").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a/b/c/d").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a/b/c").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a/b").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
-            Assert.That(pathProvider.GetDirectory("a").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
-            
             var dirs = pathProvider.RootDirectory.Directories.Map(x => x.VirtualPath);
             Assert.That(dirs, Is.EquivalentTo(new[] { "a", "e" }));
 
@@ -294,6 +281,31 @@ namespace ServiceStack.Aws.Tests.S3
             pathProvider.DeleteFolder("e");
 
             Assert.That(pathProvider.GetAllFiles().ToList().Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Can_GetAllMatchingFiles_in_nested_directories()
+        {
+            var pathProvider = GetPathProvider();
+
+            var allFilePaths = new[] {
+                "a/b/c/testfile-abc1.txt",
+                "a/b/c/d/e/f/g/testfile-abcdefg1.txt",
+            };
+
+            allFilePaths.Each(x => pathProvider.WriteFile(x, x.SplitOnLast('.').First().SplitOnLast('/').Last()));
+            
+            Assert.That(pathProvider.GetDirectory("a/b/c").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a").GetAllMatchingFiles("testfile-abc1.txt").Count(), Is.EqualTo(1));
+
+            Assert.That(pathProvider.GetDirectory("a/b/c/d/e/f/g").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b/c/d/e/f").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b/c/d/e").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b/c/d").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b/c").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a/b").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
+            Assert.That(pathProvider.GetDirectory("a").GetAllMatchingFiles("testfile-abcdefg1.txt").Count(), Is.EqualTo(1));
         }
 
         public void AssertContents(IVirtualDirectory dir,

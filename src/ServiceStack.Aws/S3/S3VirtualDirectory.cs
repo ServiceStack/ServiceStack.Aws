@@ -120,5 +120,21 @@ namespace ServiceStack.Aws.S3
                 ? filePath
                 : (filePath[0] == DirSep ? filePath.Substring(1) : filePath);
         }
+        
+        public override IEnumerable<IVirtualFile> GetAllMatchingFiles(string globPattern, int maxDepth = int.MaxValue)
+        {
+            if (IsRoot)
+            {
+                return PathProvider.EnumerateFiles().Where(x => 
+                    (x.DirPath == null || x.DirPath.CountOccurrencesOf('/') < maxDepth-1)
+                    && x.Name.Glob(globPattern));
+            }
+            
+            return PathProvider.EnumerateFiles().Where(x => 
+                x.DirPath != null
+                && x.DirPath.CountOccurrencesOf('/') < maxDepth-1
+                && x.DirPath.StartsWith(DirPath)
+                && x.Name.Glob(globPattern));
+        }
     }
 }
