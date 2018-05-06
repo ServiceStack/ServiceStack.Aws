@@ -130,7 +130,7 @@ namespace ServiceStack.Aws.S3
                     && x.Name.Glob(globPattern));
             }
             
-            return PathProvider.EnumerateFiles().Where(x => 
+            return PathProvider.EnumerateFiles(DirPath).Where(x => 
                 x.DirPath != null
                 && x.DirPath.CountOccurrencesOf('/') < maxDepth-1
                 && x.DirPath.StartsWith(DirPath)
