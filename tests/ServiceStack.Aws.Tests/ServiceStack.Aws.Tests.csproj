@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
-    <!--<TargetFrameworks>netcoreapp1.1</TargetFrameworks>-->
+    <TargetFrameworks>net46;netcoreapp2.1</TargetFrameworks>
     <DebugType>portable</DebugType>
     <AssemblyName>ServiceStack.Aws.Tests</AssemblyName>
     <OutputType>Library</OutputType>
@@ -16,9 +14,10 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="NUnitLite" Version="3.9.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+    <PackageReference Include="NUnit" Version="3.10.1" />
     <PackageReference Include="AWSSDK.Core" Version="3.3.22" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.7.2" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.18.1" />
@@ -26,11 +25,9 @@
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
     <ProjectReference Include="..\..\src\ServiceStack.Aws\ServiceStack.Aws.csproj" />
   </ItemGroup>
-
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <DefineConstants>$(DefineConstants);NET45</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <Reference Include="System.Threading" />
     <Reference Include="System.Threading.Tasks" />
@@ -39,27 +36,22 @@
     <Reference Include="System.Web" />
     <Reference Include="Microsoft.CSharp" />
     <PackageReference Include="System.Memory" Version="4.5.1" />
-
     <Reference Include="..\..\lib\net45\ServiceStack.Interfaces.dll" />
     <Reference Include="..\..\lib\net45\ServiceStack.Text.dll" />
     <Reference Include="..\..\lib\net45\ServiceStack.Common.dll" />
     <Reference Include="..\..\lib\net45\ServiceStack.Client.dll" />
     <Reference Include="..\..\lib\net45\ServiceStack.dll" />
   </ItemGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
     <DefineConstants>$(DefineConstants);NETCORE_SUPPORT;NETCORE</DefineConstants>
   </PropertyGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="2.1.1" />
-
     <Reference Include="..\..\lib\netstandard2.0\ServiceStack.Interfaces.dll" />
     <Reference Include="..\..\lib\netstandard2.0\ServiceStack.Text.dll" />
     <Reference Include="..\..\lib\netstandard2.0\ServiceStack.Common.dll" />
     <Reference Include="..\..\lib\netstandard2.0\ServiceStack.Client.dll" />
     <Reference Include="..\..\lib\netstandard2.0\ServiceStack.dll" />
   </ItemGroup>
-
 </Project>
