@@ -13,6 +13,8 @@ namespace ServiceStack.Aws.Sqs
 
         private readonly ISqsMqMessageFactory sqsMqMessageFactory;
 
+        public TimeSpan PollingDuration { get; set; } = TimeSpan.FromMilliseconds(1000);
+
         public SqsMqServer() : this(new SqsConnectionFactory()) { }
 
         public SqsMqServer(string awsAccessKey, string awsSecretKey, RegionEndpoint region)
@@ -201,8 +203,8 @@ namespace ServiceStack.Aws.Sqs
                 // Base in q and workers
                 sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.In, info, dlqDefinition.QueueArn);
 
-                info.ThreadCount.Times(i => workers.Add(new SqsMqWorker(sqsMqMessageFactory, info,
-                                                                         info.QueueNames.In, WorkerErrorHandler)));
+                info.ThreadCount.Times(i => workers.Add(
+                    new SqsMqWorker(sqsMqMessageFactory, info, info.QueueNames.In, WorkerErrorHandler) { PollingDuration = PollingDuration }));
                 
                 // Need an outq?
                 if (PublishResponsesWhitelist == null || PublishResponsesWhitelist.Any(x => x == msgType.Name))
@@ -215,7 +217,8 @@ namespace ServiceStack.Aws.Sqs
                 {   // Need priority queue and workers
                     sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.Priority, info, dlqDefinition.QueueArn);
 
-                    info.ThreadCount.Times(i => workers.Add(new SqsMqWorker(sqsMqMessageFactory, info, info.QueueNames.Priority, WorkerErrorHandler)));
+                    info.ThreadCount.Times(i => workers.Add(
+                        new SqsMqWorker(sqsMqMessageFactory, info, info.QueueNames.Priority, WorkerErrorHandler) { PollingDuration = PollingDuration }));
                 }
             }
         }

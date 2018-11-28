@@ -21,6 +21,8 @@ namespace ServiceStack.Aws.Sqs
         private Thread bgThread;
         private int status;
         private int totalMessagesProcessed;
+
+        public TimeSpan PollingDuration { get; set; } = TimeSpan.FromMilliseconds(1000);
         
         public SqsMqWorker(ISqsMqMessageFactory mqFactory,
                            SqsMqWorkerInfo queueWorkerInfo,
@@ -169,7 +171,7 @@ namespace ServiceStack.Aws.Sqs
 
                     totalMessagesProcessed += msgsProcessedThisTime;
                     
-                    Monitor.Wait(_msgLock, millisecondsTimeout: 1000);
+                    Monitor.Wait(_msgLock, timeout: PollingDuration);
 
                     retryCount = 0;
                 }
@@ -180,7 +182,7 @@ namespace ServiceStack.Aws.Sqs
                 catch (Exception ex)
                 {   
                     if (Interlocked.CompareExchange(ref status, 0, 0) != WorkerStatus.Started)
-                    {   // No longer suppossed to be running...
+                    {   // No longer supposed to be running...
                         return;
                     }
 
