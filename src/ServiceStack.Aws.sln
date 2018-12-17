@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{91F39E88
 		..\build\start-local-dynamodb.bat = ..\build\start-local-dynamodb.bat
 		Directory.Build.props = Directory.Build.props
 		ServiceStack.Aws\ServiceStack.Aws.Core.csproj = ServiceStack.Aws\ServiceStack.Aws.Core.csproj
+		..\build\build-core.proj = ..\build\build-core.proj
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.Aws", "ServiceStack.Aws\ServiceStack.Aws.csproj", "{EC090B85-E208-4B4E-AE19-BBFEF51E4560}"
