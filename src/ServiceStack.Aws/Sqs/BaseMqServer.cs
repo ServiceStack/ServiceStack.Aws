@@ -138,17 +138,14 @@ namespace ServiceStack.Aws.Sqs
         /// <summary>
         /// If you only want to enable priority queue handlers (and threads) for specific msg types
         /// </summary>
-        public string[] PriortyQueuesWhitelist { get; set; }
+        public string[] PriorityQueuesWhitelist { get; set; }
 
         /// <summary>
         /// Don't listen on any Priority Queues
         /// </summary>
         public bool DisablePriorityQueues
         {
-            set
-            {
-                PriortyQueuesWhitelist = new string[0];
-            }
+            set => PriorityQueuesWhitelist = TypeConstants.EmptyStringArray;
         }
 
         /// <summary>
@@ -162,9 +159,23 @@ namespace ServiceStack.Aws.Sqs
         /// </summary>
         public bool DisablePublishingResponses
         {
-            set { PublishResponsesWhitelist = value ? new string[0] : null; }
+            set => PublishResponsesWhitelist = value ? TypeConstants.EmptyStringArray : null;
         }
 
+        /// <summary>
+        /// Opt-in to only publish .outq messages on this white list. 
+        /// Publishes all responses by default.
+        /// </summary>
+        public string[] PublishToOutqWhitelist { get; set; }
+
+        /// <summary>
+        /// Don't publish any messages to .outq
+        /// </summary>
+        public bool DisablePublishingToOutq
+        {
+            set => PublishToOutqWhitelist = value ? TypeConstants.EmptyStringArray : null;
+        }
+        
         protected abstract void DoDispose();
 
         void DisposeWorkerThreads()

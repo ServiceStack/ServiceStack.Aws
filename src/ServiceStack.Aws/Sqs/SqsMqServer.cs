@@ -168,6 +168,7 @@ namespace ServiceStack.Aws.Sqs
                     RequestFilter = this.RequestFilter,
                     ResponseFilter = this.ResponseFilter,
                     PublishResponsesWhitelist = this.PublishResponsesWhitelist,
+                    PublishToOutqWhitelist = this.PublishToOutqWhitelist,
                     RetryCount = retry
                 },
                 MessageType = type,
@@ -213,7 +214,7 @@ namespace ServiceStack.Aws.Sqs
                 }
                 
                 // Priority q and workers
-                if (PriortyQueuesWhitelist == null || PriortyQueuesWhitelist.Any(x => x == msgType.Name))
+                if (PriorityQueuesWhitelist == null || PriorityQueuesWhitelist.Any(x => x == msgType.Name))
                 {   // Need priority queue and workers
                     sqsMqMessageFactory.QueueManager.CreateQueue(info.QueueNames.Priority, info, dlqDefinition.QueueArn);
 
