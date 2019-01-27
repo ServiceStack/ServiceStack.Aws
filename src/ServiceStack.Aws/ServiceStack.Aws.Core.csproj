@@ -3,6 +3,7 @@
   <PropertyGroup>
     <PackageId>ServiceStack.Aws.Core</PackageId>
     <AssemblyName>ServiceStack.Aws</AssemblyName>
+    <RootNamespace>ServiceStack.Aws</RootNamespace>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Title>ServiceStack.Aws .NET Standard 2.0</Title>
     <PackageDescription>
