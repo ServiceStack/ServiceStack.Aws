@@ -5,7 +5,7 @@ namespace ServiceStack.Aws.Sqs
 {
     public interface ISqsMqMessageFactory : IMessageFactory
     {
-        SqsQueueManager QueueManager { get; }
+        ISqsQueueManager QueueManager { get; }
         SqsConnectionFactory ConnectionFactory { get; }
         int RetryCount { get; set; }
         int BufferFlushIntervalSeconds { get; set; }

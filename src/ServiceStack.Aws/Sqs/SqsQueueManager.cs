@@ -12,7 +12,7 @@ using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Sqs
 {
-    public class SqsQueueManager : IDisposable
+    public class SqsQueueManager : ISqsQueueManager
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(SqsQueueManager));
         private readonly ConcurrentDictionary<string, SqsQueueDefinition> queueNameMap = new ConcurrentDictionary<string, SqsQueueDefinition>();

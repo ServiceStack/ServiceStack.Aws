@@ -8,7 +8,7 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqClient : SqsMqMessageProducer, IMessageQueueClient
     {
-        public SqsMqClient(ISqsMqBufferFactory sqsMqBufferFactory, SqsQueueManager sqsQueueManager)
+        public SqsMqClient(ISqsMqBufferFactory sqsMqBufferFactory, ISqsQueueManager sqsQueueManager)
             : base(sqsMqBufferFactory, sqsQueueManager)
         { }
 
