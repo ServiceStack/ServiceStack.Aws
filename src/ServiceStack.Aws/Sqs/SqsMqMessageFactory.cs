@@ -7,14 +7,14 @@ namespace ServiceStack.Aws.Sqs
     public class SqsMqMessageFactory : ISqsMqMessageFactory
     {
         private readonly ISqsMqBufferFactory sqsMqBufferFactory;
-        private readonly SqsQueueManager sqsQueueManager;
+        private readonly ISqsQueueManager sqsQueueManager;
         private int retryCount;
 
-        public SqsMqMessageFactory(SqsQueueManager sqsQueueManager) 
+        public SqsMqMessageFactory(ISqsQueueManager sqsQueueManager) 
             : this(new SqsMqBufferFactory(sqsQueueManager.ConnectionFactory), sqsQueueManager) { }
 
         public SqsMqMessageFactory(ISqsMqBufferFactory sqsMqBufferFactory,
-                                   SqsQueueManager sqsQueueManager)
+                                   ISqsQueueManager sqsQueueManager)
         {
             Guard.AgainstNullArgument(sqsMqBufferFactory, "sqsMqBufferFactory");
             Guard.AgainstNullArgument(sqsQueueManager, "sqsQueueManager");
@@ -23,7 +23,7 @@ namespace ServiceStack.Aws.Sqs
             this.sqsQueueManager = sqsQueueManager;
         }
 
-        public SqsQueueManager QueueManager => sqsQueueManager;
+        public ISqsQueueManager QueueManager => sqsQueueManager;
 
         public SqsConnectionFactory ConnectionFactory => sqsQueueManager.ConnectionFactory;
 

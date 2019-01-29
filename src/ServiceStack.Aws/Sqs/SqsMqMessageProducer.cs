@@ -12,9 +12,9 @@ namespace ServiceStack.Aws.Sqs
         protected static readonly ILog log = LogManager.GetLogger(typeof(SqsMqMessageProducer));
 
         protected readonly ISqsMqBufferFactory sqsMqBufferFactory;
-        protected readonly SqsQueueManager sqsQueueManager;
+        protected readonly ISqsQueueManager sqsQueueManager;
 
-        public SqsMqMessageProducer(ISqsMqBufferFactory sqsMqBufferFactory, SqsQueueManager sqsQueueManager)
+        public SqsMqMessageProducer(ISqsMqBufferFactory sqsMqBufferFactory, ISqsQueueManager sqsQueueManager)
         {
             this.sqsMqBufferFactory = sqsMqBufferFactory;
             this.sqsQueueManager = sqsQueueManager;
