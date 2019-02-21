@@ -16,6 +16,9 @@ namespace ServiceStack.Aws.Sqs
         protected readonly ISqsMqBufferFactory sqsMqBufferFactory;
         protected readonly ISqsQueueManager sqsQueueManager;
 
+        public ISqsMqBufferFactory SqsMqBufferFactory => sqsMqBufferFactory;
+        public ISqsQueueManager SqsQueueManager => sqsQueueManager;
+        
         public SqsMqMessageProducer(ISqsMqBufferFactory sqsMqBufferFactory, ISqsQueueManager sqsQueueManager)
         {
             this.sqsMqBufferFactory = sqsMqBufferFactory;
@@ -23,7 +26,7 @@ namespace ServiceStack.Aws.Sqs
         }
 
         public Action OnPublishedCallback { get; set; }
-        
+
         public void Publish<T>(T messageBody)
         {
             if (messageBody is IMessage message)
