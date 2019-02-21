@@ -162,13 +162,6 @@ namespace ServiceStack.Aws.Sqs
             RegisterHandler(processMessageFn, null, noOfThreads: noOfThreads);
         }
 
-        public void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn, int noOfThreads,
-                                       int? retryCount = null, int? visibilityTimeoutSeconds = null,
-                                       int? receiveWaitTimeSeconds = null)
-        {
-            RegisterHandler(processMessageFn, null, noOfThreads, retryCount, visibilityTimeoutSeconds, receiveWaitTimeSeconds);
-        }
-
         public override void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn,
                                                 Action<IMessageHandler, IMessage<T>, Exception> processExceptionEx)
         {
@@ -177,7 +170,8 @@ namespace ServiceStack.Aws.Sqs
 
         public override void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn, Action<IMessageHandler, IMessage<T>, Exception> processExceptionEx, int noOfThreads)
         {
-            RegisterHandler(processMessageFn, processExceptionEx, noOfThreads: noOfThreads);
+            RegisterHandler(processMessageFn, processExceptionEx, noOfThreads: noOfThreads, 
+                null, null, null, null);
         }
 
         public void RegisterHandler<T>(Func<IMessage<T>, object> processMessageFn,
