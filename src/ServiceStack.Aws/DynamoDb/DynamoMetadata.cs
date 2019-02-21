@@ -86,7 +86,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (metadata != null)
                 return metadata;
 
-            if (type.IsValueType())
+            if (type.IsValueType)
                 return null;
 
             RegisterTypes(type);
@@ -128,7 +128,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static void RegisterTypes(params Type[] refTypes)
         {
-            var metadatas = refTypes.Where(x => !x.IsValueType() 
+            var metadatas = refTypes.Where(x => !x.IsValueType 
                 && !x.IsSystemType() 
                 && Types.All(t => t.Type != x))
             .Map(ToMetadataType);

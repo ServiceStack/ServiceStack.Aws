@@ -10,7 +10,9 @@ namespace ServiceStack.Aws.Support
     {
         internal static JsConfigScope GetJsScope()
         {
-            return JsConfig.With(excludeTypeInfo: false);
+            return JsConfig.With(new Config {
+                ExcludeTypeInfo = false
+            });
         }
 
         internal static string ToScopedJson<T>(T value)

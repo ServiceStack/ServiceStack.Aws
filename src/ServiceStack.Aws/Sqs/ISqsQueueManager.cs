@@ -17,7 +17,6 @@ namespace ServiceStack.Aws.Sqs
         SqsQueueDefinition CreateQueue(string queueName, int? visibilityTimeoutSeconds = null, int? receiveWaitTimeSeconds = null, bool? disasbleBuffering = null, SqsRedrivePolicy redrivePolicy = null);
         SqsQueueDefinition CreateQueue(string queueName, SqsMqWorkerInfo info, string redriveArn = null);
         void DeleteQueue(string queueName);
-        void Dispose();
         SqsQueueDefinition GetOrCreate(string queueName, int? visibilityTimeoutSeconds = null, int? receiveWaitTimeSeconds = null, bool? disasbleBuffering = null);
         SqsQueueDefinition GetQueueDefinition(string queueName, bool forceRecheck = false);
         string GetQueueUrl(string queueName, bool forceRecheck = false);

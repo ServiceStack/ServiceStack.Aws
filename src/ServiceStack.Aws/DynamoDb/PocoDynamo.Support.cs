@@ -64,7 +64,7 @@ namespace ServiceStack.Aws.DynamoDb
                     {
                         foreach (var rethrowEx in rethrowExceptions)
                         {
-                            if (ex.GetType().IsAssignableFromType(rethrowEx))
+                            if (ex.GetType().IsAssignableFrom(rethrowEx))
                             {
                                 if (ex != outerEx)
                                     throw ex;

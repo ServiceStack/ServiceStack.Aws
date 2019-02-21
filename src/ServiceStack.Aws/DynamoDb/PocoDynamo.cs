@@ -447,7 +447,7 @@ namespace ServiceStack.Aws.DynamoDb
                 Exec(() => DynamoDb.UpdateItem(update));
                 return true;
             }
-            catch (ConditionalCheckFailedException ex)
+            catch (ConditionalCheckFailedException)
             {
                 return false;
             }

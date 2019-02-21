@@ -259,7 +259,7 @@ namespace ServiceStack.Aws.Sqs
         }
 
         private SqsQueueDefinition UpdateQueue(SqsQueueName sqsQueueName, SetQueueAttributesRequest request,
-                                               bool? disasbleBuffering = null)
+                                               bool? disableBuffering = null)
         {
             if (string.IsNullOrEmpty(request.QueueUrl))
             {
@@ -272,7 +272,7 @@ namespace ServiceStack.Aws.Sqs
             // anything assigned by the server (i.e. the ARN, etc.).
             var queueDefinition = GetQueueDefinition(sqsQueueName, request.QueueUrl);
 
-            queueDefinition.DisableBuffering = disasbleBuffering ?? DisableBuffering;
+            queueDefinition.DisableBuffering = disableBuffering ?? DisableBuffering;
 
             queueNameMap[queueDefinition.QueueName] = queueDefinition;
 

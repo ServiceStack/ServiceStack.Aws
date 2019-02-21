@@ -1,4 +1,5 @@
 ﻿using System;
+using Amazon.SQS.Model;
 using ServiceStack.Aws.Support;
 using ServiceStack.Messaging;
 
@@ -16,7 +17,7 @@ namespace ServiceStack.Aws.Sqs
         
         public Type MessageType
         {
-            get { return messageType; }
+            get => messageType;
             set
             {
                 messageType = value;
@@ -29,7 +30,7 @@ namespace ServiceStack.Aws.Sqs
         
         public int VisibilityTimeout
         {
-            get { return visibilityTimeout; }
+            get => visibilityTimeout;
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxVisibilityTimeoutSeconds, "SQS MQ VisibilityTimeout must be 0-43200");
@@ -39,7 +40,7 @@ namespace ServiceStack.Aws.Sqs
 
         public int ReceiveWaitTime
         {
-            get { return receiveWaitTime; }
+            get => receiveWaitTime;
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > SqsQueueDefinition.MaxWaitTimeSeconds, "SQS MQ ReceiveWaitTime must be 0-20");

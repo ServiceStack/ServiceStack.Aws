@@ -231,7 +231,7 @@ namespace ServiceStack.Aws.DynamoDb
             return Select(fields(typeof(T).CreateInstance<T>()).GetType().AllFields());
         }
 
-        public QueryExpression<T> Select<TModel>(Func<T, object> fields)
+        public new QueryExpression<T> Select<TModel>(Func<T, object> fields)
         {
             return Select(fields(typeof(TModel).CreateInstance<T>()).GetType().AllFields()
                 .Where(Table.HasField));
