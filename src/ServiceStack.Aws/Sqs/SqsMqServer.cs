@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Amazon;
+using Amazon.SQS.Model;
 using ServiceStack.Aws.Support;
 using ServiceStack.Messaging;
 
@@ -108,6 +109,36 @@ namespace ServiceStack.Aws.Sqs
         /// Must be thread-safe.
         /// </summary>
         public Func<object, object> ResponseFilter { get; set; }
+
+        public Action<SendMessageRequest,IMessage> SendMessageRequestFilter
+        {
+            get => sqsMqMessageFactory.SendMessageRequestFilter;
+            set => sqsMqMessageFactory.SendMessageRequestFilter = value;
+        }
+
+        public Action<ReceiveMessageRequest> ReceiveMessageRequestFilter
+        {
+            get => sqsMqMessageFactory.ReceiveMessageRequestFilter;
+            set => sqsMqMessageFactory.ReceiveMessageRequestFilter = value;
+        }
+        
+        public Action<Amazon.SQS.Model.Message, IMessage> ReceiveMessageResponseFilter
+        {
+            get => sqsMqMessageFactory.ReceiveMessageResponseFilter;
+            set => sqsMqMessageFactory.ReceiveMessageResponseFilter = value;
+        }
+        
+        public Action<DeleteMessageRequest> DeleteMessageRequestFilter
+        {
+            get => sqsMqMessageFactory.DeleteMessageRequestFilter;
+            set => sqsMqMessageFactory.DeleteMessageRequestFilter = value;
+        }
+        
+        public Action<ChangeMessageVisibilityRequest> ChangeMessageVisibilityRequestFilter
+        {
+            get => sqsMqMessageFactory.ChangeMessageVisibilityRequestFilter;
+            set => sqsMqMessageFactory.ChangeMessageVisibilityRequestFilter = value;
+        }
 
         protected override void DoDispose()
         {

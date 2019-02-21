@@ -11,6 +11,8 @@ namespace ServiceStack.Aws.Sqs
     {
         protected static readonly ILog log = LogManager.GetLogger(typeof(SqsMqMessageProducer));
 
+        public Action<SendMessageRequest,IMessage> SendMessageRequestFilter { get; set; }
+
         protected readonly ISqsMqBufferFactory sqsMqBufferFactory;
         protected readonly ISqsQueueManager sqsQueueManager;
 
@@ -21,7 +23,7 @@ namespace ServiceStack.Aws.Sqs
         }
 
         public Action OnPublishedCallback { get; set; }
-
+        
         public void Publish<T>(T messageBody)
         {
             if (messageBody is IMessage message)
@@ -65,8 +67,14 @@ namespace ServiceStack.Aws.Sqs
             var queueDefinition = sqsQueueManager.GetOrCreate(queueName);
             var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
-            sqsBuffer.Send(message.ToSqsSendMessageRequest(queueDefinition));
+            sqsBuffer.Send(ApplyFilter(message.ToSqsSendMessageRequest(queueDefinition), message));
             OnPublishedCallback?.Invoke();
+        }
+
+        public SendMessageRequest ApplyFilter(SendMessageRequest sqsMessage, IMessage mqMessage)
+        {
+            SendMessageRequestFilter?.Invoke(sqsMessage, mqMessage);
+            return sqsMessage;
         }
 
         public void Publish(string queueName, SendMessageRequest msgRequest)

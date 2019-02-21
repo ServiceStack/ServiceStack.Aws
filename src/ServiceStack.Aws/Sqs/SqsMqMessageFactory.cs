@@ -1,4 +1,5 @@
 ﻿using System;
+using Amazon.SQS.Model;
 using ServiceStack.Aws.Support;
 using ServiceStack.Messaging;
 
@@ -6,6 +7,12 @@ namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqMessageFactory : ISqsMqMessageFactory
     {
+        public Action<SendMessageRequest,IMessage> SendMessageRequestFilter { get; set; }
+        public Action<ReceiveMessageRequest> ReceiveMessageRequestFilter { get; set; }
+        public Action<Amazon.SQS.Model.Message, IMessage> ReceiveMessageResponseFilter { get; set; }
+        public Action<DeleteMessageRequest> DeleteMessageRequestFilter { get; set; }
+        public Action<ChangeMessageVisibilityRequest> ChangeMessageVisibilityRequestFilter { get; set; }
+
         private readonly ISqsMqBufferFactory sqsMqBufferFactory;
         private readonly ISqsQueueManager sqsQueueManager;
         private int retryCount;
@@ -29,19 +36,19 @@ namespace ServiceStack.Aws.Sqs
 
         public Action<Exception> ErrorHandler
         {
-            get { return sqsMqBufferFactory.ErrorHandler; }
-            set { sqsMqBufferFactory.ErrorHandler = value; }
+            get => sqsMqBufferFactory.ErrorHandler;
+            set => sqsMqBufferFactory.ErrorHandler = value;
         }
 
         public int BufferFlushIntervalSeconds
         {
-            get { return sqsMqBufferFactory.BufferFlushIntervalSeconds; }
-            set { sqsMqBufferFactory.BufferFlushIntervalSeconds = value; }
+            get => sqsMqBufferFactory.BufferFlushIntervalSeconds;
+            set => sqsMqBufferFactory.BufferFlushIntervalSeconds = value;
         }
 
         public int RetryCount
         {
-            get { return retryCount; }
+            get => retryCount;
             set
             {
                 Guard.AgainstArgumentOutOfRange(value < 0 || value > 1000, "SQS MQ RetryCount must be 0-1000");
@@ -56,12 +63,20 @@ namespace ServiceStack.Aws.Sqs
 
         public IMessageQueueClient CreateMessageQueueClient()
         {
-            return new SqsMqClient(sqsMqBufferFactory, sqsQueueManager);
+            return new SqsMqClient(sqsMqBufferFactory, sqsQueueManager) {
+                SendMessageRequestFilter = SendMessageRequestFilter,
+                ReceiveMessageRequestFilter = ReceiveMessageRequestFilter,
+                ReceiveMessageResponseFilter = ReceiveMessageResponseFilter,
+                DeleteMessageRequestFilter = DeleteMessageRequestFilter,
+                ChangeMessageVisibilityRequestFilter = ChangeMessageVisibilityRequestFilter,
+            };
         }
 
         public IMessageProducer CreateMessageProducer()
         {
-            return new SqsMqMessageProducer(sqsMqBufferFactory, sqsQueueManager);
+            return new SqsMqMessageProducer(sqsMqBufferFactory, sqsQueueManager) {
+                SendMessageRequestFilter = SendMessageRequestFilter,
+            };
         }
     }
 }

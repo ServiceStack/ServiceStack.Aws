@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.SQS.Model;
-using ServiceStack.Aws.Support;
 using ServiceStack.Messaging;
+using Message = Amazon.SQS.Model.Message;
 
 namespace ServiceStack.Aws.Sqs
 {
     public class SqsMqClient : SqsMqMessageProducer, IMessageQueueClient
     {
+        public Action<ReceiveMessageRequest> ReceiveMessageRequestFilter { get; set; }
+        public Action<Message, IMessage> ReceiveMessageResponseFilter { get; set; }
+        public Action<DeleteMessageRequest> DeleteMessageRequestFilter { get; set; }
+        public Action<ChangeMessageVisibilityRequest> ChangeMessageVisibilityRequestFilter { get; set; }
+        
         public SqsMqClient(ISqsMqBufferFactory sqsMqBufferFactory, ISqsQueueManager sqsQueueManager)
             : base(sqsMqBufferFactory, sqsQueueManager)
         { }
@@ -47,22 +52,34 @@ namespace ServiceStack.Aws.Sqs
 
             do
             {
-                var sqsMessage = sqsBuffer.Receive(new ReceiveMessageRequest
+                var sqsMessage = sqsBuffer.Receive(ApplyFilter(new ReceiveMessageRequest
                 {
                     MaxNumberOfMessages = queueDefinition.ReceiveBufferSize,
                     QueueUrl = queueDefinition.QueueUrl,
                     VisibilityTimeout = queueDefinition.VisibilityTimeout,
                     WaitTimeSeconds = receiveWaitTime,
                     MessageAttributeNames = AllMessageProperties
-                });
+                }));
 
-                var message = sqsMessage.FromSqsMessage<T>(queueDefinition.QueueName);
+                var message = ApplyFilter(sqsMessage, sqsMessage.FromSqsMessage<T>(queueDefinition.QueueName));
                 if (message != null)
                     return message;
 
             } while (DateTime.UtcNow <= timeoutAt);
 
             return null;
+        }
+
+        private ReceiveMessageRequest ApplyFilter(ReceiveMessageRequest msg)
+        {
+            ReceiveMessageRequestFilter?.Invoke(msg);
+            return msg;
+        }
+
+        private Message<T> ApplyFilter<T>(Message sqsMessage, Message<T> mqMessage)
+        {
+            ReceiveMessageResponseFilter?.Invoke(sqsMessage, mqMessage);
+            return mqMessage;
         }
 
         public void DeleteMessage(IMessage message)
@@ -76,11 +93,17 @@ namespace ServiceStack.Aws.Sqs
 
             var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
-            sqsBuffer.Delete(new DeleteMessageRequest
+            sqsBuffer.Delete(ApplyFilter(new DeleteMessageRequest
             {
                 QueueUrl = queueDefinition.QueueUrl,
                 ReceiptHandle = sqsTag.RHandle
-            });
+            }));
+        }
+
+        private DeleteMessageRequest ApplyFilter(DeleteMessageRequest msg)
+        {
+            DeleteMessageRequestFilter?.Invoke(msg);
+            return msg;
         }
 
         public void Ack(IMessage message)
@@ -99,12 +122,18 @@ namespace ServiceStack.Aws.Sqs
 
             var sqsBuffer = sqsMqBufferFactory.GetOrCreate(queueDefinition);
 
-            sqsBuffer.ChangeVisibility(new ChangeMessageVisibilityRequest
+            sqsBuffer.ChangeVisibility(ApplyFilter(new ChangeMessageVisibilityRequest
             {
                 QueueUrl = queueDefinition.QueueUrl,
                 ReceiptHandle = sqsTag.RHandle,
                 VisibilityTimeout = visibilityTimeoutSeconds
-            });
+            }));
+        }
+
+        private ChangeMessageVisibilityRequest ApplyFilter(ChangeMessageVisibilityRequest msg)
+        {
+            ChangeMessageVisibilityRequestFilter?.Invoke(msg);
+            return msg;
         }
 
         public void Nak(IMessage message, bool requeue, Exception exception = null)
