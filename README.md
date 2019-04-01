@@ -118,7 +118,7 @@ public class AppHost : AppHostBase
     {
         //All Razor Views, Markdown Content, imgs, js, css, etc are served from an S3 Bucket
         var s3 = new AmazonS3Client(AwsConfig.AwsAccessKey, AwsConfig.AwsSecretKey, RegionEndpoint.USEast1);
-        VirtualFiles = new S3VirtualFiles(s3, AwsConfig.S3BucketName, this);
+        VirtualFiles = new S3VirtualFiles(s3, AwsConfig.S3BucketName);
     }
     
     public override List<IVirtualPathProvider> GetVirtualFileSources()
@@ -240,7 +240,7 @@ we can have files written to an S3 Bucket instead:
 
 ```csharp
 var s3Client = new AmazonS3Client(AwsConfig.AwsAccessKey, AwsConfig.AwsSecretKey, RegionEndpoint.USEast1);
-VirtualFiles = new S3VirtualFiles(s3Client, AwsConfig.S3BucketName, this);
+VirtualFiles = new S3VirtualFiles(s3Client, AwsConfig.S3BucketName);
 ```
 
 If we comment out the above configuration any saved files are instead written to the local FileSystem (default).
