@@ -23,6 +23,9 @@ namespace ServiceStack.Aws.DynamoDbTests
             return db;
         }
 
+        public static string DynamoDbUrl = Environment.GetEnvironmentVariable("CI_DYNAMODB") 
+            ?? ConfigUtils.GetAppSetting("DynamoDbUrl", "http://localhost:8000");
+
         public static ICacheClient CreateCacheClient()
         {
             var cache = new DynamoDbCacheClient(CreatePocoDynamo());
@@ -40,7 +43,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             var dynamoClient = useLocalDb
                 ? new AmazonDynamoDBClient("keyId", "key", new AmazonDynamoDBConfig {
-                    ServiceURL = ConfigUtils.GetAppSetting("DynamoDbUrl", "http://localhost:8000"),
+                    ServiceURL = DynamoDbUrl,
                 })
                 : new AmazonDynamoDBClient(accessKey, secretKey, RegionEndpoint.USEast1);
             return dynamoClient;

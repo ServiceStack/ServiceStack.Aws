@@ -15,7 +15,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Issues
         {
             var db = new AmazonDynamoDBClient("keyId", "key", new AmazonDynamoDBConfig
             {
-                ServiceURL = "http://localhost:8000",
+                ServiceURL = DynamoTestBase.DynamoDbUrl,
             });
 
             try
