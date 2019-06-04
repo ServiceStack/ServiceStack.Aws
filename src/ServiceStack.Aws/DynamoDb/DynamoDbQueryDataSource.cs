@@ -174,7 +174,7 @@ namespace ServiceStack.Aws.DynamoDb
                 var rangeFmt = DynamoQueryConditions.GetExpressionFormat(rangeCondition.QueryCondition.Alias);
                 if (rangeFmt != null)
                 {
-                    dynamoFmt += " AND " + string.Format(hashFmt, queryExpr.GetFieldLabel(rangeField), ":k1");
+                    dynamoFmt += " AND " + string.Format(rangeFmt, queryExpr.GetFieldLabel(rangeField), ":k1");
                     args["k1"] = rangeCondition.Value;
                 }
                 else
