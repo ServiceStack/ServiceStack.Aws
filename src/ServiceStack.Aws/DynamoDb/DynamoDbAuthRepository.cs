@@ -14,7 +14,7 @@ namespace ServiceStack.Aws.DynamoDb
         public DynamoDbAuthRepository(IPocoDynamo db, bool initSchema = false) : base(db, initSchema) { }
     }
 
-    public class DynamoDbAuthRepository<TUserAuth, TUserAuthDetails> : IUserAuthRepository, IManageRoles, IClearable, IRequiresSchema, IManageApiKeys
+    public class DynamoDbAuthRepository<TUserAuth, TUserAuthDetails> : IUserAuthRepository, IManageRoles, IClearable, IRequiresSchema, IManageApiKeys, IQueryUserAuth
         where TUserAuth : class, IUserAuth
         where TUserAuthDetails : class, IUserAuthDetails
     {
@@ -616,6 +616,18 @@ namespace ServiceStack.Aws.DynamoDb
             Db.RegisterTable<ApiKey>();
 
             Db.InitSchema();
+        }
+
+        public List<IUserAuth> GetUserAuths(string orderBy = null, int? skip = null, int? take = null)
+        {
+            return Db.FromScan<TUserAuth>().Exec().SortAndPage(orderBy, skip, take).Map(DeSanitize).ToList();
+        }
+
+        public List<IUserAuth> SearchUserAuths(string query, string orderBy = null, int? skip = null, int? take = null)
+        {
+            return Db.FromScan<TUserAuth>().Filter(x => 
+                    x.UserName.Contains(query) || x.DisplayName.Contains(query) || x.Company.Contains(query))
+                .Exec().SortAndPage(orderBy, skip, take).Map(DeSanitize).ToList();
         }
     }
 

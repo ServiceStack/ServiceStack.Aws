@@ -84,7 +84,7 @@ namespace ServiceStack.Aws.Tests.S3
             {
                 BucketName = BucketName,
                 Key = "testfile.txt",
-                ModifiedSinceDate = response.LastModified,
+                ModifiedSinceDateUtc = response.LastModified,
             });
 
             response.Key.Print();
