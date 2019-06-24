@@ -105,7 +105,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             authRepo.SaveUserAuth(newUser);
             
             var newSession = SessionFeature.CreateNewSession(null, "SESSION_ID");
-            newSession.PopulateSession(newUser, new List<IAuthTokens>());
+            newSession.PopulateSession(newUser);
 
             var updatedUser = authRepo.GetUserAuth(newSession.UserAuthId);
             Assert.That(updatedUser, Is.Not.Null);
@@ -126,7 +126,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             }, "p@55wOrd");
             
             var newSession = SessionFeature.CreateNewSession(null, "SESSION_ID");
-            newSession.PopulateSession(newUser, new List<IAuthTokens>());
+            newSession.PopulateSession(newUser);
             Assert.That(newSession.Email, Is.EqualTo("user@fb.com"));
 
             var fbAuthTokens = new AuthTokens

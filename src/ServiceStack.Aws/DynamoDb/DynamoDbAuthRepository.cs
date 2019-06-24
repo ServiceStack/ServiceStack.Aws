@@ -180,8 +180,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         private void LoadUserAuth(IAuthSession session, IUserAuth userAuth)
         {
-            session.PopulateSession(userAuth,
-                GetUserAuthDetails(session.UserAuthId).ConvertAll(x => (IAuthTokens)x));
+            session.PopulateSession(userAuth, this);
         }
 
         public virtual IUserAuth GetUserAuth(string userAuthId)
