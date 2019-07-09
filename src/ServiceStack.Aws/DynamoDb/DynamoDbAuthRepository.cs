@@ -437,6 +437,23 @@ namespace ServiceStack.Aws.DynamoDb
                 .Map(x => x.Permission);
         }
 
+        public virtual void GetRolesAndPermissions(string userAuthId, out ICollection<string> roles, out ICollection<string> permissions)
+        {
+            var authId = int.Parse(userAuthId);
+            var results = Db.FromQuery<UserAuthRole>(x => x.UserAuthId == authId)
+                .Exec();
+
+            roles = new List<string>();
+            permissions = new List<string>();
+            foreach (var result in results)
+            {
+                if (result.Role != null)
+                    roles.Add(result.Role);
+                if (result.Permission != null)
+                    permissions.Add(result.Permission);
+            }
+        }
+
         public virtual bool HasRole(string userAuthId, string role)
         {
             if (role == null)
