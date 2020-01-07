@@ -20,10 +20,10 @@
 
   <ItemGroup>
     <PackageReference Include="ServiceStack" Version="$(Version)" />
-    <PackageReference Include="AWSSDK.Core" Version="3.3.103.43" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.70" />
-    <PackageReference Include="AWSSDK.S3" Version="3.3.104.31" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.102.11" />
+    <PackageReference Include="AWSSDK.Core" Version="3.3.104.13" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.104.15" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.110.9" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.102.52" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
