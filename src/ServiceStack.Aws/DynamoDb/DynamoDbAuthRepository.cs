@@ -159,6 +159,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         private IUserAuth DeSanitize(TUserAuth userAuth)
         {
+            if (userAuth == null)
+                return null;
+            
             if (userAuth.UserName != null && userAuth.UserName.Contains("@"))
             {
                 if (userAuth.Email == null)
