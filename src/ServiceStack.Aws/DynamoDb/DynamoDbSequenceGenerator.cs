@@ -1,6 +1,10 @@
 ﻿// Copyright (c) ServiceStack, Inc. All Rights Reserved.
 // License: https://raw.github.com/ServiceStack/ServiceStack/master/license.txt
 
+using System.Threading;
+using System.Threading.Tasks;
+using ServiceStack.Text;
+
 namespace ServiceStack.Aws.DynamoDb
 {
     public class Seq
@@ -9,7 +13,7 @@ namespace ServiceStack.Aws.DynamoDb
         public long Counter { get; set; }
     }
 
-    public class DynamoDbSequenceSource : ISequenceSource
+    public class DynamoDbSequenceSource : ISequenceSource, ISequenceSourceAsync
     {
         private readonly IPocoDynamo db;
         private readonly DynamoMetadataType table;
@@ -35,6 +39,16 @@ namespace ServiceStack.Aws.DynamoDb
         {
             db.PutItem(new Seq { Id = tableName, Counter = startingAt });
         }
+
+        public async Task<long> IncrementAsync(string tableName, long amount = 1, CancellationToken token = default)
+        {
+            return await db.IncrementByIdAsync<Seq>(tableName, x => x.Counter, amount, token).ConfigAwait();
+        }
+
+        public async Task ResetAsync(string tableName, long startingAt = 0, CancellationToken token = default)
+        {
+            await db.PutItemAsync(new Seq { Id = tableName, Counter = startingAt }, token: token).ConfigAwait();
+        }
     }
 
     public static class SequenceGeneratorExtensions
@@ -44,10 +58,22 @@ namespace ServiceStack.Aws.DynamoDb
             return seq.Increment(meta.Name, amount);
         }
 
+        public static async Task<long> IncrementAsync(this ISequenceSourceAsync seq, DynamoMetadataType meta, int amount = 1,
+            CancellationToken token=default)
+        {
+            return await seq.IncrementAsync(meta.Name, amount, token).ConfigAwait();
+        }
+
         public static long Increment<T>(this ISequenceSource seq, int amount = 1)
         {
             var tableName = DynamoMetadata.GetType<T>().Name;
             return seq.Increment(tableName, amount);
+        }
+
+        public static async Task<long> IncrementAsync<T>(this ISequenceSourceAsync seq, int amount = 1, CancellationToken token=default)
+        {
+            var tableName = DynamoMetadata.GetType<T>().Name;
+            return await seq.IncrementAsync(tableName, amount, token).ConfigAwait();
         }
 
         public static void Reset<T>(this ISequenceSource seq, int startingAt = 0)
@@ -56,9 +82,20 @@ namespace ServiceStack.Aws.DynamoDb
             seq.Reset(tableName, startingAt);
         }
 
+        public static async Task ResetAsync<T>(this ISequenceSourceAsync seq, int startingAt = 0, CancellationToken token=default)
+        {
+            var tableName = DynamoMetadata.GetType<T>().Name;
+            await seq.ResetAsync(tableName, startingAt, token).ConfigAwait();
+        }
+
         public static long Current(this ISequenceSource seq, DynamoMetadataType meta)
         {
             return seq.Increment(meta.Name, 0);
+        }
+
+        public static async Task<long> CurrentAsync(this ISequenceSourceAsync seq, DynamoMetadataType meta, CancellationToken token=default)
+        {
+            return await seq.IncrementAsync(meta.Name, 0, token).ConfigAwait();
         }
 
         public static long Current<T>(this ISequenceSource seq)
@@ -72,6 +109,11 @@ namespace ServiceStack.Aws.DynamoDb
             return GetNextSequences(seq, DynamoMetadata.GetType<T>(), noOfSequences);
         }
 
+        public static async Task<long[]> GetNextSequencesAsync<T>(this ISequenceSource seq, int noOfSequences, CancellationToken token=default)
+        {
+            return await GetNextSequencesAsync(seq, DynamoMetadata.GetType<T>(), noOfSequences).ConfigAwait();
+        }
+
         public static long[] GetNextSequences(this ISequenceSource seq, DynamoMetadataType meta, int noOfSequences)
         {
             var newCounter = seq.Increment(meta, noOfSequences);
@@ -82,6 +124,23 @@ namespace ServiceStack.Aws.DynamoDb
                 ids[i] = firstId + i;
             }
             return ids;
+        }
+
+        public static async Task<long[]> GetNextSequencesAsync(this ISequenceSource seq, DynamoMetadataType meta, int noOfSequences)
+        {
+            if (seq is ISequenceSourceAsync seqAsync)
+            {
+                var newCounter = await seqAsync.IncrementAsync(meta, noOfSequences).ConfigAwait();
+                var firstId = newCounter - noOfSequences + 1;
+                var ids = new long[noOfSequences];
+                for (var i = 0; i < noOfSequences; i++)
+                {
+                    ids[i] = firstId + i;
+                }
+                return ids;
+            }
+            // ReSharper disable once MethodHasAsyncOverload
+            return seq.GetNextSequences(meta, noOfSequences);
         }
     }
 }

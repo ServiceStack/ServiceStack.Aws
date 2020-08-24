@@ -129,6 +129,46 @@ namespace ServiceStack.Aws.DynamoDb
             } while (true);
         }
 
+        public async Task<bool> WaitForTablesToBeReadyAsync(IEnumerable<string> tableNames, CancellationToken token = default)
+        {
+            var pendingTables = new List<string>(tableNames);
+
+            if (pendingTables.Count == 0)
+                return true;
+
+            do
+            {
+                try
+                {
+                    var responses = await Task.WhenAll(pendingTables.Map(x =>
+                        ExecAsync(() => DynamoDb.DescribeTableAsync(x, token))
+                    ).ToArray()).ConfigAwait();
+
+                    foreach (var response in responses)
+                    {
+                        if (response.Table.TableStatus == DynamoStatus.Active)
+                            pendingTables.Remove(response.Table.TableName);
+                    }
+
+                    if (Log.IsDebugEnabled)
+                        Log.Debug($"Tables Pending: {pendingTables.ToJsv()}");
+
+                    if (pendingTables.Count == 0)
+                        return true;
+
+                    if (token.IsCancellationRequested)
+                        return false;
+
+                    await Task.Delay(PollTableStatus, token).ConfigAwait();
+                }
+                catch (ResourceNotFoundException)
+                {
+                    // DescribeTable is eventually consistent. So you might
+                    // get resource not found. So we handle the potential exception.
+                }
+            } while (true);
+        }
+
         public bool WaitForTablesToBeDeleted(IEnumerable<string> tableNames, TimeSpan? timeout = null)
         {
             var pendingTables = new List<string>(tableNames);
@@ -156,12 +196,51 @@ namespace ServiceStack.Aws.DynamoDb
             } while (true);
         }
 
+        public async Task<bool> WaitForTablesToBeDeletedAsync(IEnumerable<string> tableNames, TimeSpan? timeout = null, CancellationToken token = default)
+        {
+            var pendingTables = new List<string>(tableNames);
+
+            if (pendingTables.Count == 0)
+                return true;
+
+            var startAt = DateTime.UtcNow;
+            do
+            {
+                var existingTables = (await GetTableNamesAsync(token).ConfigAwait()).ToList();
+                pendingTables.RemoveAll(x => !existingTables.Contains(x));
+
+                if (Log.IsDebugEnabled)
+                    Log.DebugFormat("Waiting for Tables to be removed: {0}", pendingTables.Dump());
+
+                if (pendingTables.Count == 0)
+                    return true;
+
+                if (timeout != null && DateTime.UtcNow - startAt > timeout.Value)
+                    return false;
+
+                await Task.Delay(PollTableStatus, token).ConfigAwait();
+
+            } while (true);
+        }
+
         private T ConvertGetItemResponse<T>(GetItemRequest request, DynamoMetadataType table)
         {
             var response = Exec(() => DynamoDb.GetItem(request), rethrowExceptions: throwNotFoundExceptions);
 
             if (!response.IsItemSet)
-                return default(T);
+                return default;
+            var attributeValues = response.Item;
+
+            return Converters.FromAttributeValues<T>(table, attributeValues);
+        }
+
+        private async Task<T> ConvertGetItemResponseAsync<T>(GetItemRequest request, DynamoMetadataType table, CancellationToken token = default)
+        {
+            var response = await ExecAsync(async () => 
+                await DynamoDb.GetItemAsync(request, token).ConfigAwait(), throwNotFoundExceptions).ConfigAwait();
+
+            if (!response.IsItemSet)
+                return default;
             var attributeValues = response.Item;
 
             return Converters.FromAttributeValues<T>(table, attributeValues);
@@ -194,6 +273,35 @@ namespace ServiceStack.Aws.DynamoDb
             return to;
         }
 
+        private async Task<List<T>> ConvertBatchGetItemResponseAsync<T>(DynamoMetadataType table, KeysAndAttributes getItems, CancellationToken token = default)
+        {
+            var to = new List<T>();
+
+            var request = new BatchGetItemRequest(new Dictionary<string, KeysAndAttributes> {
+                {table.Name, getItems}
+            });
+
+            var response = await ExecAsync(async () => 
+                await DynamoDb.BatchGetItemAsync(request, token).ConfigAwait()).ConfigAwait();
+
+            if (response.Responses.TryGetValue(table.Name, out var results))
+                results.Each(x => to.Add(Converters.FromAttributeValues<T>(table, x)));
+
+            var i = 0;
+            while (response.UnprocessedKeys.Count > 0)
+            {
+                response = await ExecAsync(async () => 
+                    await DynamoDb.BatchGetItemAsync(new BatchGetItemRequest(response.UnprocessedKeys), token).ConfigAwait()).ConfigAwait();
+                if (response.Responses.TryGetValue(table.Name, out results))
+                    results.Each(x => to.Add(Converters.FromAttributeValues<T>(table, x)));
+
+                if (response.UnprocessedKeys.Count > 0)
+                    await i.SleepBackOffMultiplierAsync(token).ConfigAwait();
+            }
+
+            return to;
+        }
+
         private void ExecBatchWriteItemResponse<T>(DynamoMetadataType table, List<WriteRequest> deleteItems)
         {
             var request = new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>>
@@ -212,5 +320,77 @@ namespace ServiceStack.Aws.DynamoDb
                     i.SleepBackOffMultiplier();
             }
         }
+
+        private async Task ExecBatchWriteItemResponseAsync<T>(DynamoMetadataType table, List<WriteRequest> deleteItems, CancellationToken token=default)
+        {
+            var request = new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>>
+            {
+                {table.Name, deleteItems}
+            });
+
+            var response = await ExecAsync(async () => 
+                await DynamoDb.BatchWriteItemAsync(request, token).ConfigAwait()).ConfigAwait();
+
+            var i = 0;
+            while (response.UnprocessedItems.Count > 0)
+            {
+                response = await ExecAsync(async () => 
+                    await DynamoDb.BatchWriteItemAsync(new BatchWriteItemRequest(response.UnprocessedItems), token).ConfigAwait()).ConfigAwait();
+
+                if (response.UnprocessedItems.Count > 0)
+                    await i.SleepBackOffMultiplierAsync(token).ConfigAwait();
+            }
+        }
+        
+        private void PopulateMissingHashes<T>(DynamoMetadataType table, List<T> items)
+        {
+            var autoIncr = table.Fields.FirstOrDefault(x => x.IsAutoIncrement);
+            if (autoIncr != null)
+            {
+                var seqRequiredPos = new List<int>();
+                for (int i = 0; i < items.Count; i++)
+                {
+                    var item = items[i];
+                    var value = autoIncr.GetValue(item);
+                    if (DynamoConverters.IsNumberDefault(value))
+                        seqRequiredPos.Add(i);
+                }
+                if (seqRequiredPos.Count == 0)
+                    return;
+
+                var nextSequences = Sequences.GetNextSequences(table, seqRequiredPos.Count);
+                for (int i = 0; i < nextSequences.Length; i++)
+                {
+                    var pos = seqRequiredPos[i];
+                    autoIncr.SetValue(items[pos], nextSequences[i]);
+                }
+            }
+        }
+        
+        private async Task PopulateMissingHashesAsync<T>(DynamoMetadataType table, List<T> items, CancellationToken token=default)
+        {
+            var autoIncr = table.Fields.FirstOrDefault(x => x.IsAutoIncrement);
+            if (autoIncr != null)
+            {
+                var seqRequiredPos = new List<int>();
+                for (int i = 0; i < items.Count; i++)
+                {
+                    var item = items[i];
+                    var value = autoIncr.GetValue(item);
+                    if (DynamoConverters.IsNumberDefault(value))
+                        seqRequiredPos.Add(i);
+                }
+                if (seqRequiredPos.Count == 0)
+                    return;
+
+                var nextSequences = await Sequences.GetNextSequencesAsync(table, seqRequiredPos.Count);
+                for (int i = 0; i < nextSequences.Length; i++)
+                {
+                    var pos = seqRequiredPos[i];
+                    autoIncr.SetValue(items[pos], nextSequences[i]);
+                }
+            }
+        }
+        
     }
 }

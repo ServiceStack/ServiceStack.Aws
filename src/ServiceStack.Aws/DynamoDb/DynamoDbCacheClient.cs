@@ -11,7 +11,7 @@ using ServiceStack.Logging;
 
 namespace ServiceStack.Aws.DynamoDb
 {
-    public class DynamoDbCacheClient : ICacheClientExtended, IRequiresSchema, IRemoveByPattern
+    public partial class DynamoDbCacheClient : ICacheClientExtended, IRequiresSchema, IRemoveByPattern
     {
         public const string IdField = "Id";
         public const string DataField = "Data";

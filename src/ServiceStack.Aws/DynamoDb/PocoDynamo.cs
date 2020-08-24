@@ -274,8 +274,6 @@ namespace ServiceStack.Aws.DynamoDb
                         attrDefinitions.Add(new AttributeDefinition(x.RangeKey.Name, x.RangeKey.DbType));
                 });
             }
-
-
             return to;
         }
 
@@ -453,11 +451,10 @@ namespace ServiceStack.Aws.DynamoDb
             }
         }
 
-        public void UpdateItem<T>(DynamoUpdateItem update)
+        private UpdateItemRequest ToUpdateItemRequest<T>(DynamoUpdateItem update)
         {
             var table = DynamoMetadata.GetTable<T>();
-            var request = new UpdateItemRequest
-            {
+            var request = new UpdateItemRequest {
                 TableName = table.Name,
                 Key = Converters.ToAttributeKeyValue(this, table, update.Hash, update.Range),
                 AttributeUpdates = new Dictionary<string, AttributeValueUpdate>(),
@@ -502,6 +499,12 @@ namespace ServiceStack.Aws.DynamoDb
                 }
             }
 
+            return request;
+        }
+
+        public void UpdateItem<T>(DynamoUpdateItem update)
+        {
+            var request = ToUpdateItemRequest<T>(update);
             Exec(() => DynamoDb.UpdateItem(request));
         }
 
@@ -578,31 +581,6 @@ namespace ServiceStack.Aws.DynamoDb
 
                     if (response.UnprocessedItems.Count > 0)
                         i.SleepBackOffMultiplier();
-                }
-            }
-        }
-
-        private void PopulateMissingHashes<T>(DynamoMetadataType table, List<T> items)
-        {
-            var autoIncr = table.Fields.FirstOrDefault(x => x.IsAutoIncrement);
-            if (autoIncr != null)
-            {
-                var seqRequiredPos = new List<int>();
-                for (int i = 0; i < items.Count; i++)
-                {
-                    var item = items[i];
-                    var value = autoIncr.GetValue(item);
-                    if (DynamoConverters.IsNumberDefault(value))
-                        seqRequiredPos.Add(i);
-                }
-                if (seqRequiredPos.Count == 0)
-                    return;
-
-                var nextSequences = Sequences.GetNextSequences(table, seqRequiredPos.Count);
-                for (int i = 0; i < nextSequences.Length; i++)
-                {
-                    var pos = seqRequiredPos[i];
-                    autoIncr.SetValue(items[pos], nextSequences[i]);
                 }
             }
         }

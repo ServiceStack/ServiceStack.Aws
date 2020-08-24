@@ -5,8 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using ServiceStack.Text;
 
 namespace ServiceStack.Aws.DynamoDb
 {
@@ -242,9 +245,19 @@ namespace ServiceStack.Aws.DynamoDb
             return Db.Query(this);
         }
 
+        public async Task<List<T>> ExecAsync(CancellationToken token=default)
+        {
+            return await Db.QueryAsync(this, token).ConfigAwait();
+        }
+
         public List<T> Exec(int limit)
         {
             return Db.Query(this, limit:limit);
+        }
+
+        public async Task<List<T>> ExecAsync(int limit, CancellationToken token=default)
+        {
+            return await Db.QueryAsync(this, limit:limit, token: token).ConfigAwait();
         }
 
         public IEnumerable<Into> ExecInto<Into>()
@@ -252,9 +265,19 @@ namespace ServiceStack.Aws.DynamoDb
             return Db.Query<Into>(this.Projection<Into>());
         }
 
+        public async Task<List<Into>> ExecIntoAsync<Into>(CancellationToken token=default)
+        {
+            return await Db.QueryAsync<Into>(this.Projection<Into>(), token).ConfigAwait();
+        }
+
         public List<Into> Exec<Into>(int limit)
         {
             return Db.Query<Into>(this.Projection<Into>(), limit:limit);
+        }
+
+        public async Task<List<Into>> ExecAsync<Into>(int limit, CancellationToken token=default)
+        {
+            return await Db.QueryAsync<Into>(this.Projection<Into>(), limit:limit, token).ConfigAwait();
         }
 
         public IEnumerable<TKey> ExecColumn<TKey>(Expression<Func<T, TKey>> fields)
@@ -268,6 +291,21 @@ namespace ServiceStack.Aws.DynamoDb
                 object value = Table.GetField(field).GetValue(attrValue);
                 yield return (TKey)value;
             }
+        }
+
+        public async Task<List<TKey>> ExecColumnAsync<TKey>(Expression<Func<T, TKey>> fields, CancellationToken token=default)
+        {
+            var q = new PocoDynamoExpression(typeof(T)).Parse(fields);
+            var field = q.ReferencedFields[0];
+            this.ProjectionExpression = field;
+            var to = new List<TKey>();
+
+            foreach (var attrValue in await Db.QueryAsync(this, token).ConfigAwait())
+            {
+                object value = Table.GetField(field).GetValue(attrValue);
+                to.Add((TKey) value);
+            }
+            return to;
         }
     }
 }

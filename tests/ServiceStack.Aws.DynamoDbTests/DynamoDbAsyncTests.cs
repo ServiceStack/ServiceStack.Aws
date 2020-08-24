@@ -19,12 +19,12 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.DeleteTable<Poco>();
 
             var tables = db.GetTableNames().ToList();
-            Assert.That(!tables.Contains(typeof(Poco).Name));
+            Assert.That(!tables.Contains(nameof(Poco)));
 
             await db.InitSchemaAsync();
 
             tables = db.GetTableNames().ToList();
-            Assert.That(tables.Contains(typeof(Poco).Name));
+            Assert.That(tables.Contains(nameof(Poco)));
         }
     }
 }

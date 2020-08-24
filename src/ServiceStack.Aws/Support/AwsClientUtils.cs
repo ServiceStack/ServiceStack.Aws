@@ -2,6 +2,7 @@
 // License: https://raw.github.com/ServiceStack/ServiceStack/master/license.txt
 
 using System.Threading;
+using System.Threading.Tasks;
 using ServiceStack.Text;
 
 namespace ServiceStack.Aws.Support
@@ -30,5 +31,8 @@ namespace ServiceStack.Aws.Support
         /// <param name="retriesAttempted"></param>
         internal static void SleepBackOffMultiplier(this int retriesAttempted) => 
             Thread.Sleep(ExecUtils.CalculateFullJitterBackOffDelay(retriesAttempted));
+
+        internal static async Task SleepBackOffMultiplierAsync(this int retriesAttempted, CancellationToken token=default) => 
+            await Task.Delay(ExecUtils.CalculateFullJitterBackOffDelay(retriesAttempted));
     }
 }
