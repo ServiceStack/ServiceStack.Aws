@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using ServiceStack.Aws.Support;
@@ -48,12 +49,12 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var entry = Dynamo.GetItem<CacheEntry>(key);
             if (entry == null)
-                return default(T);
+                return default;
 
             if (entry.ExpiryDate != null && DateTime.UtcNow > entry.ExpiryDate.Value.ToUniversalTime())
             {
                 Remove(key);
-                return default(T);
+                return default;
             }
 
             return entry.Data.FromJson<T>();
@@ -74,7 +75,7 @@ namespace ServiceStack.Aws.DynamoDb
         private bool CacheAdd<T>(string key, T value, DateTime? expiresAt)
         {
             var entry = GetValue<T>(key);
-            if (!Equals(entry, default(T)))
+            if (!Equals(entry, default))
                 return false;
 
             CacheSet(key, value, expiresAt);
@@ -84,7 +85,7 @@ namespace ServiceStack.Aws.DynamoDb
         private bool CacheReplace<T>(string key, T value, DateTime? expiresAt)
         {
             var entry = GetValue<T>(key);
-            if (Equals(entry, default(T)))
+            if (Equals(entry, default))
                 return false;
 
             CacheSet(key, value, expiresAt);
@@ -92,6 +93,31 @@ namespace ServiceStack.Aws.DynamoDb
         }
 
         private bool CacheSet<T>(string key, T value, DateTime? expiresAt)
+        {
+            var request = ToCacheEntryPutItemRequest(key, value, expiresAt);
+
+            Exception lastEx = null;
+            var i = 0;
+            var firstAttempt = DateTime.UtcNow;
+            while (DateTime.UtcNow - firstAttempt < Dynamo.MaxRetryOnExceptionTimeout)
+            {
+                i++;
+                try
+                {
+                    ((PocoDynamo)Dynamo).Exec(() => Dynamo.DynamoDb.PutItem(request));
+                    return true;
+                }
+                catch (ResourceNotFoundException ex)
+                {
+                    lastEx = ex;
+                    i.SleepBackOffMultiplier(); //Table could temporarily not exist after a FlushAll()
+                }
+            }
+
+            throw new TimeoutException($"Exceeded timeout of {Dynamo.MaxRetryOnExceptionTimeout}", lastEx);
+        }
+
+        private PutItemRequest ToCacheEntryPutItemRequest<T>(string key, T value, DateTime? expiresAt)
         {
             var now = DateTime.UtcNow;
             string json = AwsClientUtils.ToScopedJson(value);
@@ -103,26 +129,19 @@ namespace ServiceStack.Aws.DynamoDb
                 ModifiedDate = now,
                 ExpiryDate = expiresAt,
             };
-
-            Exception lastEx = null;
-            var i = 0;
-            var firstAttempt = DateTime.UtcNow;
-            while (DateTime.UtcNow - firstAttempt < Dynamo.MaxRetryOnExceptionTimeout)
+            var table = DynamoMetadata.GetTable<CacheEntry>();
+            var request = new PutItemRequest
             {
-                i++;
-                try
-                {
-                    Dynamo.PutItem(entry);
-                    return true;
-                }
-                catch (ResourceNotFoundException ex)
-                {
-                    lastEx = ex;
-                    i.SleepBackOffMultiplier(); //Table could temporarily not exist after a FlushAll()
-                }
+                TableName = table.Name,
+                Item = Dynamo.Converters.ToAttributeValues(Dynamo, entry, table),
+                ReturnValues = ReturnValue.NONE,
+            };
+            if (typeof(T).IsNumericType())
+            {
+                request.Item[DataField] = new AttributeValue { N = json }; //Needs to be Number Type to be able to increment value
             }
 
-            throw new TimeoutException($"Exceeded timeout of {Dynamo.MaxRetryOnExceptionTimeout}", lastEx);
+            return request;
         }
 
         private int UpdateCounterBy(string key, int amount)

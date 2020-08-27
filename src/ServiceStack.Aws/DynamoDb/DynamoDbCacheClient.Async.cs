@@ -73,16 +73,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         private async Task<bool>  CacheSetAsync<T>(string key, T value, DateTime? expiresAt, CancellationToken token=default)
         {
-            var now = DateTime.UtcNow;
-            string json = AwsClientUtils.ToScopedJson(value);
-            var entry = new CacheEntry
-            {
-                Id = key,
-                Data = json,
-                CreatedDate = now,
-                ModifiedDate = now,
-                ExpiryDate = expiresAt,
-            };
+            var request = ToCacheEntryPutItemRequest(key, value, expiresAt);
 
             Exception lastEx = null;
             var i = 0;
@@ -92,7 +83,8 @@ namespace ServiceStack.Aws.DynamoDb
                 i++;
                 try
                 {
-                    await Dynamo.PutItemAsync(entry, token: token).ConfigAwait();
+                    await ((PocoDynamo)Dynamo).ExecAsync(async () => 
+                        await Dynamo.DynamoDb.PutItemAsync(request, token).ConfigAwait()).ConfigAwait();
                     return true;
                 }
                 catch (ResourceNotFoundException ex)

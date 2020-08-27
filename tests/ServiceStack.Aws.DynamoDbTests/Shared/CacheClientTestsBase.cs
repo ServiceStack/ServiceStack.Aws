@@ -39,6 +39,87 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         }
     }
 
+    public class AllFields
+    {
+        public int Id { get; set; }
+        public int? NullableId { get; set; }
+        public byte Byte { get; set; }
+        public short Short { get; set; }
+        public int Int { get; set; }
+        public long Long { get; set; }
+        public ushort UShort { get; set; }
+        public uint UInt { get; set; }
+        public ulong ULong { get; set; }
+        public float Float { get; set; }
+        public double Double { get; set; }
+        public decimal Decimal { get; set; }
+        public string String { get; set; }
+        public DateTime DateTime { get; set; }
+        public TimeSpan TimeSpan { get; set; }
+        public Guid Guid { get; set; }
+        public DateTime? NullableDateTime { get; set; }
+        public TimeSpan? NullableTimeSpan { get; set; }
+        public Guid? NullableGuid { get; set; }
+
+        protected bool Equals(AllFields other)
+        {
+            return Id == other.Id &&
+                NullableId == other.NullableId &&
+                Byte == other.Byte &&
+                Short == other.Short &&
+                Int == other.Int &&
+                Long == other.Long &&
+                UShort == other.UShort &&
+                UInt == other.UInt &&
+                ULong == other.ULong &&
+                Float.Equals(other.Float) &&
+                Double.Equals(other.Double) &&
+                Decimal == other.Decimal &&
+                string.Equals(String, other.String) &&
+                DateTime.Equals(other.DateTime) &&
+                TimeSpan.Equals(other.TimeSpan) &&
+                Guid.Equals(other.Guid) &&
+                NullableDateTime.Equals(other.NullableDateTime) &&
+                NullableTimeSpan.Equals(other.NullableTimeSpan) &&
+                NullableGuid.Equals(other.NullableGuid);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((AllFields)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Id;
+                hashCode = (hashCode * 397) ^ NullableId.GetHashCode();
+                hashCode = (hashCode * 397) ^ Byte.GetHashCode();
+                hashCode = (hashCode * 397) ^ Short.GetHashCode();
+                hashCode = (hashCode * 397) ^ Int;
+                hashCode = (hashCode * 397) ^ Long.GetHashCode();
+                hashCode = (hashCode * 397) ^ UShort.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int)UInt;
+                hashCode = (hashCode * 397) ^ ULong.GetHashCode();
+                hashCode = (hashCode * 397) ^ Float.GetHashCode();
+                hashCode = (hashCode * 397) ^ Double.GetHashCode();
+                hashCode = (hashCode * 397) ^ Decimal.GetHashCode();
+                hashCode = (hashCode * 397) ^ (String != null ? String.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ DateTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ TimeSpan.GetHashCode();
+                hashCode = (hashCode * 397) ^ Guid.GetHashCode();
+                hashCode = (hashCode * 397) ^ NullableDateTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ NullableTimeSpan.GetHashCode();
+                hashCode = (hashCode * 397) ^ NullableGuid.GetHashCode();
+                return hashCode;
+            }
+        }
+    }
+
     public class CustomAuthSession : AuthUserSession
     {
         [DataMember]
@@ -50,11 +131,11 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
     {
         private readonly ICacheClient Cache;
 
-        public abstract ICacheClient CreateCacheClient();
+        public abstract ICacheClient CreateClient();
 
         protected CacheClientTestsBase()
         {
-            Cache = CreateCacheClient();
+            Cache = CreateClient();
             Cache.FlushAll();
         }
 
@@ -163,6 +244,26 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         }
 
         [Test]
+        public void Expired_item_returns_correct_GetTimeToLive()
+        {
+            var key = "int:key";
+
+            var value = Cache.GetOrCreate(key, TimeSpan.FromMilliseconds(2000), () => 1);
+            var ttl = Cache.GetTimeToLive(key);
+
+            Assert.That(value, Is.EqualTo(1));
+            Assert.That(ttl.Value.TotalMilliseconds, Is.GreaterThan(0));
+
+            Cache.Remove(key);
+
+            value = Cache.Get<int>(key);
+            ttl = Cache.GetTimeToLive(key);
+
+            Assert.That(value, Is.EqualTo(0));
+            Assert.That(ttl, Is.Null);
+        }
+
+        [Test]
         public void Can_increment_and_decrement_values()
         {
             Assert.That(Cache.Increment("incr:a", 2), Is.EqualTo(2));
@@ -170,6 +271,14 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
 
             Assert.That(Cache.Decrement("decr:a", 2), Is.EqualTo(-2));
             Assert.That(Cache.Decrement("decr:a", 3), Is.EqualTo(-5));
+        }
+
+        [Test]
+        public void Can_increment_and_reset_values()
+        {
+            Assert.That(Cache.Increment("incr:counter", 10), Is.EqualTo(10));
+            Cache.Set("incr:counter", 0);
+            Assert.That(Cache.Increment("incr:counter", 10), Is.EqualTo(10));
         }
 
         [Test]
@@ -264,7 +373,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         [Test]
         public void Can_cache_multiple_items_in_parallel()
         {
-            var cache = CreateCacheClient();
+            var cache = CreateClient();
             var fns = 10.Times(i => (Action)(() =>
             {
                 cache.Set("concurrent-test", $"Data: {i}");
@@ -279,8 +388,8 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         [Test]
         public void Can_set_get_and_remove_ISession()
         {
-            var sessionA = new SessionFactory(CreateCacheClient()).CreateSession("a");
-            var sessionB = new SessionFactory(CreateCacheClient()).CreateSession("b");
+            var sessionA = new SessionFactory(CreateClient()).CreateSession("a");
+            var sessionB = new SessionFactory(CreateClient()).CreateSession("b");
 
             3.Times(i =>
             {
@@ -329,8 +438,8 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
             Assert.That(sessionKeys.Count, Is.EqualTo(5));
             Assert.That(sessionKeys.All(x => x.StartsWith("urn:iauthsession:")));
 
-            var allSesssions = Cache.GetAll<IAuthSession>(sessionKeys);
-            Assert.That(allSesssions.Values.Count(x => x != null), Is.EqualTo(sessionKeys.Count));
+            var allSessions = Cache.GetAll<IAuthSession>(sessionKeys);
+            Assert.That(allSessions.Values.Count(x => x != null), Is.EqualTo(sessionKeys.Count));
 
             var allKeys = Cache.GetAllKeys().ToList()
                 .Where(x => x.StartsWith("urn:iauthsession:") || x.StartsWith("otherkey")).ToList();
@@ -339,5 +448,59 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
 
             JsConfig.Reset();
         }
+
+        [Test]
+        public void Can_Cache_AllFields()
+        {
+            JsConfig.DateHandler = DateHandler.ISO8601;
+
+            var dto = new AllFields
+            {
+                Id = 1,
+                NullableId = 2,
+                Byte = 3,
+                Short = 4,
+                Int = 5,
+                Long = 6,
+                UShort = 7,
+                UInt = 8,
+                Float = 1.1f,
+                Double = 2.2d,
+                Decimal = 3.3m,
+                String = "String",
+                DateTime = DateTime.Now,
+                TimeSpan = new TimeSpan(1, 1, 1, 1, 1),
+                Guid = Guid.NewGuid(),
+                NullableTimeSpan = new TimeSpan(2, 2, 2),
+                NullableGuid = new Guid("4B6BB8AE-57B5-4B5B-8632-0C35AF0B3168"),
+            };
+
+            Cache.Set("allfields", dto);
+            var fromCache = Cache.Get<AllFields>("allfields");
+
+            Assert.That(fromCache.DateTime, Is.EqualTo(dto.DateTime));
+
+            Assert.That(fromCache.Equals(dto));
+
+            JsConfig.Reset();
+        }
+        
+        [Test]
+        public void Can_RemoveAll_and_GetKeysStartingWith_with_prefix()
+        {
+            var cache = Cache.WithPrefix("prefix.");
+
+            cache.Set("test_QUERY_Deposit__Query_Deposit_10_1", "A");
+            cache.Set("test_QUERY_Deposit__0_1___CUSTOM", "B");
+
+            var keys = cache.GetKeysStartingWith("test_QUERY_Deposit").ToList();
+            Assert.That(keys.Count, Is.EqualTo(2));
+
+            cache.RemoveAll(keys);
+
+            var newKeys = cache.GetKeysStartingWith("test_QUERY_Deposit");
+            Assert.That(newKeys.Count, Is.EqualTo(0));
+        }
+        
     }
 }

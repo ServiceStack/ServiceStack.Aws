@@ -428,7 +428,7 @@ namespace ServiceStack.Aws.DynamoDb
             var response = Exec(() => DynamoDb.PutItem(request));
 
             if (response.Attributes.IsEmpty())
-                return default(T);
+                return default;
 
             return Converters.FromAttributeValues<T>(table, response.Attributes);
         }
