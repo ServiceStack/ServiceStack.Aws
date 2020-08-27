@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
@@ -10,17 +11,17 @@ using ServiceStack.Text;
 namespace ServiceStack.Aws.DynamoDbTests
 {
     [TestFixture]
-    public class PocoDynaboDbTests : DynamoTestBase
+    public class PocoDynamoDbTestsAsync : DynamoTestBase
     {
         [OneTimeSetUp]
-        public void OneTimeSetUp()
+        public async Task OneTimeSetUp()
         {
             var db = CreatePocoDynamo();
             db.DeleteAllTables(TimeSpan.FromMinutes(1));
         }
 
         [Test]
-        public void Does_Create_tables()
+        public async Task Does_Create_tables()
         {
             var db = CreatePocoDynamo();
             var types = new List<Type>()
@@ -29,7 +30,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 .Add<Node>();
 
             db.RegisterTables(types);
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
             var tableNames = db.GetTableNames();
 
@@ -42,15 +43,15 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Can_put_and_delete_Country_raw()
+        public async Task Can_put_and_delete_Country_raw()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Country>();
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
-            db.DynamoDb.PutItem(new PutItemRequest
+            await db.DynamoDb.PutItemAsync(new PutItemRequest
             {
-                TableName = typeof(Country).Name,
+                TableName = nameof(Country),
                 Item = new Dictionary<string, AttributeValue>
                 {
                     { "Id", new AttributeValue { N = "1" } },
@@ -59,9 +60,9 @@ namespace ServiceStack.Aws.DynamoDbTests
                 }
             });
 
-            var response = db.DynamoDb.GetItem(new GetItemRequest
+            var response = await db.DynamoDb.GetItemAsync(new GetItemRequest
             {
-                TableName = typeof(Country).Name,
+                TableName = nameof(Country),
                 ConsistentRead = true,
                 Key = new Dictionary<string, AttributeValue> {
                     { "Id", new AttributeValue { N = "1" } }
@@ -75,11 +76,11 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Can_put_and_delete_Country()
+        public async Task Can_put_and_delete_Country()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Country>();
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
             var country = new Country
             {
@@ -88,9 +89,9 @@ namespace ServiceStack.Aws.DynamoDbTests
                 CountryName = "United States"
             };
 
-            db.PutItem(country);
+            await db.PutItemAsync(country);
 
-            var dbCountry = db.GetItem<Country>(2);
+            var dbCountry = await db.GetItemAsync<Country>(2);
 
             dbCountry.PrintDump();
 
@@ -98,15 +99,15 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Can_put_and_delete_basic_Customer_raw()
+        public async Task Can_put_and_delete_basic_Customer_raw()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Customer>();
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
-            db.DynamoDb.PutItem(new PutItemRequest
+            await db.DynamoDb.PutItemAsync(new PutItemRequest
             {
-                TableName = typeof(Customer).Name,
+                TableName = nameof(Customer),
                 Item = new Dictionary<string, AttributeValue>
                 {
                     { "Id", new AttributeValue { N = "2" } },
@@ -116,9 +117,9 @@ namespace ServiceStack.Aws.DynamoDbTests
                 }
             });
 
-            var response = db.DynamoDb.GetItem(new GetItemRequest
+            var response = await db.DynamoDb.GetItemAsync(new GetItemRequest
             {
-                TableName = typeof(Customer).Name,
+                TableName = nameof(Customer),
                 ConsistentRead = true,
                 Key = new Dictionary<string, AttributeValue> {
                     { "Id", new AttributeValue { N = "2" } }
@@ -133,11 +134,11 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Can_Put_Get_and_Delete_Customer_with_Orders()
+        public async Task Can_Put_Get_and_Delete_Customer_with_Orders()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Customer>();
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
             var customer = new Customer
             {
@@ -174,44 +175,44 @@ namespace ServiceStack.Aws.DynamoDbTests
                 }
             };
 
-            db.PutItem(customer);
+            await db.PutItemAsync(customer);
 
-            var dbCustomer = db.GetItem<Customer>(11);
+            var dbCustomer = await db.GetItemAsync<Customer>(11);
 
             Assert.That(dbCustomer.Equals(customer));
 
             db.DeleteItem<Customer>(11);
 
-            dbCustomer = db.GetItem<Customer>(11);
+            dbCustomer = await db.GetItemAsync<Customer>(11);
 
             Assert.That(dbCustomer, Is.Null);
         }
 
         [Test]
-        public void Does_auto_populate_AutoIncrement_fields()
+        public async Task Does_auto_populate_AutoIncrement_fields()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Customer>();
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
-            db.Sequences.Reset<Customer>(10);
-            db.Sequences.Reset<Order>(20);
-            db.Sequences.Reset<CustomerAddress>(30);
+            await db.SequencesAsync.ResetAsync<Customer>(10);
+            await db.SequencesAsync.ResetAsync<Order>(20);
+            await db.SequencesAsync.ResetAsync<CustomerAddress>(30);
 
             var customer = new Customer
             {
                 Name = "Foo",
             };
 
-            db.PutItem(customer);
+            await db.PutItemAsync(customer);
 
             Assert.That(customer.Id, Is.EqualTo(11));
 
-            Assert.That(db.Sequences.Current<Customer>(), Is.EqualTo(11));
-            Assert.That(db.Sequences.Current<Order>(), Is.EqualTo(20));
-            Assert.That(db.Sequences.Current<CustomerAddress>(), Is.EqualTo(30));
+            Assert.That(await db.SequencesAsync.CurrentAsync<Customer>(), Is.EqualTo(11));
+            Assert.That(await db.SequencesAsync.CurrentAsync<Order>(), Is.EqualTo(20));
+            Assert.That(await db.SequencesAsync.CurrentAsync<CustomerAddress>(), Is.EqualTo(30));
 
-            var dbCustomer = db.GetItem<Customer>(11);
+            var dbCustomer = await db.GetItemAsync<Customer>(11);
             Assert.That(dbCustomer.Id, Is.EqualTo(11));
 
             customer = new Customer
@@ -242,7 +243,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 }
             };
 
-            db.PutItem(customer);
+            await db.PutItemAsync(customer);
 
             Assert.That(customer.Id, Is.EqualTo(12));
             Assert.That(customer.Orders[0].Id, Is.EqualTo(21));
@@ -251,11 +252,11 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Can_Put_Get_and_Delete_Deeply_Nested_Nodes()
+        public async Task Can_Put_Get_and_Delete_Deeply_Nested_Nodes()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Node>();
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
             var nodes = new Node(1, "/root",
                 new List<Node>
@@ -270,9 +271,9 @@ namespace ServiceStack.Aws.DynamoDbTests
                     new Node(3, "/root/3")
                 });
 
-            db.PutItem(nodes);
+            await db.PutItemAsync(nodes);
 
-            var dbNodes = db.GetItem<Node>(1);
+            var dbNodes = await db.GetItemAsync<Node>(1);
 
             dbNodes.PrintDump();
 
@@ -280,11 +281,11 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Can_put_and_get_Collection()
+        public async Task Can_put_and_get_Collection()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Collection>();
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
             var row = new Collection
             {
@@ -293,9 +294,9 @@ namespace ServiceStack.Aws.DynamoDbTests
             .InitStrings(10.Times(i => ((char)('A' + i)).ToString()).ToArray())
             .InitInts(10.Times(i => i).ToArray());
 
-            db.PutItem(row);
+            await db.PutItemAsync(row);
 
-            var dbRow = db.GetItem<Collection>(1);
+            var dbRow = await db.GetItemAsync<Collection>(1);
 
             dbRow.PrintDump();
 
@@ -303,27 +304,27 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Does_convert_empty_string_to_null()
+        public async Task Does_convert_empty_string_to_null()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Customer>();
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
-            db.PutItem(new Customer { Id = 1, Name = "" });
+            await db.PutItemAsync(new Customer { Id = 1, Name = "" });
 
-            var customer = db.GetItem<Customer>(1);
+            var customer = await db.GetItemAsync<Customer>(1);
 
             Assert.That(customer.Name, Is.Null);
         }
 
         [Test]
-        public void Does_return_null_if_doesnt_exist()
+        public async Task Does_return_null_if_doesnt_exist()
         {
             var db = CreatePocoDynamo();
             db.RegisterTable<Customer>();
-            db.InitSchema();
+            await db.InitSchemaAsync();
 
-            var customer = db.GetItem<Customer>(999);
+            var customer = await db.GetItemAsync<Customer>(999);
             Assert.That(customer, Is.Null);
         }
     }

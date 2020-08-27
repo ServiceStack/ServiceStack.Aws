@@ -55,11 +55,11 @@ namespace ServiceStack.Aws.DynamoDbTests
             db.GetTableNames().PrintDump();
 
             Assert.That(db.GetTableNames(), Is.EquivalentTo(new[] {
-                typeof(ApiKey).Name,
-                typeof(Seq).Name,
-                typeof(UserAuth).Name,
-                typeof(UserAuthDetails).Name,
-                typeof(UserAuthRole).Name,
+                nameof(ApiKey),
+                nameof(Seq),
+                nameof(UserAuth),
+                nameof(UserAuthDetails),
+                nameof(UserAuthRole),
             }));
 
             var userAuth = AssertTable(db, typeof(UserAuth), "Id");

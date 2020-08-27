@@ -16,9 +16,9 @@ namespace ServiceStack.Aws.DynamoDbTests
             var db = CreatePocoDynamo()
                 .RegisterTable<Poco>();
 
-            db.DeleteTable<Poco>();
+            await db.DeleteTableAsync<Poco>();
 
-            var tables = db.GetTableNames().ToList();
+            var tables = (await db.GetTableNamesAsync()).ToList();
             Assert.That(!tables.Contains(nameof(Poco)));
 
             await db.InitSchemaAsync();

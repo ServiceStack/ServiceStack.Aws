@@ -26,6 +26,11 @@ namespace ServiceStack.Aws.DynamoDb
         ISequenceSource Sequences { get; }
 
         /// <summary>
+        /// Get the Async numeric Sequence provider configured with this client
+        /// </summary>
+        ISequenceSourceAsync SequencesAsync { get; }
+
+        /// <summary>
         /// Access the converters that converts POCO's into DynamoDB data types
         /// </summary>
         DynamoConverters Converters { get; }

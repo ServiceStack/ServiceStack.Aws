@@ -104,12 +104,18 @@ namespace ServiceStack.Aws.DynamoDb
             return seq.Increment(tableName, 0);
         }
 
+        public static async Task<long> CurrentAsync<T>(this ISequenceSourceAsync seq, CancellationToken token=default)
+        {
+            var tableName = DynamoMetadata.GetType<T>().Name;
+            return await seq.IncrementAsync(tableName, 0, token);
+        }
+
         public static long[] GetNextSequences<T>(this ISequenceSource seq, int noOfSequences)
         {
             return GetNextSequences(seq, DynamoMetadata.GetType<T>(), noOfSequences);
         }
 
-        public static async Task<long[]> GetNextSequencesAsync<T>(this ISequenceSource seq, int noOfSequences, CancellationToken token=default)
+        public static async Task<long[]> GetNextSequencesAsync<T>(this ISequenceSourceAsync seq, int noOfSequences, CancellationToken token=default)
         {
             return await GetNextSequencesAsync(seq, DynamoMetadata.GetType<T>(), noOfSequences).ConfigAwait();
         }
@@ -126,21 +132,16 @@ namespace ServiceStack.Aws.DynamoDb
             return ids;
         }
 
-        public static async Task<long[]> GetNextSequencesAsync(this ISequenceSource seq, DynamoMetadataType meta, int noOfSequences)
+        public static async Task<long[]> GetNextSequencesAsync(this ISequenceSourceAsync seq, DynamoMetadataType meta, int noOfSequences)
         {
-            if (seq is ISequenceSourceAsync seqAsync)
+            var newCounter = await seq.IncrementAsync(meta, noOfSequences).ConfigAwait();
+            var firstId = newCounter - noOfSequences + 1;
+            var ids = new long[noOfSequences];
+            for (var i = 0; i < noOfSequences; i++)
             {
-                var newCounter = await seqAsync.IncrementAsync(meta, noOfSequences).ConfigAwait();
-                var firstId = newCounter - noOfSequences + 1;
-                var ids = new long[noOfSequences];
-                for (var i = 0; i < noOfSequences; i++)
-                {
-                    ids[i] = firstId + i;
-                }
-                return ids;
+                ids[i] = firstId + i;
             }
-            // ReSharper disable once MethodHasAsyncOverload
-            return seq.GetNextSequences(meta, noOfSequences);
+            return ids;
         }
     }
 }

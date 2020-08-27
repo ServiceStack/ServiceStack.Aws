@@ -11,10 +11,7 @@ namespace ServiceStack.Aws.DynamoDbTests
     {
         private DynamoDbAppSettings settings;
 
-        public IPocoDynamo Db
-        {
-            get { return settings.Db;  }
-        }
+        public IPocoDynamo Db => settings.Db;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()

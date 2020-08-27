@@ -21,6 +21,7 @@ namespace ServiceStack.Aws.DynamoDb
         public IAmazonDynamoDB DynamoDb { get; private set; }
 
         public ISequenceSource Sequences { get; set; }
+        public ISequenceSourceAsync SequencesAsync { get; set; }
 
         public DynamoConverters Converters { get; set; }
 
@@ -51,6 +52,7 @@ namespace ServiceStack.Aws.DynamoDb
             this.DynamoDb = dynamoDb ?? throw new ArgumentNullException(nameof(dynamoDb));
 
             this.Sequences = new DynamoDbSequenceSource(this);
+            this.SequencesAsync = (ISequenceSourceAsync)this.Sequences;
             this.Converters = DynamoMetadata.Converters;
             PollTableStatus = TimeSpan.FromSeconds(2);
             MaxRetryOnExceptionTimeout = TimeSpan.FromSeconds(60);

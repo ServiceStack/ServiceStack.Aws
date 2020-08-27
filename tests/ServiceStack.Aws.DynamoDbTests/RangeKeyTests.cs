@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
@@ -57,6 +58,30 @@ namespace ServiceStack.Aws.DynamoDbTests
             });
 
             var dto = db.GetItem<RangeTest>("test", createdDate);
+
+            dto.PrintDump();
+
+            Assert.That(dto.Id, Is.EqualTo("test"));
+            Assert.That(dto.Data, Is.EqualTo("Data"));
+            Assert.That(dto.CreatedDate, Is.EqualTo(createdDate)
+                .Within(TimeSpan.FromMinutes(1)));
+        }
+
+        [Test]
+        public async Task Can_Create_RangeTest_Async()
+        {
+            var db = CreatePocoDynamo();
+
+            await db.CreateTableIfMissingAsync(DynamoMetadata.RegisterTable<RangeTest>());
+
+            var createdDate = DateTime.UtcNow;
+            await db.PutItemAsync(new RangeTest {
+                Id = "test",
+                CreatedDate = createdDate,
+                Data = "Data",
+            });
+
+            var dto = await db.GetItemAsync<RangeTest>("test", createdDate);
 
             dto.PrintDump();
 

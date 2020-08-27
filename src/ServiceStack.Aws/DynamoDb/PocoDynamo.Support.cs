@@ -383,7 +383,7 @@ namespace ServiceStack.Aws.DynamoDb
                 if (seqRequiredPos.Count == 0)
                     return;
 
-                var nextSequences = await Sequences.GetNextSequencesAsync(table, seqRequiredPos.Count);
+                var nextSequences = await SequencesAsync.GetNextSequencesAsync(table, seqRequiredPos.Count);
                 for (int i = 0; i < nextSequences.Length; i++)
                 {
                     var pos = seqRequiredPos[i];
