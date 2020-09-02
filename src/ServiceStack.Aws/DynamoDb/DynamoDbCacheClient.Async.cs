@@ -217,7 +217,7 @@ namespace ServiceStack.Aws.DynamoDb
             return entry.ExpiryDate - DateTime.UtcNow;
         }
 
-        public async Task<IEnumerable<string>> GetKeysByPatternAsync(string pattern, CancellationToken token=default)
+        public async Task<IEnumerable<string>> KeysByPatternAsync(string pattern, CancellationToken token=default)
         {
             if (pattern == "*")
                 return await Dynamo.FromScan<CacheEntry>().ExecColumnAsync(x => x.Id, token).ConfigAwait();
@@ -232,10 +232,10 @@ namespace ServiceStack.Aws.DynamoDb
             return await Dynamo.FromScan<CacheEntry>(x => x.Id.StartsWith(beginWith))
                 .ExecColumnAsync(x => x.Id, token).ConfigAwait();
         }
-
+        
         public async Task RemoveByPatternAsync(string pattern, CancellationToken token=default)
         {
-            var idsToRemove = await GetKeysByPatternAsync(pattern, token).ConfigAwait();
+            var idsToRemove = await KeysByPatternAsync(pattern, token).ConfigAwait();
             await RemoveAllAsync(idsToRemove, token).ConfigAwait();
         }
 
@@ -243,5 +243,35 @@ namespace ServiceStack.Aws.DynamoDb
         {
             throw new NotImplementedException();
         }
+
+#if NET472 || NETSTANDARD2_0
+        public async IAsyncEnumerable<string> GetKeysByPatternAsync(string pattern, CancellationToken token=default)
+        {
+            if (pattern == "*")
+            {
+                foreach (var item in await Dynamo.FromScan<CacheEntry>().ExecColumnAsync(x => x.Id, token).ConfigAwait())
+                {
+                    yield return item;
+                }
+            }
+            else
+            {
+                if (!pattern.EndsWith("*"))
+                    throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
+
+                var beginWith = pattern.Substring(0, pattern.Length - 1);
+                if (beginWith.Contains("*"))
+                    throw new NotImplementedException("DynamoDb only supports begins_with* patterns");
+
+                foreach (var item in await Dynamo.FromScan<CacheEntry>(x => x.Id.StartsWith(beginWith))
+                    .ExecColumnAsync(x => x.Id, token).ConfigAwait())
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        public ValueTask DisposeAsync() => default;
+#endif
     }
 }
