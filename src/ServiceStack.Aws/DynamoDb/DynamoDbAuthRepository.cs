@@ -9,12 +9,12 @@ using ServiceStack.DataAnnotations;
 
 namespace ServiceStack.Aws.DynamoDb
 {
-    public class DynamoDbAuthRepository : DynamoDbAuthRepository<UserAuth, UserAuthDetails>, IUserAuthRepository
+    public class DynamoDbAuthRepository : DynamoDbAuthRepository<UserAuth, UserAuthDetails>
     {
         public DynamoDbAuthRepository(IPocoDynamo db, bool initSchema = false) : base(db, initSchema) { }
     }
 
-    public class DynamoDbAuthRepository<TUserAuth, TUserAuthDetails> : IUserAuthRepository, IManageRoles, IClearable, IRequiresSchema, IManageApiKeys, IQueryUserAuth
+    public partial class DynamoDbAuthRepository<TUserAuth, TUserAuthDetails> : IUserAuthRepository, IManageRoles, IClearable, IRequiresSchema, IManageApiKeys, IQueryUserAuth
         where TUserAuth : class, IUserAuth
         where TUserAuthDetails : class, IUserAuthDetails
     {
