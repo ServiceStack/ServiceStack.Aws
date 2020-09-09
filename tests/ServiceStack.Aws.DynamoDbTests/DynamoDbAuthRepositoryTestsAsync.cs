@@ -20,7 +20,22 @@ namespace ServiceStack.Aws.DynamoDbTests
         {
             CleanUp();
 
-            appHost = new BasicAppHost()
+            appHost = new BasicAppHost {
+                    ConfigureContainer = c => {
+                        var db = CreatePocoDynamo();
+                        c.AddSingleton(db);
+                        c.AddSingleton((IAuthRepository)CreateAuthRepo(db));
+                        
+                        var authRepo = c.Resolve<IAuthRepository>();
+                    
+                        if (authRepo is IClearable clearable)
+                        {
+                            try { clearable.Clear(); } catch {}
+                        }
+
+                        authRepo.InitSchema();
+                    }
+                }
                 .Init();
         }
 
@@ -49,9 +64,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         [Test]
         public async Task Does_create_Auth_Tables()
         {
-            var db = CreatePocoDynamo();
-            var authRepo = CreateAuthRepo(db);
-            authRepo.InitSchema();
+            var db = appHost.Resolve<IPocoDynamo>();
 
             Assert.That(await db.GetTableNamesAsync(), Is.EquivalentTo(new[] {
                 nameof(ApiKey),
@@ -73,8 +86,8 @@ namespace ServiceStack.Aws.DynamoDbTests
         [Test]
         public async Task Can_Create_UserAuth()
         {
-            var db = CreatePocoDynamo();
-            var authRepo = CreateAuthRepo(db);
+            var db = appHost.Resolve<IPocoDynamo>();
+            var authRepo = appHost.GetAuthRepositoryAsync();
 
             var user1 = new UserAuth
             {
@@ -115,8 +128,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         [Test]
         public async Task Can_GetUserAuthByUserName_Username()
         {
-            var db = CreatePocoDynamo();
-            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
+            var authRepo = appHost.GetAuthRepositoryAsync();
 
             var dbUser = await authRepo.GetUserAuthByUserNameAsync("testusername");
             Assert.That(dbUser, Is.Null);
@@ -137,8 +149,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         [Test]
         public async Task Can_GetUserAuthByUserName_Email()
         {
-            var db = CreatePocoDynamo();
-            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
+            var authRepo = appHost.GetAuthRepositoryAsync();
 
             var dbUser = await authRepo.GetUserAuthByUserNameAsync("testemail@gmail.com");
             Assert.That(dbUser, Is.Null);
@@ -160,7 +171,6 @@ namespace ServiceStack.Aws.DynamoDbTests
         public async Task Can_put_UserAuthRole()
         {
             var db = CreatePocoDynamo();
-            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
 
             await db.PutItemAsync(new UserAuthRole
             {
@@ -179,8 +189,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         [Test]
         public async Task Can_Assign_and_Unassign_Roles()
         {
-            var db = CreatePocoDynamo();
-            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
+            var authRepo = (DynamoDbAuthRepository)appHost.GetAuthRepositoryAsync();
 
             var userAuth = await authRepo.CreateUserAuthAsync(new UserAuth
             {
@@ -219,8 +228,8 @@ namespace ServiceStack.Aws.DynamoDbTests
         [Test]
         public async Task Does_clear_all_roles()
         {
-            var db = CreatePocoDynamo();
-            var authRepo = (DynamoDbAuthRepository)CreateAuthRepo(db);
+            var db = appHost.Resolve<IPocoDynamo>();
+            var authRepo = (DynamoDbAuthRepository)appHost.GetAuthRepositoryAsync();
 
             var userAuth = await authRepo.CreateUserAuthAsync(new UserAuth
             {
@@ -255,6 +264,7 @@ namespace ServiceStack.Aws.DynamoDbTests
         [Test]
         public async Task Can_AddUserAuthDetails()
         {
+            var db = appHost.Resolve<IPocoDynamo>();
             var authRepo = appHost.GetAuthRepositoryAsync();
             
             var newUser = await authRepo.CreateUserAuthAsync(new AppUser
