@@ -132,15 +132,13 @@ namespace ServiceStack.Aws.DynamoDb
 
             AssertNoExistingUser(newUser);
 
-            Sanitize(newUser);
-
             newUser.PasswordHash = existingUser.PasswordHash;
             newUser.Salt = existingUser.Salt;
             newUser.DigestHa1Hash = existingUser.DigestHa1Hash;
             newUser.CreatedDate = existingUser.CreatedDate;
             newUser.ModifiedDate = DateTime.UtcNow;
 
-            Db.PutItem((TUserAuth)newUser);
+            Db.PutItem(Sanitize((TUserAuth)newUser));
 
             newUser = DeSanitize(Db.GetItem<TUserAuth>(newUser.Id));
             return newUser;
@@ -148,13 +146,15 @@ namespace ServiceStack.Aws.DynamoDb
 
         //DynamoDb does not allow null hash keys on Global Indexes
         //Workaround by populating UserName with Email when null
-        private void Sanitize(IUserAuth userAuth)
+        private T Sanitize<T>(T userAuth) where T : IUserAuth
         {
             if (userAuth.UserName == null)
                 userAuth.UserName = userAuth.Email;
 
             if (this.LowerCaseUsernames)
                 userAuth.UserName = userAuth.UserName.ToLower();
+            
+            return userAuth;
         }
 
         private IUserAuth DeSanitize(TUserAuth userAuth)
@@ -207,7 +207,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (userAuth.CreatedDate == default(DateTime))
                 userAuth.CreatedDate = userAuth.ModifiedDate;
 
-            Db.PutItem(userAuth);
+            Db.PutItem(Sanitize(userAuth));
         }
 
         public void SaveUserAuth(IUserAuth userAuth)
@@ -219,7 +219,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (userAuth.CreatedDate == default(DateTime))
                 userAuth.CreatedDate = userAuth.ModifiedDate;
 
-            Db.PutItem((TUserAuth)userAuth);
+            Db.PutItem(Sanitize((TUserAuth)userAuth));
         }
 
         public List<IUserAuthDetails> GetUserAuthDetails(string userAuthId)
@@ -389,7 +389,7 @@ namespace ServiceStack.Aws.DynamoDb
             newUser.CreatedDate = existingUser.CreatedDate;
             newUser.ModifiedDate = DateTime.UtcNow;
 
-            Db.PutItem((TUserAuth)newUser);
+            Db.PutItem(Sanitize((TUserAuth)newUser));
 
             return newUser;
         }
@@ -401,14 +401,16 @@ namespace ServiceStack.Aws.DynamoDb
             Db.DeleteItem<TUserAuth>(userAuthId);
 
             var userAuthDetails = Db.FromQuery<TUserAuthDetails>(x => x.UserAuthId == userId)
-                .Select(x => x.Id)
+                .Select(x => new { x.UserAuthId, x.Id })
                 .Exec();
-            Db.DeleteItems<TUserAuthDetails>(userAuthDetails.Map(x => x.Id));
+            var userAuthDetailsKeys = userAuthDetails.Map(x => new DynamoId(x.UserAuthId, x.Id));
+            Db.DeleteItems<TUserAuthDetails>(userAuthDetailsKeys);
 
             var userAuthRoles = Db.FromQuery<UserAuthRole>(x => x.UserAuthId == userId)
                 .Select(x => x.Id)
                 .Exec();
-            Db.DeleteItems<UserAuthRole>(userAuthRoles.Map(x => x.Id));
+            var userAuthRolesKeys = userAuthRoles.Map(x => new DynamoId(x.UserAuthId, x.Id));
+            Db.DeleteItems<UserAuthRole>(userAuthRolesKeys);
         }
 
         public void Clear()

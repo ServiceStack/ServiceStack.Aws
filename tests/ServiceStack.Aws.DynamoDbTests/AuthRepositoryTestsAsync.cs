@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Funq;
 using NUnit.Framework;
 using ServiceStack.Auth;
@@ -11,23 +12,7 @@ using ServiceStack.Testing;
 
 namespace ServiceStack.Aws.DynamoDbTests
 {
-    // Custom UserAuth Data Model with extended Metadata properties
-    [Index(Name = nameof(Key))]
-    public class AppUser : UserAuth
-    {
-        public string Key { get; set; }
-        public string ProfileUrl { get; set; }
-        public string LastLoginIp { get; set; }
-        public DateTime? LastLoginDate { get; set; }
-    }
-
-    [Index(Name = nameof(Key))]
-    public class AppUserDetails : UserAuthDetails
-    {
-        public string Key { get; set; }
-    }
-
-    public class NewDynamoDbAuthRepositoryTests : AuthRepositoryTestsBase
+    public class NewDynamoDbAuthRepositoryTestsAsync : AuthRepositoryTestsBaseAsync
     {
         public override void ConfigureAuthRepo(Container container)
         {
@@ -38,13 +23,13 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
     }
     
-    public class DynamoDbAuthRepositoryQueryTests : AuthRepositoryQueryTestsBase
+    public class DynamoDbAuthRepositoryQueryTestsAsync : AuthRepositoryQueryTestsBaseAsync
     {
         public override void ConfigureAuthRepo(Container container) =>
             new NewDynamoDbAuthRepositoryTests().ConfigureAuthRepo(container);
     }
     
-    public abstract class AuthRepositoryTestsBase
+    public abstract class AuthRepositoryTestsBaseAsync
     {
         private ServiceStackHost appHost;
 
@@ -86,50 +71,48 @@ namespace ServiceStack.Aws.DynamoDbTests
         const string Password = "p@55wOrd";
 
         [Test]
-        public void Can_CreateUserAuth()
+        public async Task Can_CreateUserAuth()
         {
-            var authRepo = appHost.TryResolve<IAuthRepository>();
-            
-            var newUser = authRepo.CreateUserAuth(new AppUser
+            var authRepo = appHost.GetAuthRepositoryAsync();
+
+            var newUser = await authRepo.CreateUserAuthAsync(new AppUser
             {
                 DisplayName = "Test User",
                 Email = "user@gmail.com",
                 FirstName = "Test",
                 LastName = "User",
             }, Password);
-
+            
             Assert.That(newUser.Email, Is.EqualTo("user@gmail.com"));
 
-            var fromDb = authRepo.GetUserAuth((newUser as AppUser)?.Key ?? newUser.Id.ToString());
+            var fromDb = await authRepo.GetUserAuthAsync((newUser as AppUser)?.Key ?? newUser.Id.ToString());
             Assert.That(fromDb.Email, Is.EqualTo("user@gmail.com"));
 
             newUser.FirstName = "Updated";
-            authRepo.SaveUserAuth(newUser);
-
+            await authRepo.SaveUserAuthAsync(newUser);
+            
             var newSession = SessionFeature.CreateNewSession(null, "SESSION_ID");
             newSession.PopulateSession(newUser);
 
-            var updatedUser = authRepo.GetUserAuth(newSession.UserAuthId);
+            var updatedUser = await authRepo.GetUserAuthAsync(newSession.UserAuthId);
             Assert.That(updatedUser, Is.Not.Null);
             Assert.That(updatedUser.FirstName, Is.EqualTo("Updated"));
 
-            var authUser = authRepo.TryAuthenticate(newUser.Email, Password, out var ret)
-                ? ret 
-                : null;
+            var authUser = await authRepo.TryAuthenticateAsync(newUser.Email, Password);
             Assert.That(authUser, Is.Not.Null);
             Assert.That(authUser.FirstName, Is.EqualTo(updatedUser.FirstName));
             
-            authRepo.DeleteUserAuth(newSession.UserAuthId);
-            var deletedUserAuth = authRepo.GetUserAuth(newSession.UserAuthId);
+            await authRepo.DeleteUserAuthAsync(newSession.UserAuthId);
+            var deletedUserAuth = await authRepo.GetUserAuthAsync(newSession.UserAuthId);
             Assert.That(deletedUserAuth, Is.Null);
         }
 
         [Test]
-        public void Can_AddUserAuthDetails()
+        public async Task Can_AddUserAuthDetails()
         {
-            var authRepo = appHost.TryResolve<IAuthRepository>();
+            var authRepo = appHost.GetAuthRepositoryAsync();
             
-            var newUser = authRepo.CreateUserAuth(new AppUser
+            var newUser = await authRepo.CreateUserAuthAsync(new AppUser
             {
                 DisplayName = "Facebook User",
                 Email = "user@fb.com",
@@ -152,23 +135,23 @@ namespace ServiceStack.Aws.DynamoDbTests
                 Email = "user@fb.com",
             };
             
-            var userAuthDetails = authRepo.CreateOrMergeAuthSession(newSession, fbAuthTokens);
+            var userAuthDetails = await authRepo.CreateOrMergeAuthSessionAsync(newSession, fbAuthTokens);
             Assert.That(userAuthDetails.Email, Is.EqualTo("user@fb.com"));
 
-            var userAuthDetailsList = authRepo.GetUserAuthDetails(newSession.UserAuthId);
+            var userAuthDetailsList = await authRepo.GetUserAuthDetailsAsync(newSession.UserAuthId);
             Assert.That(userAuthDetailsList.Count, Is.EqualTo(1));
             Assert.That(userAuthDetailsList[0].Email, Is.EqualTo("user@fb.com"));
-
-            authRepo.DeleteUserAuth(newSession.UserAuthId);
-            userAuthDetailsList = authRepo.GetUserAuthDetails(newSession.UserAuthId);
+            
+            await authRepo.DeleteUserAuthAsync(newSession.UserAuthId);
+            userAuthDetailsList = await authRepo.GetUserAuthDetailsAsync(newSession.UserAuthId);
             Assert.That(userAuthDetailsList, Is.Empty);
-            var deletedUserAuth = authRepo.GetUserAuth(newSession.UserAuthId);
+            var deletedUserAuth = await authRepo.GetUserAuthAsync(newSession.UserAuthId);
             Assert.That(deletedUserAuth, Is.Null);
         }
     }
     
     [TestFixture]
-    public abstract class AuthRepositoryQueryTestsBase
+    public abstract class AuthRepositoryQueryTestsBaseAsync
     {
         private ServiceStackHost appHost;
 
@@ -210,6 +193,8 @@ namespace ServiceStack.Aws.DynamoDbTests
         [OneTimeTearDown]
         public void OneTimeTearDown() => appHost.Dispose(); 
 
+        const string Password = "p@55wOrd";
+
         void SeedData(IAuthRepository authRepo)
         {
             var newUser = authRepo.CreateUserAuth(new AppUser
@@ -219,7 +204,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 Email = "user@gmail.com",
                 FirstName = "Test",
                 LastName = "User",
-            }, "p@55wOrd");
+            }, Password);
 
             newUser = authRepo.CreateUserAuth(new AppUser
             {
@@ -228,7 +213,7 @@ namespace ServiceStack.Aws.DynamoDbTests
                 Email = "manager@gmail.com",
                 FirstName = "Test",
                 LastName = "Manager",
-            }, "p@55wOrd");
+            }, Password);
             authRepo.AssignRoles(newUser, roles:new[]{ "Manager" });
 
             newUser = authRepo.CreateUserAuth(new AppUser
@@ -238,13 +223,13 @@ namespace ServiceStack.Aws.DynamoDbTests
                 Email = "admin@gmail.com",
                 FirstName = "Admin",
                 LastName = "Super User",
-            }, "p@55wOrd");
+            }, Password);
             authRepo.AssignRoles(newUser, roles:new[]{ "Admin" });
         }
 
-        private static bool IsRavenDb(IAuthRepository authRepo) => authRepo.GetType().Name.StartsWith("Raven");
+        private static bool IsRavenDb(IAuthRepositoryAsync authRepo) => authRepo.GetType().Name.StartsWith("Raven");
 
-        private static void AssertHasIdentity(IAuthRepository authRepo, List<IUserAuth> allUsers)
+        private static void AssertHasIdentity(IAuthRepositoryAsync authRepo, List<IUserAuth> allUsers)
         {
             Assert.That(IsRavenDb(authRepo)
                 ? allUsers.Cast<AppUser>().All(x => x.Key != null)
@@ -252,108 +237,87 @@ namespace ServiceStack.Aws.DynamoDbTests
         }
 
         [Test]
-        public void Can_QueryUserAuth_GetUserAuths()
+        public async Task Can_QueryUserAuth_GetUserAuths()
         {
-            var authRepo = appHost.GetAuthRepository();
+            var authRepo = appHost.GetAuthRepositoryAsync();
             using (authRepo as IDisposable)
             {
-                var allUsers = authRepo.GetUserAuths();
+                var allUsers = await authRepo.GetUserAuthsAsync();
                 Assert.That(allUsers.Count, Is.EqualTo(3));
                 AssertHasIdentity(authRepo, allUsers);
                 
                 Assert.That(allUsers.All(x => x.Email != null));
                 
-                allUsers = authRepo.GetUserAuths(skip:1);
+                allUsers = await authRepo.GetUserAuthsAsync(skip:1);
                 Assert.That(allUsers.Count, Is.EqualTo(2));
-                allUsers = authRepo.GetUserAuths(take:2);
+                allUsers = await authRepo.GetUserAuthsAsync(take:2);
                 Assert.That(allUsers.Count, Is.EqualTo(2));
-                allUsers = authRepo.GetUserAuths(skip:1,take:2);
+                allUsers = await authRepo.GetUserAuthsAsync(skip:1,take:2);
                 Assert.That(allUsers.Count, Is.EqualTo(2));
             }
         }
 
         [Test]
-        public void Can_QueryUserAuth_GetUserAuths_OrderBy()
+        public async Task Can_QueryUserAuth_GetUserAuths_OrderBy()
         {
-            var authRepo = appHost.GetAuthRepository();
+            var authRepo = appHost.GetAuthRepositoryAsync();
             using (authRepo as IDisposable)
             {
-                var allUsers = authRepo.GetUserAuths(orderBy:nameof(UserAuth.Id));
+                var allUsers = await authRepo.GetUserAuthsAsync(orderBy:nameof(UserAuth.Id));
                 Assert.That(allUsers.Count, Is.EqualTo(3));
                 Assert.That(allUsers[0].Email, Is.EqualTo("user@gmail.com"));
 
                 var idField = IsRavenDb(authRepo)
                     ? nameof(AppUser.Key)
                     : nameof(UserAuth.Id);
-                allUsers = authRepo.GetUserAuths(orderBy: idField + " DESC");
+                allUsers = await authRepo.GetUserAuthsAsync(orderBy: idField + " DESC");
                 Assert.That(allUsers.Count, Is.EqualTo(3));
                 Assert.That(allUsers[0].Email, Is.EqualTo("admin@gmail.com"));
                 
-                allUsers = authRepo.GetUserAuths(orderBy:nameof(UserAuth.DisplayName));
+                allUsers = await authRepo.GetUserAuthsAsync(orderBy:nameof(UserAuth.DisplayName));
                 Assert.That(allUsers.Count, Is.EqualTo(3));
                 Assert.That(allUsers[0].DisplayName, Is.EqualTo("Admin User"));
                 
-                allUsers = authRepo.GetUserAuths(orderBy:nameof(UserAuth.Email));
+                allUsers = await authRepo.GetUserAuthsAsync(orderBy:nameof(UserAuth.Email));
                 Assert.That(allUsers.Count, Is.EqualTo(3));
                 Assert.That(allUsers[0].Email, Is.EqualTo("admin@gmail.com"));
                 
-                allUsers = authRepo.GetUserAuths(orderBy:nameof(UserAuth.CreatedDate) + " DESC");
+                allUsers = await authRepo.GetUserAuthsAsync(orderBy:nameof(UserAuth.CreatedDate) + " DESC");
                 Assert.That(allUsers.Count, Is.EqualTo(3));
                 Assert.That(allUsers[0].DisplayName, Is.EqualTo("Admin User"));
             }
         }
 
         [Test]
-        public void Can_QueryUserAuth_SearchUserAuths()
+        public async Task Can_QueryUserAuth_SearchUserAuths()
         {
-            var authRepo = appHost.GetAuthRepository();
+            var authRepo = appHost.GetAuthRepositoryAsync();
             using (authRepo as IDisposable)
             {
-                var allUsers = authRepo.SearchUserAuths("gmail.com");
+                var allUsers = await authRepo.SearchUserAuthsAsync("gmail.com");
                 Assert.That(allUsers.Count, Is.EqualTo(3));
                 AssertHasIdentity(authRepo, allUsers);
                 Assert.That(allUsers.All(x => x.Email != null));
                 
-                allUsers = authRepo.SearchUserAuths(query:"gmail.com",skip:1);
+                allUsers = await authRepo.SearchUserAuthsAsync(query:"gmail.com",skip:1);
                 Assert.That(allUsers.Count, Is.EqualTo(2));
-                allUsers = authRepo.SearchUserAuths(query:"gmail.com",take:2);
+                allUsers = await authRepo.SearchUserAuthsAsync(query:"gmail.com",take:2);
                 Assert.That(allUsers.Count, Is.EqualTo(2));
-                allUsers = authRepo.SearchUserAuths(query:"gmail.com",skip:1,take:2);
+                allUsers = await authRepo.SearchUserAuthsAsync(query:"gmail.com",skip:1,take:2);
                 Assert.That(allUsers.Count, Is.EqualTo(2));
 
                 if (!IsRavenDb(authRepo)) // RavenDB only searches UserName/Email and only StartsWith/EndsWith
                 {
-                    allUsers = authRepo.SearchUserAuths(query:"Test");
+                    allUsers = await authRepo.SearchUserAuthsAsync(query:"Test");
                     Assert.That(allUsers.Count, Is.EqualTo(2));
 
-                    allUsers = authRepo.SearchUserAuths(query:"Admin");
+                    allUsers = await authRepo.SearchUserAuthsAsync(query:"Admin");
                     Assert.That(allUsers.Count, Is.EqualTo(1));
 
-                    allUsers = authRepo.SearchUserAuths(query:"Test",skip:1,take:1,orderBy:nameof(UserAuth.Email));
+                    allUsers = await authRepo.SearchUserAuthsAsync(query:"Test",skip:1,take:1,orderBy:nameof(UserAuth.Email));
                     Assert.That(allUsers.Count, Is.EqualTo(1));
                     Assert.That(allUsers[0].Email, Is.EqualTo("user@gmail.com"));
                 }
-            }
-        }
-
-        [Test]
-        public void Can_QueryUserAuth_in_Script()
-        {
-            var context = appHost.AssertPlugin<SharpPagesFeature>();
-            Assert.That(context.EvaluateScript("{{ authRepo.getUserAuths() | count }}"), Is.EqualTo("3"));
-            Assert.That(context.EvaluateScript("{{ authRepo.getUserAuths({ orderBy:'Id' }) | map => it.Id | join }}"), Is.EqualTo("1,2,3"));
-            Assert.That(context.EvaluateScript("{{ authRepo.getUserAuths({ skip:1, orderBy:'Id' }) | map => it.Id | join }}"), Is.EqualTo("2,3"));
-            Assert.That(context.EvaluateScript("{{ authRepo.getUserAuths({ take:2, orderBy:'Id' }) | map => it.Id | join }}"), Is.EqualTo("1,2"));
-            Assert.That(context.EvaluateScript("{{ authRepo.getUserAuths({ skip:1, take:2, orderBy:'Id' }) | map => it.Id | join }}"), Is.EqualTo("2,3"));
-
-            Assert.That(context.EvaluateScript("{{ authRepo.searchUserAuths({ query:'gmail.com',orderBy:'Id'}) | map => it.Id | join }}"), Is.EqualTo("1,2,3"));
-            Assert.That(context.EvaluateScript("{{ authRepo.searchUserAuths({ query:'gmail.com',skip:1,take:1,orderBy:'Id'}) | map => it.Id | join }}"), Is.EqualTo("2"));
-
-            if (!IsRavenDb(appHost.TryResolve<IAuthRepository>()))
-            {
-                Assert.That(context.EvaluateScript("{{ authRepo.searchUserAuths({ query:'gmail.com', orderBy:'LastName DESC' }) | map => it.Id | join }}"), Is.EqualTo("1,3,2"));
-                Assert.That(context.EvaluateScript("{{ authRepo.searchUserAuths({ query:'Test', orderBy:'Email' }) | map => it.Id | join }}"), Is.EqualTo("2,1"));
-                Assert.That(context.EvaluateScript("{{ authRepo.searchUserAuths({ query:'Test', orderBy:'Id' }) | map => it.Id | join }}"), Is.EqualTo("1,2"));
             }
         }
     }

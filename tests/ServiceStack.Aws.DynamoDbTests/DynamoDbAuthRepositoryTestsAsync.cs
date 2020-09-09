@@ -251,5 +251,48 @@ namespace ServiceStack.Aws.DynamoDbTests
             userRoles = (await db.ScanAllAsync<UserAuthRole>()).ToList();
             Assert.That(userRoles.Count, Is.EqualTo(0));
         }
+
+        [Test]
+        public async Task Can_AddUserAuthDetails()
+        {
+            var authRepo = appHost.GetAuthRepositoryAsync();
+            
+            var newUser = await authRepo.CreateUserAuthAsync(new AppUser
+            {
+                DisplayName = "Facebook User",
+                Email = "user@fb.com",
+                FirstName = "Face",
+                LastName = "Book",
+            }, "p@55wOrd");
+            
+            var newSession = SessionFeature.CreateNewSession(null, "SESSION_ID");
+            newSession.PopulateSession(newUser);
+            Assert.That(newSession.Email, Is.EqualTo("user@fb.com"));
+
+            var fbAuthTokens = new AuthTokens
+            {
+                Provider = FacebookAuthProvider.Name,
+                AccessTokenSecret = "AAADDDCCCoR848BAMkQIZCRIKnVWZAvcKWqo7Ibvec8ebV9vJrfZAz8qVupdu5EbjFzmMmbwUFDbcNDea9H6rOn5SVn8es7KYZD",
+                UserId = "123456",
+                DisplayName = "FB User",
+                FirstName = "FB",
+                LastName = "User",
+                Email = "user@fb.com",
+            };
+            
+            var userAuthDetails = await authRepo.CreateOrMergeAuthSessionAsync(newSession, fbAuthTokens);
+            Assert.That(userAuthDetails.Email, Is.EqualTo("user@fb.com"));
+
+            var userAuthDetailsList = await authRepo.GetUserAuthDetailsAsync(newSession.UserAuthId);
+            Assert.That(userAuthDetailsList.Count, Is.EqualTo(1));
+            Assert.That(userAuthDetailsList[0].Email, Is.EqualTo("user@fb.com"));
+            
+            await authRepo.DeleteUserAuthAsync(newSession.UserAuthId);
+            userAuthDetailsList = await authRepo.GetUserAuthDetailsAsync(newSession.UserAuthId);
+            Assert.That(userAuthDetailsList, Is.Empty);
+            var deletedUserAuth = await authRepo.GetUserAuthAsync(newSession.UserAuthId);
+            Assert.That(deletedUserAuth, Is.Null);
+        }
+        
     }
 }

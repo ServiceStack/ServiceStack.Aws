@@ -57,15 +57,13 @@ namespace ServiceStack.Aws.DynamoDb
 
             await AssertNoExistingUserAsync(newUser, token: token);
 
-            Sanitize(newUser);
-
             newUser.PasswordHash = existingUser.PasswordHash;
             newUser.Salt = existingUser.Salt;
             newUser.DigestHa1Hash = existingUser.DigestHa1Hash;
             newUser.CreatedDate = existingUser.CreatedDate;
             newUser.ModifiedDate = DateTime.UtcNow;
 
-            await Db.PutItemAsync((TUserAuth)newUser, token: token);
+            await Db.PutItemAsync(Sanitize(newUser), token: token);
 
             newUser = DeSanitize(Db.GetItem<TUserAuth>(newUser.Id));
             return newUser;
@@ -105,7 +103,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (userAuth.CreatedDate == default(DateTime))
                 userAuth.CreatedDate = userAuth.ModifiedDate;
 
-            await Db.PutItemAsync(userAuth, token: token);
+            await Db.PutItemAsync(Sanitize(userAuth), token: token);
         }
 
         public async Task SaveUserAuthAsync(IUserAuth userAuth, CancellationToken token = default)
@@ -114,10 +112,10 @@ namespace ServiceStack.Aws.DynamoDb
                 throw new ArgumentNullException(nameof(userAuth));
 
             userAuth.ModifiedDate = DateTime.UtcNow;
-            if (userAuth.CreatedDate == default(DateTime))
+            if (userAuth.CreatedDate == default)
                 userAuth.CreatedDate = userAuth.ModifiedDate;
 
-            await Db.PutItemAsync((TUserAuth)userAuth, token: token);
+            await Db.PutItemAsync(Sanitize((TUserAuth)userAuth), token: token);
         }
 
         public async Task<List<IUserAuthDetails>> GetUserAuthDetailsAsync(string userAuthId, CancellationToken token = default)
@@ -285,7 +283,7 @@ namespace ServiceStack.Aws.DynamoDb
             newUser.CreatedDate = existingUser.CreatedDate;
             newUser.ModifiedDate = DateTime.UtcNow;
 
-            await Db.PutItemAsync((TUserAuth)newUser, token: token);
+            await Db.PutItemAsync(Sanitize((TUserAuth)newUser), token: token);
 
             return newUser;
         }
@@ -294,17 +292,19 @@ namespace ServiceStack.Aws.DynamoDb
         {
             var userId = int.Parse(userAuthId);
 
-            Db.DeleteItem<TUserAuth>(userAuthId);
+            await Db.DeleteItemAsync<TUserAuth>(userAuthId, token: token);
 
             var userAuthDetails = await Db.FromQuery<TUserAuthDetails>(x => x.UserAuthId == userId)
                 .Select(x => x.Id)
                 .ExecAsync(token);
-            await Db.DeleteItemsAsync<TUserAuthDetails>(userAuthDetails.Map(x => x.Id), token);
+            var userAuthDetailsKeys = userAuthDetails.Map(x => new DynamoId(x.UserAuthId, x.Id));
+            await Db.DeleteItemsAsync<TUserAuthDetails>(userAuthDetailsKeys, token);
 
             var userAuthRoles = await Db.FromQuery<UserAuthRole>(x => x.UserAuthId == userId)
                 .Select(x => x.Id)
                 .ExecAsync(token);
-            await Db.DeleteItemsAsync<UserAuthRole>(userAuthRoles.Map(x => x.Id), token: token);
+            var userAuthRolesKeys = userAuthRoles.Map(x => new DynamoId(x.UserAuthId, x.Id));
+            await Db.DeleteItemsAsync<UserAuthRole>(userAuthRolesKeys, token);
         }
 
         public async Task ClearAsync(CancellationToken token = default)
