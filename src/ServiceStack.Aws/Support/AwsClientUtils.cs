@@ -33,6 +33,6 @@ namespace ServiceStack.Aws.Support
             Thread.Sleep(ExecUtils.CalculateFullJitterBackOffDelay(retriesAttempted));
 
         internal static async Task SleepBackOffMultiplierAsync(this int retriesAttempted, CancellationToken token=default) => 
-            await Task.Delay(ExecUtils.CalculateFullJitterBackOffDelay(retriesAttempted));
+            await Task.Delay(ExecUtils.CalculateFullJitterBackOffDelay(retriesAttempted), token);
     }
 }

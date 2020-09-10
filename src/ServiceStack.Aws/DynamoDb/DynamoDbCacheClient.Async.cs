@@ -29,9 +29,9 @@ namespace ServiceStack.Aws.DynamoDb
 
         private async Task<T> GetValueAsync<T>(string key, CancellationToken token=default)
         {
-            var entry = Dynamo.GetItem<CacheEntry>(key);
+            var entry = await Dynamo.GetItemAsync<CacheEntry>(key, token).ConfigAwait();
             if (entry == null)
-                return default(T);
+                return default;
 
             if (entry.ExpiryDate != null && DateTime.UtcNow > entry.ExpiryDate.Value.ToUniversalTime())
             {
@@ -53,7 +53,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         private async Task<bool> CacheAddAsync<T>(string key, T value, DateTime? expiresAt, CancellationToken token=default)
         {
-            var entry = GetValue<T>(key);
+            var entry = await GetValueAsync<T>(key, token).ConfigAwait();
             if (!Equals(entry, default(T)))
                 return false;
 
@@ -61,9 +61,9 @@ namespace ServiceStack.Aws.DynamoDb
             return true;
         }
 
-        private async Task<bool>  CacheReplaceAsync<T>(string key, T value, DateTime? expiresAt, CancellationToken token=default)
+        private async Task<bool> CacheReplaceAsync<T>(string key, T value, DateTime? expiresAt, CancellationToken token=default)
         {
-            var entry = GetValue<T>(key);
+            var entry = await GetValueAsync<T>(key, token).ConfigAwait();
             if (Equals(entry, default(T)))
                 return false;
 
@@ -71,7 +71,7 @@ namespace ServiceStack.Aws.DynamoDb
             return true;
         }
 
-        private async Task<bool>  CacheSetAsync<T>(string key, T value, DateTime? expiresAt, CancellationToken token=default)
+        private async Task<bool> CacheSetAsync<T>(string key, T value, DateTime? expiresAt, CancellationToken token=default)
         {
             var request = ToCacheEntryPutItemRequest(key, value, expiresAt);
 

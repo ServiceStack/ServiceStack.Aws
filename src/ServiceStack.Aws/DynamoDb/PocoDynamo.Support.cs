@@ -27,15 +27,12 @@ namespace ServiceStack.Aws.DynamoDb
             }, rethrowExceptions, retryOnErrorCodes);
         }
 
-        public Task ExecAsync(Func<Task> fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
+        public async Task ExecAsync(Func<Task> fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
         {
-            return Exec(fn, rethrowExceptions, retryOnErrorCodes);
-        }
-
-
-        public Task<T> ExecAsync<T>(Func<Task<T>> fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
-        {
-            return Exec(fn, rethrowExceptions, retryOnErrorCodes);
+            await ExecAsync(async () => {
+                await fn();
+                return true;
+            }, rethrowExceptions, retryOnErrorCodes);
         }
 
         public T Exec<T>(Func<T> fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
@@ -83,6 +80,50 @@ namespace ServiceStack.Aws.DynamoDb
                         throw;
 
                     i.SleepBackOffMultiplier();
+                }
+            }
+
+            throw new TimeoutException($"Exceeded timeout of {MaxRetryOnExceptionTimeout}", originalEx);
+        }
+
+        public async Task<T> ExecAsync<T>(Func<Task<T>> fn, Type[] rethrowExceptions = null, HashSet<string> retryOnErrorCodes = null)
+        {
+            var i = 0;
+            Exception originalEx = null;
+            var firstAttempt = DateTime.UtcNow;
+
+            if (retryOnErrorCodes == null)
+                retryOnErrorCodes = RetryOnErrorCodes;
+
+            while (DateTime.UtcNow - firstAttempt < MaxRetryOnExceptionTimeout)
+            {
+                i++;
+                try
+                {
+                    return await fn();
+                }
+                catch (Exception ex)
+                {
+                    ExceptionFilter?.Invoke(ex);
+
+                    if (rethrowExceptions != null)
+                    {
+                        foreach (var rethrowEx in rethrowExceptions)
+                        {
+                            if (ex.GetType().IsAssignableFrom(rethrowEx))
+                                throw;
+                        }
+                    }
+
+                    if (originalEx == null)
+                        originalEx = ex;
+
+                    var amazonEx = ex as AmazonDynamoDBException;
+                    if (amazonEx?.StatusCode == HttpStatusCode.BadRequest &&
+                        !retryOnErrorCodes.Contains(amazonEx.ErrorCode))
+                        throw;
+
+                    await i.SleepBackOffMultiplierAsync();
                 }
             }
 
