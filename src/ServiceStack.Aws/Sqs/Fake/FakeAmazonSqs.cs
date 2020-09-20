@@ -803,6 +803,8 @@ namespace ServiceStack.Aws.Sqs.Fake
             throw new NotImplementedException();
         }
 
+        public ISQSPaginatorFactory Paginators { get; }
+
         public string AuthorizeS3ToSendMessage(string queueUrl, string bucket)
         {
             throw new NotImplementedException();
