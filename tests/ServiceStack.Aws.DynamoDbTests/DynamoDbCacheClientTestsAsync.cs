@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using ServiceStack.Aws.DynamoDb;
@@ -30,7 +31,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             await cache.RemoveExpiredEntriesAsync();
 
-            var validEntries = (await cache.Dynamo.ScanAllAsync<CacheEntry>()).Map(x => x.Id);
+            var validEntries = (await cache.Dynamo.ScanAllAsync<CacheEntry>().ToListAsync()).Map(x => x.Id);
             Assert.That(validEntries, Is.EquivalentTo(new[] { "valid1m", "valid1h" }));
         }
 

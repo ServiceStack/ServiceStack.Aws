@@ -57,7 +57,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             var dbOrders = db.GetRelatedItems<Order>(customer.Id).ToList();
             Assert.That(dbOrders, Is.EquivalentTo(orders));
 
-            dbOrders = (await db.QueryAsync(db.FromQuery<Order>(x => x.CustomerId == customer.Id))).ToList();
+            dbOrders = await db.QueryAsync(db.FromQuery<Order>(x => x.CustomerId == customer.Id)).ToListAsync();
             Assert.That(dbOrders, Is.EquivalentTo(orders));
         }
 
@@ -81,25 +81,25 @@ namespace ServiceStack.Aws.DynamoDbTests
             var q = db.FromQuery<OrderWithFieldIndex>(x => x.CustomerId == customer.Id)
                 .LocalIndex(x => x.Cost > 10);
 
-            var expensiveOrders = (await db.QueryAsync(q)).ToList();
+            var expensiveOrders = await db.QueryAsync(q).ToListAsync();
             Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.Cost > 10)));
             Assert.That(expensiveOrders.All(x => x.Qty == 0));  //non-projected field
 
-            expensiveOrders = (await db.QueryAsync(q.Clone().Select(new[] { "Qty" }))).ToList();
+            expensiveOrders = await db.QueryAsync(q.Clone().Select(new[] { "Qty" })).ToListAsync();
             Assert.That(expensiveOrders.All(x => x.Id == 0 && x.Qty > 0));
 
-            expensiveOrders = (await db.QueryAsync(q.Clone().SelectTableFields())).ToList();
+            expensiveOrders = await db.QueryAsync(q.Clone().SelectTableFields()).ToListAsync();
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.CustomerId > 0 && x.Qty > 0 && x.LineItem != null));
 
-            expensiveOrders = (await db.QueryAsync(q.Clone().Select<OrderWithFieldIndex>())).ToList();
+            expensiveOrders = await db.QueryAsync(q.Clone().Select<OrderWithFieldIndex>()).ToListAsync();
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.CustomerId > 0 && x.Qty > 0 && x.LineItem != null));
 
-            expensiveOrders = (await db.QueryAsync(q.Clone().Select(x => new { x.Id, x.Cost }))).ToList();
+            expensiveOrders = await db.QueryAsync(q.Clone().Select(x => new { x.Id, x.Cost })).ToListAsync();
             Assert.That(expensiveOrders.All(x => x.CustomerId == 0));
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0));
 
             Assert.ThrowsAsync<AmazonDynamoDBException>(async () =>
-                (await db.QueryAsync(db.FromQuery<OrderWithFieldIndex>().LocalIndex(x => x.Cost > 10))).ToList());
+                await db.QueryAsync(db.FromQuery<OrderWithFieldIndex>().LocalIndex(x => x.Cost > 10)).ToListAsync());
         }
 
         [Test]
@@ -119,8 +119,8 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             await db.PutRelatedItemsAsync(customer.Id, orders);
 
-            var expensiveOrders = (await db.QueryAsync(
-                db.FromQueryIndex<OrderCostIndex>(x => x.CustomerId == customer.Id && x.Cost > 10))).ToList();
+            var expensiveOrders = await db.QueryAsync(
+                db.FromQueryIndex<OrderCostIndex>(x => x.CustomerId == customer.Id && x.Cost > 10)).ToListAsync();
 
             expensiveOrders.PrintDump();
 
@@ -129,7 +129,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
 
             Assert.ThrowsAsync<AmazonDynamoDBException>(async () =>
-                (await db.QueryAsync(db.FromQueryIndex<OrderCostIndex>(x => x.Cost > 10))).ToList());
+                await db.QueryAsync(db.FromQueryIndex<OrderCostIndex>(x => x.Cost > 10)).ToListAsync());
         }
 
         [Test]
@@ -156,7 +156,7 @@ namespace ServiceStack.Aws.DynamoDbTests
 
             await db.PutRelatedItemsAsync(customer.Id, orders);
 
-            var expensiveOrders = (await db.QueryAsync(db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10))).ToList();
+            var expensiveOrders = await db.QueryAsync(db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10)).ToListAsync();
             Assert.That(expensiveOrders.Count, Is.EqualTo(orders.Count(x => x.ProductId == 1 && x.Cost > 10)));
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
 
@@ -166,7 +166,7 @@ namespace ServiceStack.Aws.DynamoDbTests
             dbOrders = (await db.FromQueryIndex<OrderGlobalCostIndex>(x => x.ProductId == 1 && x.Cost > 10).ExecIntoAsync<OrderWithGlobalTypedIndex>()).ToList();
             Assert.That(dbOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0 && x.LineItem != null));
 
-            expensiveOrders = (await db.ScanAsync(db.FromScanIndex<OrderGlobalCostIndex>(x => x.Cost > 10))).ToList();
+            expensiveOrders = await db.ScanAsync(db.FromScanIndex<OrderGlobalCostIndex>(x => x.Cost > 10)).ToListAsync();
             Assert.That(expensiveOrders.All(x => x.Cost > 10 && x.Id > 0 && x.Qty > 0));
 
             var indexOrders = (await db.ScanIntoAsync<OrderWithGlobalTypedIndex>(db.FromScanIndex<OrderGlobalCostIndex>(x => x.Cost > 10))).ToList();

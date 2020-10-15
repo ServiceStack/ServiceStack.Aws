@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -217,7 +218,11 @@ namespace ServiceStack.Aws.DynamoDb
                 }
             };
 
+#if NET472 || NETSTANDARD2_0
+            return await QueryAsync(request, r => r.ConvertAll<T>(), token).ToListAsync(token);
+#else
             return await QueryAsync(request, r => r.ConvertAll<T>(), token).ConfigAwait();
+#endif
         }
 
         public async Task DeleteRelatedItemsAsync<T>(object hash, IEnumerable<object> ranges, CancellationToken token = default)
@@ -454,6 +459,198 @@ namespace ServiceStack.Aws.DynamoDb
                 : 0;
         }
 
+        public async Task<long> DescribeItemCountAsync<T>(CancellationToken token = default)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var response = await ExecAsync(async () => 
+                await DynamoDb.DescribeTableAsync(new DescribeTableRequest(table.Name), token).ConfigAwait()).ConfigAwait();
+            return response.Table.ItemCount;
+        }
+        
+#if NET472 || NETSTANDARD2_0
+        public async Task<long> ScanItemCountAsync<T>(CancellationToken token = default)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new ScanRequest(table.Name);
+            var response = await ScanAsync(request, r => new[] { r.Count }, token).ToListAsync(token);
+            return response.Sum();
+        }
+
+        public IAsyncEnumerable<T> ScanAllAsync<T>(CancellationToken token = default)
+        {
+            var type = DynamoMetadata.GetType<T>();
+            var request = new ScanRequest
+            {
+                Limit = PagingLimit,
+                TableName = type.Name,
+            };
+
+            return ScanAsync(request, r => r.ConvertAll<T>(), token);
+        }
+
+        public async IAsyncEnumerable<T> ScanAsync<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter, CancellationToken token = default)
+        {
+            ScanResponse response = null;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = await ExecAsync(async () => 
+                    await DynamoDb.ScanAsync(request, token).ConfigAwait()).ConfigAwait();
+
+                var results = converter(response);
+                foreach (var result in results)
+                {
+                    yield return result;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty());
+        }
+
+        public async IAsyncEnumerable<T> ScanAsync<T>(ScanExpression<T> request, int limit, [EnumeratorCancellation] CancellationToken token = default)
+        {
+            if (request.Limit == default)
+                request.Limit = limit;
+
+            ScanResponse response = null;
+            var count = 0;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = await ExecAsync(async () => 
+                    await DynamoDb.ScanAsync(request, token).ConfigAwait()).ConfigAwait();
+                var results = response.ConvertAll<T>();
+
+                foreach (var result in results)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    yield return result;
+
+                    if (++count >= limit)
+                        break;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty() && count < limit);
+        }
+
+        public IAsyncEnumerable<T> ScanAsync<T>(ScanExpression<T> request, CancellationToken token = default)
+        {
+            return ScanAsync(request, r => r.ConvertAll<T>(), token);
+        }
+
+        public async IAsyncEnumerable<T> ScanAsync<T>(ScanRequest request, int limit, [EnumeratorCancellation] CancellationToken token = default)
+        {
+            if (request.Limit == default(int))
+                request.Limit = limit;
+
+            ScanResponse response = null;
+            var count = 0;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = await ExecAsync(async () => 
+                    await DynamoDb.ScanAsync(request, token).ConfigAwait()).ConfigAwait();
+                var results = response.ConvertAll<T>();
+
+                foreach (var result in results)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    yield return result;
+
+                    if (++count >= limit)
+                        break;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty() && count < limit);
+        }
+
+        public IAsyncEnumerable<T> ScanAsync<T>(ScanRequest request, CancellationToken token = default)
+        {
+            return ScanAsync(request, r => r.ConvertAll<T>(), token);
+        }
+
+        public IAsyncEnumerable<T> QueryAsync<T>(QueryExpression<T> request, CancellationToken token=default)
+        {
+            return QueryAsync(request, r => r.ConvertAll<T>(), token);
+        }
+
+        public IAsyncEnumerable<T> QueryAsync<T>(QueryExpression<T> request, int limit, CancellationToken token=default)
+        {
+            return QueryAsync<T>((QueryRequest)request, limit, token);
+        }
+
+        public IAsyncEnumerable<T> QueryAsync<T>(QueryRequest request, CancellationToken token=default)
+        {
+            return QueryAsync(request, r => r.ConvertAll<T>(), token);
+        }
+
+        public async IAsyncEnumerable<T> QueryAsync<T>(QueryRequest request, int limit, [EnumeratorCancellation] CancellationToken token=default)
+        {
+            if (request.Limit == default(int))
+                request.Limit = limit;
+
+            QueryResponse response = null;
+            var count = 0;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = await ExecAsync(async () => 
+                    await DynamoDb.QueryAsync(request, token).ConfigAwait()).ConfigAwait();
+                var results = response.ConvertAll<T>();
+
+                foreach (var result in results)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    yield return result;
+
+                    if (++count >= limit)
+                        break;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty() && count < limit);
+        }
+
+        public async IAsyncEnumerable<T> QueryAsync<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter, [EnumeratorCancellation] CancellationToken token=default)
+        {
+            QueryResponse response = null;
+            do
+            {
+                if (response != null)
+                    request.ExclusiveStartKey = response.LastEvaluatedKey;
+
+                response = await ExecAsync(async () => 
+                    await DynamoDb.QueryAsync(request, token).ConfigAwait()).ConfigAwait();
+                var results = converter(response);
+                
+                foreach (var result in results)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    yield return result;
+                }
+
+            } while (!response.LastEvaluatedKey.IsEmpty());
+        }
+#else
+
+        public async Task<long> ScanItemCountAsync<T>(CancellationToken token = default)
+        {
+            var table = DynamoMetadata.GetTable<T>();
+            var request = new ScanRequest(table.Name);
+            var response = await ScanAsync(request, r => new[] { r.Count }, token).ConfigAwait();
+            return response.Sum();
+        }
+
         public async Task<List<T>> ScanAllAsync<T>(CancellationToken token = default)
         {
             var type = DynamoMetadata.GetType<T>();
@@ -555,22 +752,6 @@ namespace ServiceStack.Aws.DynamoDb
             return await ScanAsync(request, r => r.ConvertAll<T>(), token).ConfigAwait();
         }
 
-        public async Task<long> ScanItemCountAsync<T>(CancellationToken token = default)
-        {
-            var table = DynamoMetadata.GetTable<T>();
-            var request = new ScanRequest(table.Name);
-            var response = await ScanAsync(request, r => new[] { r.Count }, token).ConfigAwait();
-            return response.Sum();
-        }
-
-        public async Task<long> DescribeItemCountAsync<T>(CancellationToken token = default)
-        {
-            var table = DynamoMetadata.GetTable<T>();
-            var response = await ExecAsync(async () => 
-                await DynamoDb.DescribeTableAsync(new DescribeTableRequest(table.Name), token).ConfigAwait()).ConfigAwait();
-            return response.Table.ItemCount;
-        }
-
         public async Task<List<T>> QueryAsync<T>(QueryExpression<T> request, CancellationToken token=default)
         {
             return await QueryAsync(request, r => r.ConvertAll<T>(), token).ConfigAwait();
@@ -634,6 +815,7 @@ namespace ServiceStack.Aws.DynamoDb
             } while (!response.LastEvaluatedKey.IsEmpty());
             return to;
         }
+#endif
         
     }
 }

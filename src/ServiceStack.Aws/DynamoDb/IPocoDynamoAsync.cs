@@ -50,6 +50,24 @@ namespace ServiceStack.Aws.DynamoDb
         Task DeleteItemsAsync<T>(IEnumerable<object> hashes, CancellationToken token = default);
         Task DeleteItemsAsync<T>(IEnumerable<DynamoId> ids, CancellationToken token = default);
         Task<long> IncrementAsync<T>(object hash, string fieldName, long amount = 1, CancellationToken token = default);
+        Task<long> ScanItemCountAsync<T>(CancellationToken token = default);
+        Task<long> DescribeItemCountAsync<T>(CancellationToken token = default);
+
+#if NET472 || NETSTANDARD2_0
+        IAsyncEnumerable<T> ScanAllAsync<T>(CancellationToken token = default);
+        IAsyncEnumerable<T> ScanAsync<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter,
+            CancellationToken token = default);
+        IAsyncEnumerable<T> ScanAsync<T>(ScanExpression<T> request, int limit, CancellationToken token = default);
+        IAsyncEnumerable<T> ScanAsync<T>(ScanExpression<T> request, CancellationToken token = default);
+        IAsyncEnumerable<T> ScanAsync<T>(ScanRequest request, int limit, CancellationToken token = default);
+        IAsyncEnumerable<T> ScanAsync<T>(ScanRequest request, CancellationToken token = default);
+        IAsyncEnumerable<T> QueryAsync<T>(QueryExpression<T> request, CancellationToken token = default);
+        IAsyncEnumerable<T> QueryAsync<T>(QueryExpression<T> request, int limit, CancellationToken token = default);
+        IAsyncEnumerable<T> QueryAsync<T>(QueryRequest request, CancellationToken token = default);
+        IAsyncEnumerable<T> QueryAsync<T>(QueryRequest request, int limit, CancellationToken token = default);
+        IAsyncEnumerable<T> QueryAsync<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter,
+            CancellationToken token = default);
+#else
         Task<List<T>> ScanAllAsync<T>(CancellationToken token = default);
         Task<List<T>> ScanAsync<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter,
             CancellationToken token = default);
@@ -57,13 +75,12 @@ namespace ServiceStack.Aws.DynamoDb
         Task<List<T>> ScanAsync<T>(ScanExpression<T> request, CancellationToken token = default);
         Task<List<T>> ScanAsync<T>(ScanRequest request, int limit, CancellationToken token = default);
         Task<List<T>> ScanAsync<T>(ScanRequest request, CancellationToken token = default);
-        Task<long> ScanItemCountAsync<T>(CancellationToken token = default);
-        Task<long> DescribeItemCountAsync<T>(CancellationToken token = default);
         Task<List<T>> QueryAsync<T>(QueryExpression<T> request, CancellationToken token = default);
         Task<List<T>> QueryAsync<T>(QueryExpression<T> request, int limit, CancellationToken token = default);
         Task<List<T>> QueryAsync<T>(QueryRequest request, CancellationToken token = default);
         Task<List<T>> QueryAsync<T>(QueryRequest request, int limit, CancellationToken token = default);
         Task<List<T>> QueryAsync<T>(QueryRequest request, Func<QueryResponse, IEnumerable<T>> converter,
             CancellationToken token = default);
+#endif
     }
 }

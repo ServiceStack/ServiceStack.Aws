@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -245,12 +246,13 @@ namespace ServiceStack.Aws.DynamoDb
         }
 
 #if NET472 || NETSTANDARD2_0
-        public async IAsyncEnumerable<string> GetKeysByPatternAsync(string pattern, CancellationToken token=default)
+        public async IAsyncEnumerable<string> GetKeysByPatternAsync(string pattern, [EnumeratorCancellation] CancellationToken token=default)
         {
             if (pattern == "*")
             {
                 foreach (var item in await Dynamo.FromScan<CacheEntry>().ExecColumnAsync(x => x.Id, token).ConfigAwait())
                 {
+                    token.ThrowIfCancellationRequested();
                     yield return item;
                 }
             }
@@ -266,6 +268,7 @@ namespace ServiceStack.Aws.DynamoDb
                 foreach (var item in await Dynamo.FromScan<CacheEntry>(x => x.Id.StartsWith(beginWith))
                     .ExecColumnAsync(x => x.Id, token).ConfigAwait())
                 {
+                    token.ThrowIfCancellationRequested();
                     yield return item;
                 }
             }

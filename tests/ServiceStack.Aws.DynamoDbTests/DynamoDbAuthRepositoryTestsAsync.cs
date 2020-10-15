@@ -246,18 +246,18 @@ namespace ServiceStack.Aws.DynamoDbTests
             await authRepo.AssignRolesAsync(userAuth.Id.ToString(),
                 permissions: new[] { "ThePermission" });
 
-            var userAuths = (await db.ScanAllAsync<UserAuth>()).ToList();
+            var userAuths = await db.ScanAllAsync<UserAuth>().ToListAsync();
             Assert.That(userAuths.Count, Is.GreaterThan(0));
 
-            var userRoles = (await db.ScanAllAsync<UserAuthRole>()).ToList();
+            var userRoles = await db.ScanAllAsync<UserAuthRole>().ToListAsync();
             Assert.That(userRoles.Count, Is.GreaterThan(0));
 
             await authRepo.ClearAsync();
 
-            userAuths = (await db.ScanAllAsync<UserAuth>()).ToList();
+            userAuths = await db.ScanAllAsync<UserAuth>().ToListAsync();
             Assert.That(userAuths.Count, Is.EqualTo(0));
 
-            userRoles = (await db.ScanAllAsync<UserAuthRole>()).ToList();
+            userRoles = await db.ScanAllAsync<UserAuthRole>().ToListAsync();
             Assert.That(userRoles.Count, Is.EqualTo(0));
         }
 
