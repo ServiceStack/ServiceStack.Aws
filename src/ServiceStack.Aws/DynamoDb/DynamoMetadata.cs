@@ -170,6 +170,7 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     Parent = metadata,
                     Type = p.PropertyType,
+                    PropertyInfo = p,
                     Name = Converters.GetFieldName(p),
                     DbType = Converters.GetFieldType(p.PropertyType),
                     IsAutoIncrement = p.HasAttribute<AutoIncrementAttribute>(),
@@ -211,6 +212,7 @@ namespace ServiceStack.Aws.DynamoDb
                 {
                     Parent = metadata,
                     Type = p.PropertyType,
+                    PropertyInfo = p,
                     Name = Converters.GetFieldName(p),
                     DbType = Converters.GetFieldType(p.PropertyType),
                     IsHashKey = p == hash,
@@ -356,7 +358,8 @@ namespace ServiceStack.Aws.DynamoDb
 
         public DynamoMetadataField GetField(string fieldName)
         {
-            return Fields.FirstOrDefault(x => x.Name == fieldName);
+            return Fields.FirstOrDefault(x => x.PropertyInfo.Name == fieldName)
+                ?? Fields.FirstOrDefault(x => x.Name == fieldName);
         }
 
         public bool HasField(string fieldName)
@@ -387,6 +390,7 @@ namespace ServiceStack.Aws.DynamoDb
         public DynamoMetadataType Parent { get; set; }
 
         public Type Type { get; set; }
+        public PropertyInfo PropertyInfo { get; set; }
 
         public string Name { get; set; }
 
@@ -406,7 +410,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public object GetValue(object onInstance)
         {
-            return this.GetValueFn == null ? null : this.GetValueFn(onInstance);
+            return GetValueFn?.Invoke(onInstance);
         }
 
         public object SetValue(object instance, object value)

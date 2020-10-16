@@ -210,8 +210,7 @@ namespace ServiceStack.Aws.DynamoDb
                     List<object> args = this.VisitExpressionList(m.Arguments);
                     object arg = args[1];
 
-                    var memberExpr = m.Arguments[0] as MemberExpression;
-                    if (memberExpr != null && memberExpr.Expression.NodeType == ExpressionType.Parameter)
+                    if (m.Arguments[0] is MemberExpression memberExpr && memberExpr.Expression.NodeType == ExpressionType.Parameter)
                     {
                         var memberName = GetMemberName(memberExpr.Member.Name);
                         var expr = $"contains({memberName}, {GetValueAsParam(arg)})";
@@ -421,7 +420,7 @@ namespace ServiceStack.Aws.DynamoDb
             if (field != null && !ReferencedFields.Contains(field.Name))
                 ReferencedFields.Add(field.Name);
 
-            var memberName = GetMemberName(m.Member.Name);
+            var memberName = GetMemberName(field?.Name ?? m.Member.Name);
 
             if (propertyInfo != null && propertyInfo.PropertyType.IsEnum)
                 return new EnumMemberAccess(memberName, propertyInfo.PropertyType);
