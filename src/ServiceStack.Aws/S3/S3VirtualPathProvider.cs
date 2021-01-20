@@ -76,7 +76,7 @@ namespace ServiceStack.Aws.S3
                 : (S3VirtualDirectory)RootDirectory;
         }
 
-        public IVirtualDirectory GetDirectory(string virtualPath)
+        public override IVirtualDirectory GetDirectory(string virtualPath)
         {
             if (virtualPath == null)
                 return null;
@@ -261,7 +261,7 @@ namespace ServiceStack.Aws.S3
                 : null;
         }
 
-        public string SanitizePath(string filePath)
+        public override string SanitizePath(string filePath)
         {
             var sanitizedPath = string.IsNullOrEmpty(filePath)
                 ? null

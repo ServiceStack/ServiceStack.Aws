@@ -501,7 +501,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             if (!roles.IsEmpty())
             {
-                var roleSet = userRoles.Where(x => x.Role != null).Select(x => x.Role).ToHashSet();
+                var roleSet = userRoles.Where(x => x.Role != null).Select(x => x.Role).ToSet();
                 foreach (var role in roles)
                 {
                     if (!roleSet.Contains(role))
@@ -518,7 +518,7 @@ namespace ServiceStack.Aws.DynamoDb
 
             if (!permissions.IsEmpty())
             {
-                var permissionSet = userRoles.Where(x => x.Permission != null).Select(x => x.Permission).ToHashSet();
+                var permissionSet = userRoles.Where(x => x.Permission != null).Select(x => x.Permission).ToSet();
                 foreach (var permission in permissions)
                 {
                     if (!permissionSet.Contains(permission))
