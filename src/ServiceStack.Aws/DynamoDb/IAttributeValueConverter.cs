@@ -51,7 +51,7 @@ namespace ServiceStack.Aws.DynamoDb
         public object FromAttributeValue(AttributeValue attrValue, Type type)
         {
             if (attrValue.S != null)
-                return Enum.Parse(type, attrValue.S);
+                return Enum.Parse(Nullable.GetUnderlyingType(type) ?? type, attrValue.S);
 
             if (attrValue.N != null)
                 return Enum.ToObject(type, int.Parse(attrValue.N));
