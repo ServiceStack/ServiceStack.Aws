@@ -169,6 +169,7 @@ namespace ServiceStack.Aws.DynamoDbTests.Shared
         public decimal Cost { get; set; }
         public int Qty { get; set; }
         public int Id { get; set; }
+        public string LineItem { get; set; }
     }
 
     [References(typeof(OrderGlobalCostIndex))]
