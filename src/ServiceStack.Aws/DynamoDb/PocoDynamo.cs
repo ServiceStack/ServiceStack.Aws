@@ -46,6 +46,8 @@ namespace ServiceStack.Aws.DynamoDb
         public TimeSpan PollTableStatus { get; set; }
 
         public TimeSpan MaxRetryOnExceptionTimeout { get; set; }
+        
+        public Action<CreateTableRequest> CreateTableFilter { get; set; }
 
         public PocoDynamo(IAmazonDynamoDB dynamoDb)
         {
@@ -184,6 +186,8 @@ namespace ServiceStack.Aws.DynamoDb
         private void CreateTable(DynamoMetadataType table)
         {
             var request = ToCreateTableRequest(table);
+            CreateTableFilter?.Invoke(request);
+            
             Exec(() =>
             {
                 try
@@ -208,10 +212,10 @@ namespace ServiceStack.Aws.DynamoDb
                 throw new NotSupportedException($"{table.Name} does not have any serializable properties");
 
             var keySchema = new List<KeySchemaElement> {
-                new KeySchemaElement(table.HashKey.Name, KeyType.HASH),
+                new(table.HashKey.Name, KeyType.HASH),
             };
             var attrDefinitions = new List<AttributeDefinition> {
-                new AttributeDefinition(table.HashKey.Name, table.HashKey.DbType),
+                new(table.HashKey.Name, table.HashKey.DbType),
             };
             if (table.RangeKey != null)
             {

@@ -79,6 +79,7 @@ namespace ServiceStack.Aws.DynamoDb
         private async Task CreateTableAsync(DynamoMetadataType table, CancellationToken token = default)
         {
             var request = ToCreateTableRequest(table);
+            CreateTableFilter?.Invoke(request);
             try
             {
                 await ExecAsync(async () => 
