@@ -119,7 +119,8 @@ namespace ServiceStack.Aws.DynamoDb
             var table = ToMetadataTable(type);
             Types.Add(table);
 
-            LicenseUtils.AssertValidUsage(LicenseFeature.Aws, QuotaType.Tables, Types.Count);
+            //using table count to fix limit reached issue. or else it restricts the poco types to 10
+            LicenseUtils.AssertValidUsage(LicenseFeature.Aws, QuotaType.Tables, GetTables().Count);
 
             RegisterTypes(type.GetReferencedTypes());
 
