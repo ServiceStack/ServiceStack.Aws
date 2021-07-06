@@ -119,7 +119,8 @@ namespace ServiceStack.Aws.DynamoDb
             var table = ToMetadataTable(type);
             Types.Add(table);
 
-            LicenseUtils.AssertValidUsage(LicenseFeature.Aws, QuotaType.Tables, Types.Count);
+            var tableCount = Types.Count(x => x.IsTable);
+            LicenseUtils.AssertValidUsage(LicenseFeature.Aws, QuotaType.Tables, tableCount);
 
             RegisterTypes(type.GetReferencedTypes());
 
