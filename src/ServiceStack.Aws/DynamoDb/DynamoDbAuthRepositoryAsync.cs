@@ -121,7 +121,7 @@ namespace ServiceStack.Aws.DynamoDb
         public async Task<List<IUserAuthDetails>> GetUserAuthDetailsAsync(string userAuthId, CancellationToken token = default)
         {
             var id = int.Parse(userAuthId);
-#if NET472 || NETSTANDARD2_0
+#if NET472 || NETSTANDARD
             return (await Db.QueryAsync(Db.FromQuery<TUserAuthDetails>(q => q.UserAuthId == id), token).ToListAsync(token))
                 .Cast<IUserAuthDetails>().ToList();
 #else

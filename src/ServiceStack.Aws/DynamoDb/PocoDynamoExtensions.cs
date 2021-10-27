@@ -132,7 +132,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static async Task<List<T>> GetAllAsync<T>(this IPocoDynamo db, CancellationToken token=default)
         {
-#if NET472 || NETSTANDARD2_0
+#if NET472 || NETSTANDARD
             return await db.ScanAllAsync<T>(token).ToListAsync(token);
 #else
             return (await db.ScanAllAsync<T>(token).ConfigAwait()).ToList();
@@ -281,7 +281,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static async Task<List<T>> ScanIntoAsync<T>(this IPocoDynamo db, ScanExpression request, CancellationToken token=default)
         {
-#if NET472 || NETSTANDARD2_0
+#if NET472 || NETSTANDARD
             return await db.ScanAsync<T>(request.Projection<T>(), token).ToListAsync(token);
 #else
             return await db.ScanAsync<T>(request.Projection<T>(), token).ConfigAwait();
@@ -295,7 +295,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static async Task<List<T>> ScanIntoAsync<T>(this IPocoDynamo db, ScanExpression request, int limit, CancellationToken token=default)
         {
-#if NET472 || NETSTANDARD2_0
+#if NET472 || NETSTANDARD
             return await db.ScanAsync<T>(request.Projection<T>(), limit: limit, token: token).ToListAsync(token);
 #else
             return await db.ScanAsync<T>(request.Projection<T>(), limit: limit, token: token).ConfigAwait();
@@ -309,7 +309,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static async Task<List<T>> QueryIntoAsync<T>(this IPocoDynamo db, QueryExpression request, CancellationToken token=default)
         {
-#if NET472 || NETSTANDARD2_0
+#if NET472 || NETSTANDARD
             return await db.QueryAsync<T>(request.Projection<T>(), token).ToListAsync(token);
 #else
             return await db.QueryAsync<T>(request.Projection<T>(), token).ConfigAwait();
@@ -323,7 +323,7 @@ namespace ServiceStack.Aws.DynamoDb
 
         public static async Task<List<T>> QueryIntoAsync<T>(this IPocoDynamo db, QueryExpression request, int limit, CancellationToken token=default)
         {
-#if NET472 || NETSTANDARD2_0
+#if NET472 || NETSTANDARD
             return await db.QueryAsync<T>(request.Projection<T>(), limit: limit, token).ToListAsync(token);
 #else
             return await db.QueryAsync<T>(request.Projection<T>(), limit: limit, token).ConfigAwait();

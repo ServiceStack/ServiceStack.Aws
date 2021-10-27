@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net472;net6.0</TargetFrameworks>
     <DebugType>portable</DebugType>
     <AssemblyName>ServiceStack.Aws.Tests</AssemblyName>
     <OutputType>Library</OutputType>
@@ -31,7 +31,7 @@
     <Reference Include="Microsoft.CSharp" />
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="2.2.0" />
   </ItemGroup>
 </Project>

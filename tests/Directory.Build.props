@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <Version>5.12.0</Version>
+    <Version>5.12.1</Version>
     <LangVersion>latest</LangVersion>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
   </PropertyGroup>
@@ -22,8 +22,8 @@
     <DefineConstants>$(DefineConstants);NETFX;NET472</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
-    <DefineConstants>$(DefineConstants);NETCORE_SUPPORT;NETCORE</DefineConstants>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+    <DefineConstants>$(DefineConstants);NETCORE_SUPPORT;NETCORE;NET6_0</DefineConstants>
   </PropertyGroup>
 
 </Project>

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <PackageId>ServiceStack.Aws</PackageId>
     <AssemblyName>ServiceStack.Aws</AssemblyName>
-    <TargetFrameworks>net45;net472;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;net472;netstandard2.0;net6.0</TargetFrameworks>
     <Title>ServiceStack integration for Amazon Web Services (AWS)</Title>
     <PackageDescription>
       ServiceStack integration for Amazon Web Services (AWS) including:
@@ -16,6 +16,9 @@
       - DynamoDbCacheClient - A Caching Provider for DynamoDB
     </PackageDescription>
     <PackageTags>ServiceStack;AWS;Amazon;WebServices;DynamoDb;S3;SQS;Cache;CacheClient</PackageTags>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+    <DefineConstants>$(DefineConstants);NETSTANDARD;NET6_0</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,6 +40,12 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Linq.Async" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Linq.Async" Version="5.0.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />

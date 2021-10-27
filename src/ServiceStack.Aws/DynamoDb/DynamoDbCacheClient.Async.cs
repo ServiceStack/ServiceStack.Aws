@@ -245,7 +245,7 @@ namespace ServiceStack.Aws.DynamoDb
             throw new NotImplementedException();
         }
 
-#if NET472 || NETSTANDARD2_0
+#if NET472 || NETSTANDARD
         public async IAsyncEnumerable<string> GetKeysByPatternAsync(string pattern, [EnumeratorCancellation] CancellationToken token=default)
         {
             if (pattern == "*")

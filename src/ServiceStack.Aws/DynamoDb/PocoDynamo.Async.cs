@@ -219,7 +219,7 @@ namespace ServiceStack.Aws.DynamoDb
                 }
             };
 
-#if NET472 || NETSTANDARD2_0
+#if NET472 || NETSTANDARD
             return await QueryAsync(request, r => r.ConvertAll<T>(), token).ToListAsync(token);
 #else
             return await QueryAsync(request, r => r.ConvertAll<T>(), token).ConfigAwait();
@@ -468,7 +468,7 @@ namespace ServiceStack.Aws.DynamoDb
             return response.Table.ItemCount;
         }
         
-#if NET472 || NETSTANDARD2_0
+#if NET472 || NETSTANDARD
         public async Task<long> ScanItemCountAsync<T>(CancellationToken token = default)
         {
             var table = DynamoMetadata.GetTable<T>();
