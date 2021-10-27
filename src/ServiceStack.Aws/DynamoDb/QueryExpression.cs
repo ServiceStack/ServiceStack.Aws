@@ -70,7 +70,7 @@ namespace ServiceStack.Aws.DynamoDb
                 ScanIndexForward = ScanIndexForward,                                
             }.SetSelect(base.Select);
 
-#if !NETSTANDARD
+#if !NETCORE
             if (ReadWriteTimeoutInternal != null)
                 q.ReadWriteTimeoutInternal = ReadWriteTimeoutInternal;
             if (TimeoutInternal != null)
@@ -245,7 +245,7 @@ namespace ServiceStack.Aws.DynamoDb
         public IEnumerable<Into> ExecInto<Into>() => Db.Query<Into>(this.Projection<Into>());
         public List<Into> Exec<Into>(int limit) => Db.Query<Into>(this.Projection<Into>(), limit:limit);
 
-#if NET472 || NETSTANDARD
+#if NET472 || NETCORE
         public async Task<List<T>> ExecAsync(CancellationToken token=default) => await Db.QueryAsync(this, token).ToListAsync(token);
         public async Task<List<T>> ExecAsync(int limit, CancellationToken token=default) => await Db.QueryAsync(this, limit:limit, token: token).ToListAsync(token);
         public async Task<List<Into>> ExecIntoAsync<Into>(CancellationToken token=default) => await Db.QueryAsync<Into>(this.Projection<Into>(), token).ToListAsync(token);
@@ -276,7 +276,7 @@ namespace ServiceStack.Aws.DynamoDb
             var field = q.ReferencedFields[0];
             this.ProjectionExpression = field;
 
-#if NET472 || NETSTANDARD
+#if NET472 || NETCORE
             return await Db.QueryAsync(this, token)
                 .Select(attrValue => Table.GetField(field).GetValue(attrValue))
                 .Select(value => (TKey) value)

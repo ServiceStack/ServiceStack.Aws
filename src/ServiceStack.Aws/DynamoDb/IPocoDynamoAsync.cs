@@ -53,7 +53,7 @@ namespace ServiceStack.Aws.DynamoDb
         Task<long> ScanItemCountAsync<T>(CancellationToken token = default);
         Task<long> DescribeItemCountAsync<T>(CancellationToken token = default);
 
-#if NET472 || NETSTANDARD
+#if NET472 || NETCORE
         IAsyncEnumerable<T> ScanAllAsync<T>(CancellationToken token = default);
         IAsyncEnumerable<T> ScanAsync<T>(ScanRequest request, Func<ScanResponse, IEnumerable<T>> converter,
             CancellationToken token = default);
