@@ -42,6 +42,7 @@
   <Target Name="ClearNuGetRestoreCaches">
     <RemoveDir Directories="$(SrcDir)/ServiceStack.Aws/obj" />
     <RemoveDir Directories="$(TestsDir)/ServiceStack.Aws.DynamoDbTests/obj" />
+    <RemoveDir Directories="$(TestsDir)/ServiceStack.Aws.Tests/obj" />
   </Target>
 
   <Target Name="UpdateVersion">
