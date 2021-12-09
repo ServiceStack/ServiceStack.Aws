@@ -15,7 +15,7 @@
   <ItemGroup>
     <PackageReference Include="ServiceStack.Core" Version="$(Version)" />
     <PackageReference Include="AWSSDK.Core" Version="3.7.3.33" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.5.2" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.94" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.4" />
     <PackageReference Include="AWSSDK.SQS" Version="3.7.1.36" />
   </ItemGroup>
