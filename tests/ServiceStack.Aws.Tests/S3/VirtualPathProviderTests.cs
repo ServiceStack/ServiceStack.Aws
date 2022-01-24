@@ -8,7 +8,7 @@ using ServiceStack.Testing;
 
 namespace ServiceStack.Aws.Tests.S3
 {
-    public class S3VirtualPathProviderTests : VirtualPathProviderTests
+    public class S3VirtualFilesTests : VirtualPathProviderTests
     {
         private IAmazonS3 client = AwsConfig.CreateAmazonS3Client();
         public const string BucketName = "ss-ci-test";

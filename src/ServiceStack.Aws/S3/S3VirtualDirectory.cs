@@ -15,9 +15,9 @@ namespace ServiceStack.Aws.S3
 {
     public class S3VirtualDirectory : AbstractVirtualDirectoryBase
     {
-        internal S3VirtualPathProvider PathProvider { get; private set; }
+        internal S3VirtualFiles PathProvider { get; private set; }
 
-        public S3VirtualDirectory(S3VirtualPathProvider pathProvider, string dirPath, S3VirtualDirectory parentDir)
+        public S3VirtualDirectory(S3VirtualFiles pathProvider, string dirPath, S3VirtualDirectory parentDir)
             : base(pathProvider, parentDir)
         {
             this.PathProvider = pathProvider;

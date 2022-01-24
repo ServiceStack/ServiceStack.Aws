@@ -13,13 +13,13 @@ namespace ServiceStack.Aws.S3
 {
     public class S3VirtualFile : AbstractVirtualFileBase
     {
-        private S3VirtualPathProvider PathProvider { get; set; }
+        private S3VirtualFiles PathProvider { get; set; }
 
         public IAmazonS3 Client => PathProvider.AmazonS3;
 
         public string BucketName => PathProvider.BucketName;
 
-        public S3VirtualFile(S3VirtualPathProvider pathProvider, IVirtualDirectory directory)
+        public S3VirtualFile(S3VirtualFiles pathProvider, IVirtualDirectory directory)
             : base(pathProvider, directory)
         {
             this.PathProvider = pathProvider;
@@ -31,7 +31,7 @@ namespace ServiceStack.Aws.S3
 
         public string ContentType { get; set; }
 
-        public override string Name => S3VirtualPathProvider.GetFileName(FilePath);
+        public override string Name => S3VirtualFiles.GetFileName(FilePath);
 
         public override string VirtualPath => FilePath;
 
